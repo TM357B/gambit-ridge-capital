@@ -1,60 +1,7 @@
 /* Gambit Ridge Capital — terminal : 03-desks.js (scripts classiques, globals partagés, chargés dans l'ordre) */
 /* ============ RH ============ */
 async function renderHR() {
-  if (!HROV) {
-    document.getElementById('content').innerHTML = '<div class="loader">Chargement du pôle RH…</div>';
-    try { const r = await fetch('/api/hr'); HROV = await r.json(); } catch(e) { HROV = null; }
-  }
-  if (!HROV || HROV.error) { document.getElementById('content').innerHTML = '<div class="loader">Pôle RH indisponible.</div>'; return; }
-  const w = HROV.weekly_report;
-  let html = '';
-  html += '<div class="kpis">';
-  html += kpi('Employés', String(HROV.n_employees));
-  html += kpi('Masse salariale', w.payroll.total+'k$/an', '');
-  html += kpi('dont bonus', w.payroll.total_bonus+'k$', 'pos');
-  html += kpi('Réunion RH', HROV.meeting_day, '');
-  html += '</div>';
-  // Manager RH + pôle
-  html += '<div class="panel"><div class="panel-h">Pôle RH — Manager RH <span class="rt">rapport au gérant le vendredi</span></div><div class="panel-b"><table>';
-  html += `<tr><th>Analyste RH</th><th>Mission</th></tr>`;
-  for (const a of HROV.hr_agents) html += `<tr><td class="amber">${esc(a.name)}</td><td class="muted">${esc(a.scope)}</td></tr>`;
-  html += '</table></div></div>';
-  // Évaluations hebdo par équipe
-  html += '<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(420px,1fr));margin-top:10px">';
-  for (const ev of w.team_evaluations) {
-    html += `<div class="panel"><div class="panel-h">Équipe ${esc(ev.team)} <span class="rt">contribution moy. ${sgn(ev.mean_contribution,2)}</span></div><div class="panel-b" style="padding:6px">`;
-    html += `<div class="muted" style="font-size:11px;margin-bottom:4px">Top performer : ${esc(ev.top_performer||'—')}</div>`;
-    for (const d of ev.decisions) {
-      const cls = d.kind==='promotion' ? 'pos' : (d.kind==='avertissement' ? 'neg' : '');
-      html += `<div class="${cls}" style="font-size:11px;margin:3px 0">▸ ${esc(d.kind.toUpperCase())} — ${esc(d.reason)}</div>`;
-    }
-    if (!ev.decisions.length) html += '<div class="muted" style="font-size:11px">Aucune décision cette semaine.</div>';
-    html += '</div></div>';
-  }
-  html += '</div>';
-  // Recrutements proposés par les managers
-  if (w.recruitments && w.recruitments.length) {
-    html += '<div class="panel" style="margin-top:10px"><div class="panel-h">Recrutements proposés par les managers</div><div class="panel-b">';
-    for (const rec of w.recruitments) html += `<div class="pos" style="font-size:12px;margin:4px 0">▸ ${esc(rec.reason)}</div>`;
-    html += '</div></div>';
-  }
-  // Vivier de recrutement actif (RH + managers)
-  if (HROV.recruit_pool && HROV.recruit_pool.length) {
-    html += '<div class="panel" style="margin-top:10px"><div class="panel-h">Vivier de recrutement actif <span class="rt">' + HROV.recruit_pool.length + ' candidats identifiés par le pôle RH</span></div><div class="panel-b" style="padding:4px">';
-    html += '<table><tr><th>Candidat</th><th>Profil</th><th>Équipe cible</th><th>Recommandation</th></tr>';
-    for (const c of HROV.recruit_pool) {
-      html += `<tr><td class="amber">${esc(c.name)}<div class="muted" style="font-size:10px">${esc(c.school)}</div></td><td>${esc(c.specialty)}</td><td>${esc(c.target_team)}<div class="muted" style="font-size:10px">parrain : ${esc(c.sponsor)}</div></td><td class="muted" style="font-size:11px">${esc(c.justification)}</td></tr>`;
-    }
-    html += '</table></div></div>';
-  }
-  // Organigramme complet
-  html += '<div class="panel" style="margin-top:10px"><div class="panel-h">Organigramme & rémunération</div><div class="panel-b"><table>';
-  html += '<tr><th>Employé</th><th>Rôle</th><th>Équipe</th><th class="num">Fixe</th><th class="num">Bonus</th><th class="num">Total</th><th class="num">Contribution</th></tr>';
-  for (const e of HROV.org) {
-    html += `<tr><td class="amber">${esc(e.name)}</td><td class="muted">${esc(e.role)}</td><td>${esc(e.team)}</td><td class="num">${e.base_salary}k$</td><td class="num pos">+${e.bonus}k$</td><td class="num">${e.total_comp}k$</td><td class="num ${e.contribution>=0?'pos':'neg'}">${sgn(e.contribution,2)}</td></tr>`;
-  }
-  html += '</table></div></div>';
-  document.getElementById('content').innerHTML = html;
+  document.getElementById('content').innerHTML = '<div class="loader">Module RH désactivé dans la version publique.</div>';
 }
 
 /* ============ ACTUALITÉS ============ */

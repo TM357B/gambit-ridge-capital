@@ -54,6 +54,23 @@ A Bloomberg-style local terminal (macOS app + iPhone web app) shows the portfoli
 
 ![Risk tab: strategy health, VaR, limits, nine historical crises replayed on today's portfolio](docs/img/risk.png)
 
+## How this was built
+
+I designed and directed this project; most of the code was written with AI coding assistants (Mistral Code for the first version, then Claude Code). My role was the one a portfolio manager or research lead plays:
+
+- **Defining the method** — tradable universe only, frozen protocol, development vs validation, costs, multiple-testing correction.
+- **Challenging the results** — asking why the ML model "worked", which led to discovering it did not; rejecting carry even when one variant looked good on the validation period.
+- **Making the decisions** — which strategy goes live, the 90/10 allocation by risk budget, when not to touch the strategy.
+
+Using AI made it possible to build the whole chain alone; the judgement calls, and the mistakes caught along the way, are mine.
+
+## What I learned
+
+- **Most backtests lie by construction.** The first version's best model looked strong only because the universe was partly untradable and the evaluation reused the same data to choose and to judge.
+- **Diversification beats prediction.** Trend following is a mediocre strategy on its own (Sharpe ≈0.5–0.7) but a strong complement to a 60/40, because it is nearly uncorrelated with it.
+- **Costs and plumbing matter as much as signals.** Weight drift, transaction costs, data quality, time zones and broker constraints (shorts that cannot be borrowed) all moved the results.
+- **Discipline is a feature.** The hardest rule is not modifying a live strategy after a bad week.
+
 ## Quick start
 
 ```bash

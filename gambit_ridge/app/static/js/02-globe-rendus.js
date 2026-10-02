@@ -317,14 +317,6 @@ async function selectManager(mid) {
     html += `<tr><td class="amber">${esc(a.agent)}</td><td class="muted">${esc(a.scope)}</td><td class="num">${a.n_signals}</td><td class="num ${a.mean_score>=0?'pos':'neg'}">${sgn(a.mean_score,2)}</td></tr>`;
   }
   html += '</table>';
-  // RH de l'équipe
-  if (d.hr && d.hr.employees && d.hr.employees.length) {
-    html += '<div style="margin-top:10px"><span class="hdr-row">Équipe (RH) :</span><table><tr><th>Employé</th><th>Rôle</th><th class="num">Fixe</th><th class="num">Bonus</th><th class="num">Contribution</th></tr>';
-    for (const e of d.hr.employees) {
-      html += `<tr><td class="amber">${esc(e.name)}</td><td class="muted">${esc(e.role)}</td><td class="num">${e.base_salary}k$</td><td class="num pos">+${e.bonus}k$</td><td class="num ${e.contribution>=0?'pos':'neg'}">${sgn(e.contribution,2)}</td></tr>`;
-    }
-    html += '</table></div>';
-  }
   // Chat manager
   html += `<div class="grid" style="grid-template-columns:1fr 1fr;margin-top:10px">`;
   html += `<div><div class="chat-log" id="mgrChatLog">${(managerChatHistory[mid]||[]).map(m=>`<div class="q">❯ ${esc(m.q)}</div><div class="a">${esc(m.a)}</div>`).join('')||'<span class="muted">Demandez au manager les nouveautés de son équipe…</span>'}</div>`;
