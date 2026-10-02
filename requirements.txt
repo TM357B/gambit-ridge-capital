@@ -1,0 +1,11 @@
+# Gambit Ridge Capital — dépendances d'exécution.
+# Le dépôt est volontairement quasi zéro-dépendance : tout le quant
+# (moteur de backtest, HMM, Kalman, AR/GARCH, RL) est implémenté en
+# numpy pur pour rester installable sur Python 3.14 sans framework ML
+# lourd. numpy est la seule dépendance requise ; les autres sont
+# optionnelles et listées pour information.
+numpy>=1.26
+
+# --- Optionnel (non requis par le cœur) ---
+# pytest        # exécution des tests unitaires : tests/
+# pyyaml        # lecture de config.yaml (fallback intégré sinon)

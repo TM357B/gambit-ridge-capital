@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+data_cache/
+.venv/
+.pytest_cache/
+journal/
+
+# données de marché téléchargées (non redistribuables)
+data/equity_prices.csv
+data/eval_fundamentals.json

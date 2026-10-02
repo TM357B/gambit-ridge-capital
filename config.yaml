@@ -1,0 +1,49 @@
+# Gambit Ridge Capital — configuration centrale des backtests et modèles.
+# Toute la reproductibilité passe par ici : graines, coûts, fréquences,
+# fenêtres walk-forward et activation des briques ML (Phases 1-4,
+# Dixon, Halperin & Bilokon, "Machine Learning in Finance", Springer 2020).
+
+reproducibility:
+  seed: 42
+
+data:
+  # Univers FRED (prix) + fondamentaux fournis (PLTR FY2021->TTM).
+  # Un report n'est visible qu'à fin_periode + publication_lag_days
+  # (règle anti-look-ahead n°1) — voir gambit_ridge/data/fundamentals.py.
+  fundamentals:
+    enabled: true
+    path: data/fundamentals.csv
+    publication_lag_days: 45
+
+backtest:
+  initial_capital: 1_000_000
+  commission_bps: 2.0     # 2 bps
+  slippage_bps: 5.0       # 5 bps -> 7 bps de coûts totaux par unité de turnover
+  periods_per_year: 252
+  risk_free_rate: 0.02
+  # Réalisme : rééquilibrage hebdomadaire (tous les 5 jours de bourse).
+  rebalance_every: 5
+
+walkforward:
+  # Purged walk-forward avec embargo (règle anti-look-ahead n°2) :
+  # la fin du train est purgée d'autant de périodes que le lookback max
+  # des features pour éviter tout chevauchement train/test.
+  embargo_periods: 10
+
+baselines:
+  # Chap. 6 : benchmark économétrique que tout modèle ML devra battre OOS.
+  ar_max_lag: 5            # AR(p) sur rendements agrégés, p sélectionné par BIC
+  garch_p: 1
+  garch_q: 1
+
+regimes:                   # Phase 1 (HMM / Kalman) — activable
+  enabled: false
+
+signals_ml:                # Phase 2 (ridge, feedforward, autoencodeur) — activable
+  enabled: false
+
+allocation_rl:            # Phase 3 (Q-learning / G-learning)
+  # Verdict eval OOS (FRED 20 ans, 4 folds purges) : ridge seul
+  # Sharpe 0.63 ; +G-learning 0.21 (DD 50%->15% mais rendement ecrase) ;
+  # +Q-learning -0.15. Aucun ne bat la baseline -> desactive par defaut.
+  enabled: false

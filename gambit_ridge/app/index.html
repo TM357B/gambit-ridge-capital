@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Gambit Ridge Capital — Terminal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GRC">
+<link rel="apple-touch-icon" href="/static/icons/icon-180.png">
+<link rel="icon" type="image/png" href="/static/icons/icon-192.png">
+<link rel="manifest" href="/static/manifest.webmanifest">
+<link rel="stylesheet" href="/static/app.css?v={{V}}">
+</head>
+<body>
+<div id="lockScreen">
+  <div class="lock-logo">GAMBIT RIDGE CAPITAL</div>
+  <div class="lock-sub">Terminal — accès restreint</div>
+  <div class="lock-box">
+    <input type="password" id="lockInput" placeholder="Code d'accès" autocomplete="off" onkeydown="if(event.key==='Enter')tryUnlock()">
+    <button class="btn" onclick="tryUnlock()">DÉVERROUILLER</button>
+  </div>
+  <div class="lock-msg" id="lockMsg"></div>
+  <div class="lock-foot">GRC SECURITY · ACCÈS SOUVENT JOURNALISÉ</div>
+</div>
+<div class="topbar">
+  <span class="brand">GAMBIT RIDGE CAPITAL<span class="beta"> · TERMINAL</span></span>
+  <span id="connDot" style="color:var(--green)">● LIVE</span>
+  <span id="opsDot" class="small" style="cursor:help"></span>
+  <form class="cmd" onsubmit="event.preventDefault();runCommand(this.c.value);this.c.blur()"><input id="cmdInput" name="c" autocomplete="off" spellcheck="false" placeholder="Commande… ex. NVDA GP · FXC · ECST · HELP  ( / )"><button class="go">GO</button></form>
+  <span class="clock" id="clock"></span>
+</div>
+<div class="tabs">
+  <div class="tab active" id="tab-terminal" onclick="switchTab('terminal')">Terminal</div>
+  <div class="tab" id="tab-research" onclick="switchTab('research')">Recherche</div>
+  <div class="tab" id="tab-risk" onclick="switchTab('risk')">Risque</div>
+  <div class="tab" id="tab-fn" onclick="switchTab('fn')">Fonctions</div>
+  <div class="tab" id="tab-agents" onclick="switchTab('agents')">Agents</div>
+  <div class="tab" id="tab-reports" onclick="switchTab('reports')">Rendus</div>
+  <div class="tab" id="tab-backtest" onclick="switchTab('backtest')">Backtest</div>
+  <div class="tab" id="tab-news" onclick="switchTab('news')">Actualités</div>
+  <div class="tab" id="tab-strategies" onclick="switchTab('strategies')">Stratégies</div>
+  <div class="tab" id="tab-notes" onclick="switchTab('notes')">Notes</div>
+  <div class="tab" id="tab-voice" onclick="switchTab('voice')">Voix</div>
+  <div class="tab" id="tab-paper" onclick="switchTab('paper')">Paper Trading</div>
+</div>
+<div class="tape" id="tape"><div class="tape-inner" id="tapeInner"></div></div>
+<div class="content" id="content"><div class="loader">Connexion au terminal…</div></div>
+
+<script src="/static/js/01-core.js?v={{V}}"></script>
+<script src="/static/js/02-globe-rendus.js?v={{V}}"></script>
+<script src="/static/js/03-desks.js?v={{V}}"></script>
+<script src="/static/js/04-marche-graphiques.js?v={{V}}"></script>
+<script src="/static/js/05-terminal-recherche-paper.js?v={{V}}"></script>
+<script src="/static/js/06-fonctions.js?v={{V}}"></script>
+<script src="/static/js/07-risque-exploitation-notes.js?v={{V}}"></script>
+<script src="/static/js/99-demarrage.js?v={{V}}"></script>
+</body>
+</html>
