@@ -4,6 +4,8 @@
 
 **A systematic multi-asset fund, built end to end as a personal research project — with an evaluation protocol designed not to fool itself.**
 
+📄 **[Research paper](https://claude.ai/code/artifact/23f58f3b-432a-4016-b1df-b1fff6509637)** (in French): protocol, results, what failed, risk and execution.
+
 ![Research tab: the retained strategy against the 60/40 and the retired ML model, development vs validation](docs/img/research.png)
 
 > Research and paper-trading project. No outside capital is managed, nothing here is investment advice, and every performance figure below is a backtest or paper trading, labelled as such.
