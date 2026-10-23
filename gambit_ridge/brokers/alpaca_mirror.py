@@ -130,8 +130,12 @@ def plan(c: AlpacaClient | None = None) -> dict:
 def run(live: bool | None = None) -> dict:
     from ..paper import summary
 
+    from ..live.engine import enabled as live_enabled
+
     c = AlpacaClient()
     live = _config().get("live_orders", False) if live is None else live
+    if live and live_enabled():  # le moteur live pilote déjà le compte : jamais deux pilotes
+        live = False
     p = plan(c)
     results = []
     if live:

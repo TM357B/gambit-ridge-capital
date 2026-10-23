@@ -9,3 +9,4 @@ numpy>=1.26
 # --- Optionnel (non requis par le cœur) ---
 # pytest        # exécution des tests unitaires : tests/
 # pyyaml        # lecture de config.yaml (fallback intégré sinon)
+# matplotlib    # graphiques de la surface de vol (options/vol_surface.py) ; CSV seuls sinon

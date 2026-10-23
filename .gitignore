@@ -6,6 +6,10 @@ data_cache/
 .pytest_cache/
 journal/
 
+# Métadonnées macOS (disque exFAT : fichiers AppleDouble)
+._*
+.DS_Store
+
 # données de marché téléchargées (non redistribuables)
 data/equity_prices.csv
 data/eval_fundamentals.json

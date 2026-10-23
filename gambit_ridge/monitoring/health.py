@@ -1,7 +1,7 @@
 """Santé de la stratégie : la performance réelle est-elle dans la zone normale ?
 
 Référence : le backtest quotidien du FONDS COMPLET tel qu'il tourne en
-production (90 % poche ETF retenue + 10 % poche crypto retenue, coûts inclus),
+production (poche ETF + poche crypto dans la répartition de production, coûts inclus),
 calculé par `build_reference()` et mis en cache dans data/fund_backtest.json.
 
 Pour chaque horizon h (5, 20, 60, 120 séances), on compare le rendement et
@@ -29,16 +29,23 @@ MIN_DAYS = 5
 
 
 def build_reference() -> dict:
-    """Backtest quotidien du fonds 90/10 (sur les séances ETF), coûts inclus."""
+    """Backtest quotidien du fonds dans sa répartition de production (sur les séances ETF), coûts inclus."""
     from ..data.yahoo import load_crypto_universe, load_etf_universe
     from ..research.backtest import simulate
-    from ..research.evaluate import CRYPTO_COST_BPS, ETF_COST_BPS, WARMUP, crypto_candidates, etf_candidates
+    from ..research.evaluate import CRYPTO_COST_BPS, ETF_COST_BPS, WARMUP, etf_candidates
     from ..research.production import CRYPTO_SHARE, ETF_SHARE
 
     ed, ep = load_etf_universe()
     cd, cp = load_crypto_universe()
     E = etf_candidates(ed, ep, include_ml=False)["60/40 + couche tendance"]["W"]
-    C = crypto_candidates(cd, cp)["Tendance crypto long-only"]["W"]
+    # poche crypto telle qu'en production (plafond par crypto compris), pas celle du banc historique
+    from ..research import signals as sg
+    from ..research.portfolio import build_weights, ewma_covariance
+    from ..research.production import CRYPTO_MAX_POSITION
+
+    CP = np.column_stack([cp[t] for t in cp])
+    trend = np.clip((sg.tsmom(CP, 252) + sg.ewma_trend(CP) + sg.kalman_trend(CP)) / 3.0, 0.0, None)
+    C = build_weights(trend, sg.garch_vol(CP), ewma_covariance(CP), port_vol=0.25, max_gross=1.0, max_position=CRYPTO_MAX_POSITION)
     re = simulate(np.column_stack([ep[t] for t in ep]), E, ETF_COST_BPS).returns
     rc = simulate(np.column_stack([cp[t] for t in cp]), C, CRYPTO_COST_BPS).returns
     ceq = np.cumprod(1 + rc)

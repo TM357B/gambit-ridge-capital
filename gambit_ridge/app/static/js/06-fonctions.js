@@ -4,7 +4,7 @@ const FN_LIST = [
   ['GP', 'Graphique de prix', 'SPY GP'], ['DES', 'Fiche de l’actif', 'QQQ DES'],
   ['FXC', 'Matrice des devises', 'FXC'], ['WCRS', 'Classement des devises', 'WCRS'],
   ['ECST', 'Statistiques économiques US', 'ECST'], ['WEI', 'Indices mondiaux', 'WEI'],
-  ['GC', 'Courbe des taux US', 'GC'], ['NH', 'Actualités', 'NH'],
+  ['GC', 'Courbe des taux US', 'GC'], ['OVDV', 'Surface de vol implicite', 'SPY OVDV'], ['NH', 'Actualités', 'NH'],
   ['PORT', 'Portefeuille papier', 'PORT'], ['RES', 'Recherche / backtests', 'RES'],
 ];
 const TICKER_ALIAS = { BTC: 'BTC-USD', ETH: 'ETH-USD', XRP: 'XRP-USD', LTC: 'LTC-USD', ADA: 'ADA-USD', BNB: 'BNB-USD', DOGE: 'DOGE-USD', SOL: 'SOL-USD',
@@ -27,8 +27,12 @@ function runCommand(raw) {
   const toks = (raw || '').trim().toUpperCase().replace(/<GO>/g, '').split(/\s+/).filter(Boolean);
   if (!toks.length) return;
   const nav = { NOTE: 'notes', NOTES: 'notes', RISK: 'risk', RISQUE: 'risk', NH: 'news', N: 'news', NEWS: 'news', PORT: 'paper', PT: 'paper', RES: 'research', BT: 'backtest', STRAT: 'strategies', VOIX: 'voice', VOICE: 'voice', AGENTS: 'agents', RH: 'hr', HR: 'hr', MAIN: 'terminal', TERM: 'terminal', RENDUS: 'reports' };
-  const fns = ['GP', 'DES', 'FXC', 'WCRS', 'ECST', 'WEI', 'GC', 'HELP'];
+  const fns = ['GP', 'DES', 'FXC', 'WCRS', 'ECST', 'WEI', 'GC', 'OVDV', 'HELP'];
   const last = toks[toks.length - 1];
+  // CAMP : campagnes de recherche · LIVE : panneau En direct · PROJ : projection à un an (onglet Risque)
+  if (toks.length === 1 && ['CAMP', 'CAMPAGNES'].includes(last)) { RS_SEL = { uni: 'camp' }; return switchTab('research'); }
+  if (toks.length === 1 && last === 'LIVE') return switchTab('paper');
+  if (toks.length === 1 && ['PROJ', 'PROJECTION'].includes(last)) { switchTab('risk'); return setTimeout(() => { const e = document.getElementById('chProj'); if (e) e.closest('.panel').scrollIntoView({ behavior: 'smooth' }); }, 2500); }
   if (toks.length === 1 && nav[last]) return switchTab(nav[last]);
   if (toks.length === 1 && fns.includes(last)) { FN_STATE.name = last; return switchTab('fn'); }
   if (toks.length >= 2 && fns.includes(last)) { FN_STATE.name = last; FN_STATE.sym = normTicker(toks.slice(0, -1).join('')); return switchTab('fn'); }
@@ -48,8 +52,9 @@ async function fnFetch(name, sym) {
 async function renderFn() {
   const c = document.getElementById('content');
   const S = FN_STATE;
-  let html = '<div class="fn-bar">' + FN_LIST.map(([k, l, ex]) => `<div class="fn-chip ${S.name===k?'active':''}" onclick="runCommand('${(['GP','DES'].includes(k) ? (S.sym||'SPY') + ' ' : '') + k}')" title="${esc(l)} — ex. ${esc(ex)}"><b>${k}</b> <span>${esc(l)}</span></div>`).join('') + '</div>';
-  c.innerHTML = html + '<div class="loader">Chargement ' + esc(S.name) + (['GP','DES'].includes(S.name) ? ' ' + esc(S.sym) : '') + '…</div>';
+  const avecSym = ['GP', 'DES', 'OVDV'];
+  let html = '<div class="fn-bar">' + FN_LIST.map(([k, l, ex]) => `<div class="fn-chip ${S.name===k?'active':''}" onclick="runCommand('${(avecSym.includes(k) ? (S.sym||'SPY') + ' ' : '') + k}')" title="${esc(l)} — ex. ${esc(ex)}"><b>${k}</b> <span>${esc(l)}</span></div>`).join('') + '</div>';
+  c.innerHTML = html + '<div class="loader">Chargement ' + esc(S.name) + (avecSym.includes(S.name) ? ' ' + esc(S.sym) : '') + (S.name === 'OVDV' ? ' — toutes les échéances d’options, une dizaine de secondes' : '') + '…</div>';
   let body = '';
   try {
     if (S.name === 'HELP') body = fnHelp();
@@ -60,6 +65,7 @@ async function renderFn() {
     else if (S.name === 'ECST') body = fnECST(await fnFetch('ECST'));
     else if (S.name === 'WEI') body = fnWEI(await fnFetch('WEI'));
     else if (S.name === 'GC') body = fnGC(await fnFetch('GC'));
+    else if (S.name === 'OVDV') body = fnOVDV(await fnFetch('OVDV', S.sym));
   } catch(e) { body = `<div class="loader neg">Erreur : ${esc(e.message)}</div>`; }
   if (currentTab === 'fn') c.innerHTML = html + body;
 }
@@ -230,5 +236,75 @@ function fnGC(d) {
     h += `<tr><td class="amber">${esc(m)}</td><td class="num"><b>${now[i].toFixed(2)} %</b></td><td class="num ${a>=0?'neg':'pos'}">${a>=0?'+':''}${a} pb</td><td class="num ${b>=0?'neg':'pos'}">${b>=0?'+':''}${b} pb</td></tr>`;
   });
   h += '</table><div class="muted small" style="margin:6px">pb = point de base (0,01 %). Pente négative (courbe inversée) = signal historique de ralentissement.</div></div></div>';
+  return h;
+}
+
+/* ============ OVDV : SURFACE DE VOLATILITÉ IMPLICITE ============ */
+const OVDV_COLS = [0.80, 0.90, 0.95, 1.00, 1.05, 1.10, 1.20];
+function volColor(v, lo, hi) {  // dégradé façon viridis : violet = vol basse, jaune = vol haute
+  const st = [[68,1,84],[59,82,139],[33,145,140],[94,201,98],[253,231,37]];
+  const t = Math.max(0, Math.min(1, (v - lo) / ((hi - lo) || 1))) * (st.length - 1);
+  const i = Math.min(st.length - 2, Math.floor(t)), f = t - i;
+  return 'rgb(' + st[i].map((a, k) => Math.round(a + (st[i + 1][k] - a) * f)).join(',') + ')';
+}
+
+function ovdvHeatmap(d) {
+  const narrow = window.innerWidth < 760;
+  const K = d.moneyness, J = d.grid.days, V = d.grid.vols;
+  const W = narrow ? 460 : 1000, H = narrow ? 240 : 320, L = narrow ? 44 : 58, R = narrow ? 44 : 64, T = 8, B = 24;
+  const all = V.flat().filter(v => v !== null).sort((a, b) => a - b);
+  if (!all.length) return '<div class="muted" style="padding:20px">Pas de surface.</div>';
+  const lo = all[Math.floor(all.length * 0.02)], hi = all[Math.floor(all.length * 0.98)];
+  const cw = (W - L - R) / K.length, ch = (H - T - B) / J.length;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:${H}px">`;
+  V.forEach((row, i) => row.forEach((v, j) => {
+    if (v === null) return;  // pas de cotation : case vide
+    svg += `<rect x="${(L + j * cw).toFixed(1)}" y="${(T + i * ch).toFixed(1)}" width="${(cw + 0.6).toFixed(1)}" height="${(ch + 0.6).toFixed(1)}" fill="${volColor(v, lo, hi)}"><title>${Math.round(K[j] * 100)} % du spot · ${Math.round(J[i])} j : ${(v * 100).toFixed(1)} %</title></rect>`;
+  }));
+  K.forEach((k, j) => { const p = Math.round(k * 100); if (p % (narrow ? 10 : 5) === 0) svg += `<text x="${L + (j + 0.5) * cw}" y="${H - 8}" fill="#666" font-size="10" text-anchor="middle">${p}%</text>`; });
+  for (let q = 0; q <= 5; q++) { const i = Math.round((J.length - 1) * q / 5); svg += `<text x="${L - 6}" y="${T + (i + 0.5) * ch + 3}" fill="#666" font-size="10" text-anchor="end">${Math.round(J[i])} j</text>`; }
+  const gx = W - R + 14, gh = H - T - B;
+  for (let s = 0; s < 40; s++) svg += `<rect x="${gx}" y="${T + gh * s / 40}" width="12" height="${gh / 40 + 0.6}" fill="${volColor(hi - (hi - lo) * s / 39, lo, hi)}"/>`;
+  svg += `<text x="${gx + 16}" y="${T + 9}" fill="#999" font-size="10">${(hi * 100).toFixed(0)}%</text><text x="${gx + 16}" y="${T + gh}" fill="#999" font-size="10">${(lo * 100).toFixed(0)}%</text></svg>`;
+  return svg;
+}
+
+function fnOVDV(d) {
+  if (d.error) return `<div class="loader neg">${esc(d.error)}</div><div class="muted small" style="padding:0 10px">OVDV demande un sous-jacent à options cotées aux États-Unis (SPY, QQQ, IWM, AAPL, TSLA…). Ex. : <a class="lnk" onclick="runCommand('SPY OVDV')">SPY OVDV</a></div>`;
+  const K = d.moneyness, E = d.expiries, k = d.kpi;
+  const pct = v => v === null || v === undefined ? '—' : (v * 100).toFixed(1) + ' %';
+  const pt = v => v === null || v === undefined ? '—' : (v >= 0 ? '+' : '') + (v * 100).toFixed(1) + ' pt';
+  const iAtm = K.findIndex(m => Math.abs(m - 1) < 1e-9);
+  let h = fnHeader(`${esc(d.symbol)} <span class="muted">Surface de volatilité implicite</span>`, `OVDV · ${esc(d.asof)} New York · spot ${fmtPx(d.spot)}`, `<span class="fn-last">${pct(k.atm_1m)}</span> <span class="muted small">vol ATM 1 mois</span>`);
+  h += '<div class="kpis">' + kpi('Vol ATM 1 mois', pct(k.atm_1m)) + kpi('Vol ATM 1 an', pct(k.atm_1y))
+    + kpi('Pente 1 an − 1 mois', pt(k.slope), k.slope !== null && k.slope < 0 ? 'neg' : '')
+    + kpi(`Skew 95 % − 105 % (${esc(k.skew_1m_expiry)})`, pt(k.skew_1m))
+    + kpi('Vols calculées', `${d.n_points.toLocaleString('fr-FR')} / ${d.n_quotes.toLocaleString('fr-FR')}`)
+    + kpi('Surface remplie', fmtPct(d.filled, 0)) + '</div>';
+
+  // smiles : jusqu'à 6 échéances représentatives
+  const choix = [];
+  for (const cible of [7, 30, 91, 182, 365, 730]) {
+    const e = E.reduce((a, b) => Math.abs(b.days - cible) < Math.abs(a.days - cible) ? b : a);
+    if (!choix.includes(e)) choix.push(e);
+  }
+  const xk = K.map(m => Math.round(m * 100) + ' %');
+  const smiles = choix.map((e, i) => ({ name: `${e.expiry} (${Math.round(e.days)} j)`, x: xk, y: e.smile.map(v => v === null ? NaN : v * 100), color: SERIES_COLORS[i] }));
+  const terme = [{ name: 'Vol ATM', x: d.grid.days.map(j => Math.round(j) + ' j'), y: d.grid.vols.map(r => r[iAtm] === null ? NaN : r[iAtm] * 100), color: '#ff9900', width: 2 }];
+  h += '<div class="grid g-main">';
+  h += '<div class="panel"><div class="panel-h">Smile par maturité <span class="rt">strike / spot · puts à gauche, calls à droite</span></div><div class="panel-b">' + lineChart('chOVDVs', smiles, { height: 280, yfmt: v => v.toFixed(1) + ' %' }) + '</div></div>';
+  h += '<div class="panel"><div class="panel-h">Structure par terme ATM <span class="rt">interpolée en variance totale</span></div><div class="panel-b">' + lineChart('chOVDVt', terme, { height: 280, yfmt: v => v.toFixed(1) + ' %' }) + '</div></div>';
+  h += '</div>';
+  h += '<div class="panel" style="margin-top:10px"><div class="panel-h">Surface <span class="rt">maturité (lignes) × strike / spot (colonnes) · case vide = pas de cotation</span></div><div class="panel-b">' + ovdvHeatmap(d) + '</div></div>';
+
+  // grille façon OVDV : échéances cotées × moneyness
+  const col = m => K.findIndex(x => Math.abs(x - m) < 1e-9);
+  h += '<div class="panel" style="margin-top:10px"><div class="panel-b" style="padding:4px;overflow-x:auto"><table><tr><th>Échéance</th><th class="num">Jours</th>' + OVDV_COLS.map(m => `<th class="num">${Math.round(m * 100)} %</th>`).join('') + '<th class="num">Div. implicite</th><th>Forward</th></tr>';
+  for (const e of E) {
+    h += `<tr><td class="amber">${esc(e.expiry)}</td><td class="num muted">${Math.round(e.days)}</td>` + OVDV_COLS.map(m => { const v = e.smile[col(m)]; return `<td class="num ${m === 1 ? 'amber' : ''}">${v === null ? '<span class="muted">—</span>' : (v * 100).toFixed(1)}</td>`; }).join('') + `<td class="num muted" title="sous 30 jours, le dividende implicite est trop bruité pour être lu (l’effet sur la vol reste négligeable)">${e.days < 30 ? '—' : (e.div * 100).toFixed(2) + ' %'}</td><td class="muted small">${esc(e.source)}</td></tr>`;
+  }
+  h += '</table><div class="muted small" style="margin:6px">Vol implicite Black-Scholes sur le prix mid, options hors de la monnaie seulement (puts sous le spot, calls au-dessus), strikes 75-125 % du spot, spreads &gt; 25 % rejetés. Forward de chaque échéance tiré de la parité call-put près du spot (options américaines). Interpolation le long du smile puis en variance totale σ²T ; sans cotation, la case reste vide.'
+    + (d.calendar_violations ? ` <span class="neg">${d.calendar_violations} arbitrage(s) calendaire(s) apparent(s).</span>` : ' Aucun arbitrage calendaire apparent.')
+    + ' Données Yahoo (cache 15 min). Outil d’analyse : ne pilote pas le portefeuille.</div></div></div>';
   return h;
 }

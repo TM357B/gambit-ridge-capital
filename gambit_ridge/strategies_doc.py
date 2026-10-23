@@ -13,7 +13,7 @@ Références : Dixon, Halperin & Bilokon, "Machine Learning in Finance"
 STRATEGIES = [
     {
         "id": "core_trend",
-        "name": "60/40 + couche tendance (production, 90 % du capital)",
+        "name": "60/40 + couche tendance (production, 95 % du capital)",
         "category": "Systématique multi-actifs",
         "chapter": "Chap. 2 §7.5 (moyennage de modèles), 6 §2.9-2.10 (GARCH, lissage), 7 (Kalman)",
         "principle": "Un socle de primes de risque (30 % S&P 500, 20 % Treasuries 7-10 ans) auquel on ajoute une couche de suivi de tendance long/short sur 20 ETF (actions, obligations, matières premières, devises). La tendance est quasi décorrélée du socle (corrélation ~0,05) et gagne surtout pendant les crises : elle divise le drawdown par deux.",
@@ -26,7 +26,7 @@ STRATEGIES = [
     },
     {
         "id": "crypto_trend",
-        "name": "Crypto tendance long-only (production, 10 % du capital)",
+        "name": "Crypto tendance long-only (production, 5 % du capital)",
         "category": "Crypto 24/7",
         "chapter": "Chap. 6-7 — mêmes briques que la couche tendance",
         "principle": "Même ensemble de tendances appliqué à 7 cryptos (BTC, ETH, XRP, LTC, ADA, BNB, DOGE). Uniquement long : quand la tendance est négative, la poche est en cash plutôt qu'à découvert (coût de financement et risque de squeeze).",

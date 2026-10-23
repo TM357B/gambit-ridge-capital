@@ -48,6 +48,10 @@ def notify(title: str, message: str) -> None:
 
 
 def _ntfy_topic() -> str | None:
+    import os
+
+    if os.environ.get("NTFY_TOPIC", "").strip():  # serveur Linux : fichier d'environnement du service
+        return os.environ["NTFY_TOPIC"].strip()
     try:
         out = subprocess.run(["security", "find-generic-password", "-s", "gambit-ridge-capital", "-a", "NTFY_TOPIC", "-w"],
                              capture_output=True, text=True, timeout=5)
@@ -139,7 +143,11 @@ def main(quiet: bool = False) -> int:
         from ..brokers.alpaca import has_credentials
         from ..brokers.alpaca_mirror import run as alpaca_run
 
-        if has_credentials():
+        from ..live.engine import enabled as live_enabled
+
+        if has_credentials() and live_enabled():
+            status["steps"]["alpaca"] = "géré en continu par le moteur live"
+        elif has_credentials():
             r = alpaca_run()
             n_sent = sum(1 for o in r["results"] if o["status"] == "envoyé")
             refused = [o for o in r["results"] if o["status"] == "refusé"]

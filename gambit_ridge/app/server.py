@@ -11,12 +11,13 @@ Endpoints :
   GET /api/journal → historique paper-trading + P&L
   GET /api/paper   → portefeuille papier v2 (stratégie retenue)
   GET /api/research → rapport du banc d'évaluation des stratégies
-  GET /api/fn/{gp,des,fxc,wcrs,ecst}[?s=TICKER] → fonctions de marché façon Bloomberg
+  GET /api/fn/{gp,des,fxc,wcrs,ecst,wei,gc,ovdv}[?s=TICKER] → fonctions de marché façon Bloomberg
   GET /api/risk, /api/attribution, /api/ops → risque, attribution, état d'exploitation
   GET /report[/AAAA-MM] → rapport mensuel imprimable
   GET /api/health, /api/tca, /api/notes[/AAAA-Www] ; POST /api/notes/generate
   POST /api/run    → exécute la réunion quotidienne maintenant
   POST /api/converse → conversation avec un agent / manager (LLM si clé Mistral)
+  POST /api/tts      → réponse lue par une voix ElevenLabs (MP3), GET /api/tts/status
   POST /api/backtest → backtest interactif (stratégie + source de données)
 """
 
@@ -290,6 +291,28 @@ class Handler(BaseHTTPRequestHandler):
             from ..research_note import get_note
             n = get_note(self.path.rsplit("/", 1)[-1])
             self._send_json(n if n else {"error": "note introuvable"}, 200 if n else 404)
+        elif self.path == "/api/campaigns":
+            from ..research.campaigns_api import campaigns
+            self._send_json(campaigns())
+        elif self.path == "/api/projection":
+            from ..projection import projection
+            try:
+                from ..paper import summary
+                self._send_json(projection(summary()["equity"]))
+            except Exception as exc:  # noqa: BLE001
+                self._send_json({"error": str(exc)}, 500)
+        elif self.path == "/api/system":
+            from ..ops.watchdog import status as system_status
+            try:
+                self._send_json(system_status())
+            except Exception as exc:  # noqa: BLE001
+                self._send_json({"error": str(exc)}, 500)
+        elif self.path == "/api/tts/status":
+            from ..tts import status as tts_status
+            self._send_json(tts_status())
+        elif self.path == "/api/live":
+            from ..live.engine import status as live_status
+            self._send_json(live_status())
         elif self.path == "/api/broker":
             from ..brokers.alpaca_mirror import status as broker_status
             self._send_json(broker_status())
@@ -304,7 +327,7 @@ class Handler(BaseHTTPRequestHandler):
             name = u.path[len("/api/fn/"):]
             sym = (parse_qs(u.query).get("s") or [""])[0]
             handlers = {"gp": lambda: mf.gp(sym), "des": lambda: mf.des(sym), "fxc": mf.fxc, "wcrs": mf.wcrs, "ecst": mf.ecst,
-                        "wei": mf.wei, "gc": mf.gc}
+                        "wei": mf.wei, "gc": mf.gc, "ovdv": lambda: mf.ovdv(sym or "SPY")}
             if name not in handlers:
                 self._send_json({"error": f"fonction inconnue : {name}"}, 404)
                 return
@@ -345,6 +368,27 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json(generate(force=True))
             except Exception as exc:  # noqa: BLE001
                 self._send_json({"error": str(exc)}, 500)
+            return
+        if self.path == "/api/tts":
+            length = int(self.headers.get("Content-Length", "0"))
+            try:
+                payload = json.loads(self.rfile.read(length) or b"{}")
+            except json.JSONDecodeError:
+                self._send_json({"error": "JSON invalide"}, 400)
+                return
+            from ..tts import synthesize
+            try:
+                audio, info = synthesize(payload.get("text", ""), payload.get("target", ""), payload.get("label", ""),
+                                         payload.get("previous_text", ""), payload.get("next_text", ""))
+            except Exception as exc:  # noqa: BLE001 — le terminal revient aux voix système
+                self._send_json({"error": str(exc)}, 502)
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "audio/mpeg")
+            self.send_header("Content-Length", str(len(audio)))
+            self.send_header("X-Voice", info["voice"].encode("ascii", "ignore").decode())
+            self.end_headers()
+            self.wfile.write(audio)
             return
         if self.path == "/api/converse":
             length = int(self.headers.get("Content-Length", "0"))

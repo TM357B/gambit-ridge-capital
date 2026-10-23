@@ -1,0 +1,203 @@
+{
+ "genere_le": "2026-10-04",
+ "protocole": "Campagne de recherche n° 3 (octobre 2026) — équipe Crypto contre la poche crypto de production.\n\nPROTOCOLE FIGÉ ET COMMITÉ AVANT TOUT CALCUL (pré-enregistrement) :\n\nRéférence C0 : la poche crypto de production (« Tendance crypto long-only » :\nensemble TSMOM/EWMA/Kalman, positions longues seulement, vol GARCH, vol cible\n25 %, brut <= 100 %, 50 % max par ligne) sur ses 7 cryptos.\n\nMême construction de portefeuille pour tous les essais : seul le SIGNAL change.\nLes signaux de l'équipe Crypto sont rejoués jour par jour exactement comme en\nproduction (261 dernières clôtures quotidiennes par crypto ; position =\ndirection x conviction), recalculés tous les 5 jours. Ce sont les signaux des\nagents AVANT le filtre du manager (qui n'en transmet que 4), comme en campagne 2.\n\n  C1 Équipe Crypto telle quelle (long et short), univers de l'équipe (8 cryptos)\n  C2 Équipe Crypto long seulement (shorts ramenés à 0 : Alpaca n'autorise pas\n     la vente à découvert crypto), univers de l'équipe\n  C3 Équipe Crypto long seulement, univers de PRODUCTION (isole l'effet signal)\n  C4 Moyenne 50/50 des signaux production et équipe (long seulement),\n     univers de production\n\nPériodes : développement jusqu'au 2022-12-31, validation 2023 -> aujourd'hui\n(comme le banc crypto). Coûts 20 bps. 365 jours/an. Cryptos cotées plus tard\n(SOL, AVAX) : poids nul tant qu'elles n'ont pas 64 clôtures (règle des agents).\n\nRègle d'acceptation (identique aux campagnes 1 et 2, mesurée contre C0 sur les\nmêmes jours) : Sharpe dév. >= C0 + 0,05 ; DSR (5 séries) >= 0,90 ; Sharpe\nvalidation >= C0 - 0,05 ; pire baisse validation pas plus de 3 points au-delà\nde C0. Un essai accepté n'entre au portefeuille qu'avec l'accord de Tom.\n\nUsage : python3 -m gambit_ridge.research.campaign3\nSortie : data/research_campaign3_2026-10.json\n",
+ "regles": {
+  "dev_gain": 0.05,
+  "dsr": 0.9,
+  "val_tol": 0.05,
+  "dd_tol": 0.03
+ },
+ "debut_mesure": "2018-07-27",
+ "fin": "2026-10-03",
+ "duree_s": 12,
+ "resultats": {
+  "C0": {
+   "nom": "C0 — Référence — poche crypto de production",
+   "description": "Ensemble tendance long-only, 7 cryptos.",
+   "developpement": {
+    "sharpe": 1.0287598266783642,
+    "cagr": 0.30509224109283384,
+    "vol": 0.30245332857370105,
+    "max_dd": -0.36520723610032146,
+    "sortino": 1.314035027894159,
+    "calmar": 0.835394841434702,
+    "cvar95": -0.034595782968093444,
+    "n_days": 1619,
+    "turnover_annuel": 7.9099869633496835,
+    "gross_moyen": 0.28463521132581726,
+    "couts_annuels": 0.015819973926699368
+   },
+   "validation": {
+    "sharpe": 0.8355924893028887,
+    "cagr": 0.23516425993641676,
+    "vol": 0.3102183092107796,
+    "max_dd": -0.39180532590878003,
+    "sortino": 1.1194812781879655,
+    "calmar": 0.6002068996662072,
+    "cvar95": -0.038016368334488175,
+    "n_days": 1372,
+    "turnover_annuel": 9.899905876763883,
+    "gross_moyen": 0.5194761972014097,
+    "couts_annuels": 0.01979981175352777
+   },
+   "correlation_avec_C0": 1.0,
+   "dsr_developpement": 0.9694157082302635
+  },
+  "C1": {
+   "nom": "C1 — Équipe Crypto telle quelle (long/short, 8 cryptos)",
+   "description": "Signaux des agents, univers de l'équipe.",
+   "developpement": {
+    "sharpe": 1.0620461676419788,
+    "cagr": 0.37831574184649663,
+    "vol": 0.3633804685992985,
+    "max_dd": -0.2935570239535459,
+    "sortino": 1.5670411352087148,
+    "calmar": 1.2887299944366633,
+    "cvar95": -0.041063887943447626,
+    "n_days": 1619,
+    "turnover_annuel": 27.0089627892283,
+    "gross_moyen": 0.5454155351364889,
+    "couts_annuels": 0.0540179255784566
+   },
+   "validation": {
+    "sharpe": -0.027716027489232707,
+    "cagr": -0.05405053582511743,
+    "vol": 0.30653325034313056,
+    "max_dd": -0.6578727100626585,
+    "sortino": -0.03874500931988527,
+    "calmar": -0.08215956521432458,
+    "cvar95": -0.03810227972635942,
+    "n_days": 1372,
+    "turnover_annuel": 40.40768491639492,
+    "gross_moyen": 0.7523894988533806,
+    "couts_annuels": 0.08081536983278984
+   },
+   "correlation_avec_C0": 0.20674386813100173,
+   "dsr_developpement": 0.9723562816749992,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "C2": {
+   "nom": "C2 — Équipe Crypto long seulement (8 cryptos)",
+   "description": "Shorts ramenés à 0.",
+   "developpement": {
+    "sharpe": 1.3699712490819822,
+    "cagr": 0.48664346682960535,
+    "vol": 0.32843031192145977,
+    "max_dd": -0.366561247347613,
+    "sortino": 1.705313432246922,
+    "calmar": 1.3275911470481152,
+    "cvar95": -0.03735666271715803,
+    "n_days": 1619,
+    "turnover_annuel": 16.84623217837622,
+    "gross_moyen": 0.27914080643411093,
+    "couts_annuels": 0.03369246435675244
+   },
+   "validation": {
+    "sharpe": 0.6416512900259231,
+    "cagr": 0.15341984528895058,
+    "vol": 0.2860521287647533,
+    "max_dd": -0.42398147416931165,
+    "sortino": 0.8723591356945715,
+    "calmar": 0.3618550682893383,
+    "cvar95": -0.034293863116158695,
+    "n_days": 1372,
+    "turnover_annuel": 27.202700150963306,
+    "gross_moyen": 0.4584082702064284,
+    "couts_annuels": 0.054405400301926615
+   },
+   "correlation_avec_C0": 0.7652202666196863,
+   "dsr_developpement": 0.9951208955995651,
+   "criteres": {
+    "gain_developpement": true,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "C3": {
+   "nom": "C3 — Équipe Crypto long seulement, univers de production",
+   "description": "Isole l'effet du signal.",
+   "developpement": {
+    "sharpe": 1.306012681700968,
+    "cagr": 0.4328284053172067,
+    "vol": 0.3122637135490869,
+    "max_dd": -0.4182511149710392,
+    "sortino": 1.6141647601135223,
+    "calmar": 1.0348529623099196,
+    "cvar95": -0.03647198842523204,
+    "n_days": 1619,
+    "turnover_annuel": 16.816954182471747,
+    "gross_moyen": 0.27753641038051524,
+    "couts_annuels": 0.033633908364943496
+   },
+   "validation": {
+    "sharpe": 0.48841222109523463,
+    "cagr": 0.10474143970331906,
+    "vol": 0.2896683412960447,
+    "max_dd": -0.4206899017281089,
+    "sortino": 0.6579722551369049,
+    "calmar": 0.24897540747487032,
+    "cvar95": -0.034549716526439456,
+    "n_days": 1372,
+    "turnover_annuel": 28.41801186529111,
+    "gross_moyen": 0.48730963305906355,
+    "couts_annuels": 0.05683602373058221
+   },
+   "correlation_avec_C0": 0.8536248597583906,
+   "dsr_developpement": 0.9931094418639744,
+   "criteres": {
+    "gain_developpement": true,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "C4": {
+   "nom": "C4 — Mix 50/50 production + équipe (univers de production)",
+   "description": "Moyenne des deux signaux, long seulement.",
+   "developpement": {
+    "sharpe": 1.2686908920136213,
+    "cagr": 0.4398687834535666,
+    "vol": 0.32959252204018713,
+    "max_dd": -0.40945175063587697,
+    "sortino": 1.7260346838040883,
+    "calmar": 1.0742872213159478,
+    "cvar95": -0.03746838816414553,
+    "n_days": 1619,
+    "turnover_annuel": 15.269115011566942,
+    "gross_moyen": 0.3352700840631051,
+    "couts_annuels": 0.03053823002313389
+   },
+   "validation": {
+    "sharpe": 0.725437089267619,
+    "cagr": 0.19730598606734184,
+    "vol": 0.31766943027009065,
+    "max_dd": -0.5190935685485615,
+    "sortino": 1.0263958687005064,
+    "calmar": 0.3800971501516181,
+    "cvar95": -0.038085570143876875,
+    "n_days": 1372,
+    "turnover_annuel": 20.679733008824424,
+    "gross_moyen": 0.5713114382198027,
+    "couts_annuels": 0.041359466017648845
+   },
+   "correlation_avec_C0": 0.9430935291368023,
+   "dsr_developpement": 0.9913899140131526,
+   "criteres": {
+    "gain_developpement": true,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": false
+   },
+   "verdict": "REJETÉ"
+  }
+ }
+}

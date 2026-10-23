@@ -119,6 +119,10 @@ class QuantAgent(Agent):
         self.mr_weight = mr_weight
         self._last_cross_rank: dict[str, float] = {}
 
+    # Rejoue l'ancien bug d'agrégation (facteurs tri-horizon / Sharpe / drawdown du
+    # dernier ticker appliqués à tous) — uniquement pour les comparaisons de recherche.
+    legacy_factor_leak = False
+
     def universe(self) -> list[str]:
         return list(self._tickers)
 
@@ -142,6 +146,7 @@ class QuantAgent(Agent):
         vols: dict[str, float] = {}
         tq_by_tk: dict[str, float] = {}
         vol_regime_by_tk: dict[str, float] = {}
+        elite: dict[str, tuple[float, float, float]] = {}
         for ticker in self.universe():
             md = data.get(ticker)
             if md is None or len(md.prices) < max(self.mom_lookback, self.mr_lookback, 63) + 1:
@@ -163,6 +168,7 @@ class QuantAgent(Agent):
             long_vol = realized_vol(arr, min(252, len(arr) - 1))
             vol_regime = 0.0 if long_vol <= 0 else max(-1.0, min(1.0, (vol - long_vol) / long_vol))
             raw_scores[ticker] = momentum
+            elite[ticker] = (tri_horizon, asset_sharpe, cur_dd)
             vols[ticker] = vol
             tq_by_tk[ticker] = tq
             vol_regime_by_tk[ticker] = vol_regime
@@ -182,6 +188,8 @@ class QuantAgent(Agent):
             tq = tq_by_tk[ticker]
             vol_regime = vol_regime_by_tk[ticker]
             rank = self._last_cross_rank.get(ticker, 0.0)
+            if not self.legacy_factor_leak:
+                tri_horizon, asset_sharpe, cur_dd = elite[ticker]
 
             composite = (
                 0.30 * np.tanh(tri_horizon)

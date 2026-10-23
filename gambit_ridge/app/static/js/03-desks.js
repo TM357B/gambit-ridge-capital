@@ -127,7 +127,7 @@ function toggleVoice() {
   const eng = voiceEngine();
   if (eng === 'none' || voiceBusy === 'fetch') return;
   if (voiceBusy === 'speak') { // couper la réponse en cours pour reprendre la parole
-    NATIVE_VOICE ? nativeVoice({ cmd: 'silence' }) : ('speechSynthesis' in window && speechSynthesis.cancel());
+    stopEleven(); NATIVE_VOICE ? nativeVoice({ cmd: 'silence' }) : ('speechSynthesis' in window && speechSynthesis.cancel());
     voiceBusy = false;
   }
   if (voiceListening) { eng === 'native' ? nativeVoice({ cmd: 'stop' }) : (voiceRecog && voiceRecog.stop()); return; }
@@ -144,6 +144,62 @@ function toggleVoice() {
   voiceRecog.onerror = ev => { const st = document.getElementById('voiceStatus'); if (st) st.textContent = 'Erreur micro : ' + ev.error; };
   voiceRecog.onend = () => { voiceSetState(false); if (voicePartial.trim()) voiceSend(voicePartial); };
   voiceRecog.start();
+}
+
+// ---- voix ElevenLabs (serveur /api/tts) ; repli automatique sur les voix système
+let ELEVEN = null, voiceCtx = null, voiceSrc = null;
+async function elevenReady() {
+  if (ELEVEN === null) { try { ELEVEN = await (await fetch('/api/tts/status')).json(); } catch(e) { ELEVEN = { configured: false }; } }
+  return ELEVEN.configured && !ELEVEN.error;
+}
+function audioCtx() {  // iPhone/Safari : le son doit être activé par un geste de l'utilisateur (clic, Espace)
+  if (!voiceCtx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) voiceCtx = new AC(); }
+  if (voiceCtx && voiceCtx.state === 'suspended') voiceCtx.resume();
+  return voiceCtx;
+}
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { if (currentTab === 'voice') audioCtx(); }, true));
+let voiceRun = 0;  // identifiant de la lecture en cours (une nouvelle question annule la précédente)
+function stopEleven() { voiceRun++; if (voiceSrc) { voiceSrc.onended = null; try { voiceSrc.stop(); } catch(e) {} voiceSrc = null; } }
+function splitSentences(text) {  // morceaux d'au moins ~60 caractères : fluide sans multiplier les appels
+  const parts = text.replace(/\s+/g, ' ').match(/[^.!?…;:]+[.!?…;:]*\s*/g) || [text];
+  const out = [];
+  for (const p of parts) {  // la 1re phrase part seule (démarrage rapide), les suivantes sont regroupées
+    if (out.length > 1 && (out[out.length - 1].length < 60 || p.trim().length < 20)) out[out.length - 1] += p;
+    else if (out.length === 1 && p.trim().length < 20) out[0] += p;
+    else out.push(p);
+  }
+  return out.map(x => x.trim()).filter(Boolean);
+}
+async function speakEleven(text, target, label) {
+  const ctx = audioCtx();
+  if (!ctx || !(await elevenReady())) return false;
+  stopEleven();
+  const run = voiceRun, parts = splitSentences(text);
+  // toutes les phrases sont demandées tout de suite (en parallèle) ; la lecture démarre dès la première
+  const fetchPart = i => fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: parts[i], target, label }) })
+    .then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(b => ctx.decodeAudioData(b));
+  const pending = parts.map((_, i) => fetchPart(i));
+  let first;
+  try { first = await pending[0]; } catch(e) { return false; }  // échec dès le début -> voix système
+  (async () => {
+    let at = ctx.currentTime + 0.05, last = null;
+    for (let i = 0; i < parts.length; i++) {
+      let buf;
+      try { buf = i === 0 ? first : await pending[i]; } catch(e) { break; }  // phrase en échec : on s'arrête là
+      if (run !== voiceRun) return;
+      const src = ctx.createBufferSource();
+      src.buffer = buf; src.connect(ctx.destination);
+      at = Math.max(at, ctx.currentTime + 0.02);
+      src.start(at);  // enchaînement sans blanc : chaque phrase démarre à la fin exacte de la précédente
+      at += Math.max(0.1, buf.duration - 0.15);  // chaque phrase finit par ~0,3 s de silence : on en recouvre la moitié
+      voiceSrc = last = src;
+    }
+    if (run !== voiceRun) return;
+    if (last) last.onended = () => { if (run === voiceRun) { voiceSrc = null; voiceAfterSpeech(); } };
+    else voiceAfterSpeech();
+  })();
+  return true;
 }
 
 // événements du pont natif
@@ -178,6 +234,7 @@ async function voiceSend(text) {
   log.scrollTop = log.scrollHeight;
   voiceBusy = 'speak'; voiceSetState(false);
   const st = document.getElementById('voiceStatus'); if (st) st.textContent = 'Réponse lue à voix haute — clique sur PARLER (ou Espace) pour couper et répondre.';
+  if (await speakEleven(answer, target, who)) return;  // voix ElevenLabs si configurée, sinon voix système
   if (NATIVE_VOICE) nativeVoice({ cmd: 'speak', text: answer, voice: voiceIndexFor(target), rate: 0.5 });
   else if ('speechSynthesis' in window) {
     speechSynthesis.cancel();
@@ -193,7 +250,7 @@ async function voiceSend(text) {
 document.addEventListener('keydown', e => {
   if (currentTab !== 'voice' || ['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)) return;
   if (e.code === 'Space') { e.preventDefault(); toggleVoice(); }
-  if (e.code === 'Escape') { NATIVE_VOICE ? nativeVoice({ cmd: 'silence' }) : ('speechSynthesis' in window && speechSynthesis.cancel()); voiceBusy = false; voiceSetState(false); }
+  if (e.code === 'Escape') { stopEleven(); NATIVE_VOICE ? nativeVoice({ cmd: 'silence' }) : ('speechSynthesis' in window && speechSynthesis.cancel()); voiceBusy = false; voiceSetState(false); }
 });
 
 /* ============ BACKTEST ============ */

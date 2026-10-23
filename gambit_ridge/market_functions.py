@@ -5,6 +5,7 @@ DES  : fiche d'un actif (performances, risque, bêta, position du fonds)
 FXC  : matrice des taux croisés + variation du jour (carte de chaleur)
 WCRS : classement des devises contre dollar sur plusieurs horizons
 ECST : statistiques économiques US (FRED, sans clé)
+OVDV : surface de volatilité implicite d'un sous-jacent à options cotées
 
 Les fonctions qui exigent des consensus d'économistes payants (ECSU,
 ECFC, FXFC) ne sont volontairement PAS simulées.
@@ -323,3 +324,15 @@ def gc() -> dict:
         "spreads": {"2 A - 10 A": round((s["10 A"] - s["2 A"]) * 100), "3 M - 10 A": round((s["10 A"] - s["3 M"]) * 100),
                     "5 A - 30 A": round((s["30 A"] - s["5 A"]) * 100)},
         "source": "FRED — rendements constants du Trésor américain"}
+
+
+# --------------------------------------------------------------------- OVDV
+
+def ovdv(symbol: str) -> dict:
+    """Surface de volatilité implicite (options cotées US, Yahoo) : smiles, structure ATM, grille.
+
+    Outil d'analyse : ne pilote pas le portefeuille. Calcul dans options/vol_surface.py.
+    """
+    from .options.vol_surface import ovdv as surface
+
+    return surface(_check(symbol))

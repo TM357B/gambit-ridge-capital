@@ -36,7 +36,7 @@ The trend layer is nearly uncorrelated with the 60/40 core (≈0.05) and halves 
 - **No look-ahead, tested** — every signal is a recursive filter; an automated test recomputes it on truncated history and checks it is identical.
 - **Multiple-testing correction** — Deflated Sharpe Ratio (Bailey & López de Prado, 2014).
 - **Models** (Dixon, Halperin & Bilokon, *Machine Learning in Finance*, 2020): 12-month time-series momentum, multi-speed exponential smoothing, Kalman local-linear-trend filter, GARCH(1,1) volatility forecasts, hidden Markov regimes, ridge regression.
-- **Portfolio construction** — equal risk per position (GARCH volatility), 10 % ex-ante volatility target with a shrunk EWMA covariance; fund allocation 90 % ETF / 10 % crypto, set by risk budget.
+- **Portfolio construction** — equal risk per position (GARCH volatility), 10 % ex-ante volatility target with a shrunk EWMA covariance; fund allocation 95 % ETF / 5 % crypto, set by risk budget (90/10 until October 2026, reduced for prudence), at most 1.25 % of the fund in any single coin.
 
 ## Operations
 
@@ -52,9 +52,19 @@ flowchart LR
 
 The fund runs on its own: decision after the New York close, orders replicated on an Alpaca paper account at the next open, daily data-quality checks with an independent second price source, transaction-cost analysis on real fills, a strategy-health monitor comparing live results with every comparable backtest window, monthly reports and phone alerts.
 
-A Bloomberg-style local terminal (macOS app + iPhone web app) shows the portfolio, risk (VaR, stress tests on nine historical crises, risk contributions), attribution, research results and market functions (`GP`, `DES`, `FXC`, `WCRS`, `ECST`, `WEI`, `GC`).
+A Bloomberg-style local terminal (macOS app + iPhone web app) shows the portfolio, risk (VaR, stress tests on nine historical crises, risk contributions), attribution, research results and market functions (`GP`, `DES`, `FXC`, `WCRS`, `ECST`, `WEI`, `GC`, `OVDV`).
 
 ![Risk tab: strategy health, VaR, limits, nine historical crises replayed on today's portfolio](docs/img/risk.png)
+
+## Options analytics: implied volatility surface
+
+`SPY OVDV` in the terminal (or `python -m gambit_ridge.options.vol_surface SPY`) builds the implied volatility surface of any US underlying with listed options. It is an analysis tool: it does not drive the portfolio.
+
+- **Inversion** — Black-Scholes implied volatility from the bid/ask mid, solved by a bracketed Newton–bisection method (same guarantee as Brent; numpy and the standard library only).
+- **Desk-style cleaning** — mid prices, quotes with a spread above 25 % of mid rejected, strikes within 75–125 % of spot, out-of-the-money options only (puts below spot, calls above).
+- **Forward per expiry from put–call parity** — using the strikes closest to spot only. SPY options are American: a regression of C − P on all strikes gives a discount factor above 1, because the early-exercise premium of in-the-money puts distorts parity.
+- **Interpolation** — along each smile, then across maturities in total variance (σ²T), the market convention. Where there is no quote, the surface stays empty instead of inventing values; calendar-arbitrage violations are counted.
+- **Output** — smiles, ATM term structure, surface heat map and an OVDV-style grid in the terminal; CSV of every computed point. A synthetic chain priced from a known surface (`--demo`) is recovered to within 0.01 vol point (median).
 
 ## How this was built
 
@@ -62,7 +72,7 @@ I designed and directed this project; most of the code was written with AI codin
 
 - **Defining the method** — tradable universe only, frozen protocol, development vs validation, costs, multiple-testing correction.
 - **Challenging the results** — asking why the ML model "worked", which led to discovering it did not; rejecting carry even when one variant looked good on the validation period.
-- **Making the decisions** — which strategy goes live, the 90/10 allocation by risk budget, when not to touch the strategy.
+- **Making the decisions** — which strategy goes live, the allocation by risk budget (90/10, then 95/5), when not to touch the strategy.
 
 Using AI made it possible to build the whole chain alone; the judgement calls, and the mistakes caught along the way, are mine.
 
@@ -93,7 +103,8 @@ numpy is the only required dependency: every model (GARCH, Kalman, HMM, ridge…
 | `gambit_ridge/brokers/` | Alpaca paper-account replication (Saxo simulation client, unused) |
 | `gambit_ridge/app/` | local terminal (server + web UI) |
 | `gambit_ridge/ops/` | daily automated run |
-| `tests/` | 86 tests, run in CI |
+| `gambit_ridge/options/` | Black-Scholes, implied volatility, volatility surface (`OVDV`) |
+| `tests/` | 136 tests, run in CI |
 
 ## Notes
 

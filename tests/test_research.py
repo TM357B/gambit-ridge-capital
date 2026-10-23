@@ -98,3 +98,23 @@ class TestDeflatedSharpe(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestCryptoCap(unittest.TestCase):
+    def test_single_crypto_capped(self):
+        """Décision de prudence du 2026-10-13 : jamais plus de 25 % de la poche sur une crypto."""
+        import numpy as np
+
+        from gambit_ridge.research.production import CRYPTO_MAX_POSITION, crypto_sleeve
+
+        rng = np.random.default_rng(3)
+        n = 500
+        dates = [f"d{i}" for i in range(n)]
+        up = 100 * np.cumprod(1 + rng.normal(0.004, 0.02, n))          # une seule crypto en tendance haussière
+        prices = {"UP-USD": up}
+        for k in range(4):
+            prices[f"DN{k}-USD"] = 100 * np.cumprod(1 + rng.normal(-0.003, 0.03, n))
+        w = crypto_sleeve(dates, prices)["weights"]
+        self.assertEqual(CRYPTO_MAX_POSITION, 0.25)
+        self.assertLessEqual(max(w.values()), CRYPTO_MAX_POSITION + 1e-9)
+        self.assertGreater(w["UP-USD"], 0.0)

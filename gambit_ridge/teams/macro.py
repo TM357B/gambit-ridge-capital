@@ -58,7 +58,7 @@ class MacroRegimeAgent(QuantAgent):
             regime_notes.append(f"VIX bas ({vix[-1]:.0f})")
 
         rates = self.factors.get("DGS10") or []
-        if len(rates) >= 126 and rates[-1] - rates[-127] > 1.0:
+        if len(rates) >= 127 and rates[-1] - rates[-127] > 1.0:
             regime_shift -= 0.08
             regime_notes.append("hausse rapide des taux 10 ans")
 

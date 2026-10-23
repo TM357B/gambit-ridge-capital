@@ -1,0 +1,949 @@
+{
+ "genere_le": "2026-10-04",
+ "protocole": "Campagne de recherche n° 2 (octobre 2026) — nouvelles sources de rendement et agents.\n\nPROTOCOLE FIGÉ ET COMMITÉ AVANT TOUT CALCUL (pré-enregistrement) :\n\nRéférence : la stratégie ETF de production (« 60/40 + couche tendance », 20 ETF),\ncomme dans la campagne n° 1. Chaque essai est une POCHE autonome, ramenée à 10 %\nde vol, nette de coûts, ajoutée en surcouche 0,5x : combinaison = production +\n0,5 x poche. La référence est mesurée sur EXACTEMENT les mêmes jours que l'essai\n(certaines poches ne démarrent qu'en 2011-2012).\n\nPériodes : développement jusqu'au 2019-12-31, validation 2020 -> aujourd'hui.\nCoûts : 5 bps (ETF, actions, devises, indices), 20 bps (crypto). Rebalancement\nhebdomadaire. Décisions à la clôture t, portées sur t -> t+1 (causal).\n\nPartie 1 — sources de rendement différentes (paramètres de la littérature) :\n  V1 Prime de volatilité : SVXY (vente de volatilité VIX court terme) détenu\n     seulement quand la structure par terme est en contango (VIX < VIX3M) —\n     Simon & Campasano (2014).\n  V2 Couverture longue volatilité : VIXY détenu seulement en backwardation\n     (VIX > VIX3M), cash sinon.\n  R1 Carry de taux : duration (IEF + TLT à risque égal) longue si la pente\n     10 ans - 3 mois > 0, courte sinon (Koijen et al. 2018 : carry obligataire\n     ~ pente). FRED, décalage d'un jour de publication.\n  Q1 Faible volatilité / « betting against beta » : long USMV, short SPY à\n     hauteur du bêta 1 an de USMV (Frazzini & Pedersen 2014).\n\nPartie 2 — signaux des agents de recherche, rejoués jour par jour :\n  à chaque date, chaque agent reçoit exactement ce qu'il reçoit en production\n  (261 dernières clôtures Yahoo de ses tickers ; facteurs FRED T10Y2Y, VIXCLS,\n  DGS10 pour macro-dm, décalés d'un jour) ; position = direction x conviction ;\n  poids à risque égal (vol EWMA), vol 10 %. Tickers sur calendriers différents :\n  prix reportés au dernier connu (jamais de prix futur). US10Y (rendement ^TNX)\n  est négocié via IEF en sens inverse (taux en hausse = obligations en baisse).\n  A1..A6 Équipes Macro, Micro, IA & Tech, Matières premières, Crypto, Devises\n  A7 Conseil complet (moyenne des 6 poches d'équipe)\n  A8 Conseil complet avec le correctif du bug d'agrégation (les facteurs\n     tri-horizon / Sharpe / drawdown du dernier ticker étaient appliqués à\n     tous les tickers de l'agent ; corrigé dans core/agent.py, l'ancien\n     comportement est rejoué via QuantAgent.legacy_factor_leak)\n\nRègle d'acceptation : identique à la campagne n° 1 (toutes les conditions) —\n  1. Sharpe de développement >= référence (mêmes jours) + 0,05\n  2. Deflated Sharpe Ratio (développement, 13 séries) >= 0,90\n  3. Sharpe de validation >= référence - 0,05\n  4. Pire baisse en validation pas plus de 3 points au-delà de la référence\nUn essai accepté n'entre au portefeuille qu'avec l'accord de Tom.\n\nUsage : python3 -m gambit_ridge.research.campaign2\nSortie : data/research_campaign2_2026-10.json\n",
+ "regles": {
+  "dev_gain": 0.05,
+  "dsr": 0.9,
+  "val_tol": 0.05,
+  "dd_tol": 0.03
+ },
+ "duree_s": 56,
+ "resultats": {
+  "V1": {
+   "nom": "V1 — Prime de volatilité (SVXY en contango)",
+   "description": "SVXY quand VIX < VIX3M, cash sinon.",
+   "debut_mesure": "2012-10-15",
+   "reference": {
+    "developpement": {
+     "sharpe": 1.204769685166394,
+     "cagr": 0.07015300983429373,
+     "vol": 0.05766649372485465,
+     "max_dd": -0.09261414479478423,
+     "sortino": 1.575974572329301,
+     "calmar": 0.7574761931856067,
+     "cvar95": -0.008742521852177266,
+     "n_days": 1814
+    },
+    "validation": {
+     "sharpe": 1.0409834916091272,
+     "cagr": 0.07854948008198215,
+     "vol": 0.075380581181512,
+     "max_dd": -0.10316300759189316,
+     "sortino": 1.3687953241143709,
+     "calmar": 0.7614113034850565,
+     "cvar95": -0.011365727528447092,
+     "n_days": 1697
+    }
+   },
+   "poche_seule": {
+    "developpement": {
+     "sharpe": 0.5156114977387248,
+     "cagr": 0.04442809342767329,
+     "vol": 0.09272241911178764,
+     "max_dd": -0.15872864323430222,
+     "sortino": 0.5071761291881346,
+     "calmar": 0.2798996609710333,
+     "cvar95": -0.016151579419791114,
+     "n_days": 1814
+    },
+    "validation": {
+     "sharpe": 0.33109522091665317,
+     "cagr": 0.028386794624008393,
+     "vol": 0.09970703119441629,
+     "max_dd": -0.227197416642166,
+     "sortino": 0.3240842150844424,
+     "calmar": 0.12494329840342047,
+     "cvar95": -0.017579523887123267,
+     "n_days": 1697
+    }
+   },
+   "developpement": {
+    "sharpe": 1.017165268677408,
+    "cagr": 0.09322256399253614,
+    "vol": 0.0918033863927095,
+    "max_dd": -0.16059570196324513,
+    "sortino": 1.1783437533218752,
+    "calmar": 0.5804798189049394,
+    "cvar95": -0.014745106464185656,
+    "n_days": 1814
+   },
+   "validation": {
+    "sharpe": 0.8556768413940106,
+    "cagr": 0.09283210490150173,
+    "vol": 0.11099540943898432,
+    "max_dd": -0.16894615480960032,
+    "sortino": 0.9923244240493103,
+    "calmar": 0.5494774652084984,
+    "cvar95": -0.018152675754059096,
+    "n_days": 1697
+   },
+   "correlation_poche_production": 0.5497880835879622,
+   "dsr_developpement": 0.9466751814075207,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "V2": {
+   "nom": "V2 — Couverture longue volatilité (VIXY en backwardation)",
+   "description": "VIXY quand VIX > VIX3M, cash sinon.",
+   "debut_mesure": "2012-01-17",
+   "reference": {
+    "developpement": {
+     "sharpe": 1.2407988049580905,
+     "cagr": 0.07092283564065238,
+     "vol": 0.056518814403360075,
+     "max_dd": -0.09261414479478397,
+     "sortino": 1.637416594479463,
+     "calmar": 0.7657883771188995,
+     "cvar95": -0.008494796409821547,
+     "n_days": 2003
+    },
+    "validation": {
+     "sharpe": 1.0409834916091272,
+     "cagr": 0.07854948008198215,
+     "vol": 0.075380581181512,
+     "max_dd": -0.10316300759189316,
+     "sortino": 1.3687953241143709,
+     "calmar": 0.7614113034850565,
+     "cvar95": -0.011365727528447092,
+     "n_days": 1697
+    }
+   },
+   "poche_seule": {
+    "developpement": {
+     "sharpe": -0.3630760404961373,
+     "cagr": -0.0131399795134165,
+     "vol": 0.03476677603975181,
+     "max_dd": -0.11837707503600763,
+     "sortino": -0.15669862912159913,
+     "calmar": -0.11100104905801748,
+     "cvar95": -0.0002533883810002974,
+     "n_days": 2003
+    },
+    "validation": {
+     "sharpe": 0.01486793993637375,
+     "cagr": -0.0002675090699610916,
+     "vol": 0.04271816437599951,
+     "max_dd": -0.15273974718089153,
+     "sortino": 0.008791665837720354,
+     "calmar": -0.001751404430729333,
+     "cvar95": -0.004847558473594063,
+     "n_days": 1697
+    }
+   },
+   "developpement": {
+    "sharpe": 1.1564712485265698,
+    "cagr": 0.06426642648868386,
+    "vol": 0.05518250951589185,
+    "max_dd": -0.09459583551077094,
+    "sortino": 1.548278368762812,
+    "calmar": 0.6793790248976268,
+    "cvar95": -0.008245416888139782,
+    "n_days": 2003
+   },
+   "validation": {
+    "sharpe": 1.11795061639018,
+    "cagr": 0.07927711854992192,
+    "vol": 0.07047494316280689,
+    "max_dd": -0.09044342804714901,
+    "sortino": 1.5187487828063813,
+    "calmar": 0.8765381881433553,
+    "cvar95": -0.010417470900099387,
+    "n_days": 1697
+   },
+   "correlation_poche_production": -0.3074001458252038,
+   "dsr_developpement": 0.9830150436998993,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "R1": {
+   "nom": "R1 — Carry de taux (duration selon la pente)",
+   "description": "IEF + TLT à risque égal, long si 10a-3m > 0, court sinon.",
+   "debut_mesure": "2009-05-04",
+   "reference": {
+    "developpement": {
+     "sharpe": 1.2127013829244657,
+     "cagr": 0.07578721346631201,
+     "vol": 0.061825555745329455,
+     "max_dd": -0.09261414479478451,
+     "sortino": 1.5939029111840637,
+     "calmar": 0.8183114321709949,
+     "cvar95": -0.009346278349306746,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": 1.0409834916091272,
+     "cagr": 0.07854948008198215,
+     "vol": 0.075380581181512,
+     "max_dd": -0.10316300759189316,
+     "sortino": 1.3687953241143709,
+     "calmar": 0.7614113034850565,
+     "cvar95": -0.011365727528447092,
+     "n_days": 1697
+    }
+   },
+   "poche_seule": {
+    "developpement": {
+     "sharpe": 0.4345918130474634,
+     "cagr": 0.0416132000185796,
+     "vol": 0.10699456882110225,
+     "max_dd": -0.18693706405012686,
+     "sortino": 0.6816335192422511,
+     "calmar": 0.22260540053962274,
+     "cvar95": -0.014369111569875121,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": -0.4798450152411527,
+     "cagr": -0.05684389023182834,
+     "vol": 0.10946297959029037,
+     "max_dd": -0.4520693283459808,
+     "sortino": -0.7283900331211635,
+     "calmar": -0.12574153269766664,
+     "cvar95": -0.015631691067258126,
+     "n_days": 1697
+    }
+   },
+   "developpement": {
+    "sharpe": 1.2077966074167137,
+    "cagr": 0.09954721000873712,
+    "vol": 0.08132612575193482,
+    "max_dd": -0.12747847812339808,
+    "sortino": 1.706255339991427,
+    "calmar": 0.7808942456339671,
+    "cvar95": -0.011703584203366068,
+    "n_days": 2685
+   },
+   "validation": {
+    "sharpe": 0.5716883340705466,
+    "cagr": 0.0492000718061838,
+    "vol": 0.09132127582734749,
+    "max_dd": -0.18236280446589484,
+    "sortino": 0.752261595433671,
+    "calmar": 0.26979225259384026,
+    "cvar95": -0.013997950996553361,
+    "n_days": 1697
+   },
+   "correlation_poche_production": -0.023963542756955915,
+   "dsr_developpement": 0.9958055215178456,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "Q1": {
+   "nom": "Q1 — Faible volatilité (USMV long, SPY short bêta-neutre)",
+   "description": "Bêta 1 an, poche bêta-neutre à 10 % de vol.",
+   "debut_mesure": "2013-08-22",
+   "reference": {
+    "developpement": {
+     "sharpe": 1.1786879460842883,
+     "cagr": 0.06835461385364527,
+     "vol": 0.057507595566894554,
+     "max_dd": -0.09261414479478366,
+     "sortino": 1.5161556494610156,
+     "calmar": 0.7380580364382443,
+     "cvar95": -0.008797475394972212,
+     "n_days": 1601
+    },
+    "validation": {
+     "sharpe": 1.0409834916091272,
+     "cagr": 0.07854948008198215,
+     "vol": 0.075380581181512,
+     "max_dd": -0.10316300759189316,
+     "sortino": 1.3687953241143709,
+     "calmar": 0.7614113034850565,
+     "cvar95": -0.011365727528447092,
+     "n_days": 1697
+    }
+   },
+   "poche_seule": {
+    "developpement": {
+     "sharpe": 0.8527588175459432,
+     "cagr": 0.04249864233503997,
+     "vol": 0.0502936947880856,
+     "max_dd": -0.09525889289973646,
+     "sortino": 1.2256868385480835,
+     "calmar": 0.44613831886301025,
+     "cvar95": -0.007287586281490262,
+     "n_days": 1601
+    },
+    "validation": {
+     "sharpe": -0.09261386458639757,
+     "cagr": -0.008514966107905253,
+     "vol": 0.0676367187648078,
+     "max_dd": -0.13484369844662736,
+     "sortino": -0.13224236195127756,
+     "calmar": -0.06314693386488188,
+     "cvar95": -0.009647836839299876,
+     "n_days": 1697
+    }
+   },
+   "developpement": {
+    "sharpe": 1.3270460048775725,
+    "cagr": 0.09084088541691249,
+    "vol": 0.06723783894739417,
+    "max_dd": -0.09896134225827571,
+    "sortino": 1.6885932108932298,
+    "calmar": 0.9179431416747569,
+    "cvar95": -0.01017201828072951,
+    "n_days": 1601
+   },
+   "validation": {
+    "sharpe": 0.905645387709651,
+    "cagr": 0.07450968946312675,
+    "vol": 0.0831869655208058,
+    "max_dd": -0.12124859285934433,
+    "sortino": 1.1636628060464558,
+    "calmar": 0.6145200344680493,
+    "cvar95": -0.012403564571624368,
+    "n_days": 1697
+   },
+   "correlation_poche_production": 0.08194692029964015,
+   "dsr_developpement": 0.9886676731757732,
+   "criteres": {
+    "gain_developpement": true,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "A1": {
+   "nom": "A1 — Équipe Macro",
+   "description": "2 agents, 11 tickers.",
+   "debut_mesure": "2009-05-04",
+   "reference": {
+    "developpement": {
+     "sharpe": 1.2127013829244657,
+     "cagr": 0.07578721346631201,
+     "vol": 0.061825555745329455,
+     "max_dd": -0.09261414479478451,
+     "sortino": 1.5939029111840637,
+     "calmar": 0.8183114321709949,
+     "cvar95": -0.009346278349306746,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": 1.0409834916091272,
+     "cagr": 0.07854948008198215,
+     "vol": 0.075380581181512,
+     "max_dd": -0.10316300759189316,
+     "sortino": 1.3687953241143709,
+     "calmar": 0.7614113034850565,
+     "cvar95": -0.011365727528447092,
+     "n_days": 1697
+    }
+   },
+   "poche_seule": {
+    "developpement": {
+     "sharpe": 0.18494260470932875,
+     "cagr": 0.01514126712237629,
+     "vol": 0.12053322404692965,
+     "max_dd": -0.3083673629618452,
+     "sortino": 0.25174500981503345,
+     "calmar": 0.04910139314662085,
+     "cvar95": -0.01594370165960869,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": 0.06475443671928992,
+     "cagr": 0.0011926212634776334,
+     "vol": 0.10751545251912228,
+     "max_dd": -0.20527166978591913,
+     "sortino": 0.09569946383438578,
+     "calmar": 0.005809965226674659,
+     "cvar95": -0.015382392254895733,
+     "n_days": 1697
+    }
+   },
+   "developpement": {
+    "sharpe": 0.9841709010171792,
+    "cagr": 0.08575818385691303,
+    "vol": 0.08750695744819377,
+    "max_dd": -0.174099091449116,
+    "sortino": 1.3088026660392729,
+    "calmar": 0.4925826042117951,
+    "cvar95": -0.012819312848078922,
+    "n_days": 2685
+   },
+   "validation": {
+    "sharpe": 0.889610305666542,
+    "cagr": 0.08079055457521256,
+    "vol": 0.09212010175590464,
+    "max_dd": -0.15552670022441098,
+    "sortino": 1.1988670016246619,
+    "calmar": 0.5194642107023365,
+    "cvar95": -0.013831171267889813,
+    "n_days": 1697
+   },
+   "correlation_poche_production": 0.011678330580586038,
+   "dsr_developpement": 0.9730677697896848,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "A2": {
+   "nom": "A2 — Équipe Micro",
+   "description": "2 agents, 12 tickers.",
+   "debut_mesure": "2009-05-04",
+   "reference": {
+    "developpement": {
+     "sharpe": 1.2127013829244657,
+     "cagr": 0.07578721346631201,
+     "vol": 0.061825555745329455,
+     "max_dd": -0.09261414479478451,
+     "sortino": 1.5939029111840637,
+     "calmar": 0.8183114321709949,
+     "cvar95": -0.009346278349306746,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": 1.0409834916091272,
+     "cagr": 0.07854948008198215,
+     "vol": 0.075380581181512,
+     "max_dd": -0.10316300759189316,
+     "sortino": 1.3687953241143709,
+     "calmar": 0.7614113034850565,
+     "cvar95": -0.011365727528447092,
+     "n_days": 1697
+    }
+   },
+   "poche_seule": {
+    "developpement": {
+     "sharpe": -0.012876669382824156,
+     "cagr": -0.00741932410592927,
+     "vol": 0.10984547273761076,
+     "max_dd": -0.3645886341686538,
+     "sortino": -0.019095342125029252,
+     "calmar": -0.02034985024381531,
+     "cvar95": -0.015612088365007494,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": -0.022584026775342686,
+     "cagr": -0.009139358585204538,
+     "vol": 0.11485193791329917,
+     "max_dd": -0.3437034395544905,
+     "sortino": -0.0340956860698673,
+     "calmar": -0.026590826664554198,
+     "cvar95": -0.01595009968827651,
+     "n_days": 1697
+    }
+   },
+   "developpement": {
+    "sharpe": 0.8715997776453857,
+    "cagr": 0.07317637438064839,
+    "vol": 0.08520965348941395,
+    "max_dd": -0.18942142604943743,
+    "sortino": 1.1665532378509864,
+    "calmar": 0.3863151909834633,
+    "cvar95": -0.012609531917260672,
+    "n_days": 2685
+   },
+   "validation": {
+    "sharpe": 0.7885734558631114,
+    "cagr": 0.0750505603118008,
+    "vol": 0.09786409928403057,
+    "max_dd": -0.2228579882429908,
+    "sortino": 1.0563951479737386,
+    "calmar": 0.3367640572523262,
+    "cvar95": -0.014714162963741444,
+    "n_days": 1697
+   },
+   "correlation_poche_production": 0.064993245173755,
+   "dsr_developpement": 0.9402129732817304,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "A3": {
+   "nom": "A3 — Équipe IA & Tech",
+   "description": "4 agents, 18 tickers.",
+   "debut_mesure": "2009-05-04",
+   "reference": {
+    "developpement": {
+     "sharpe": 1.2127013829244657,
+     "cagr": 0.07578721346631201,
+     "vol": 0.061825555745329455,
+     "max_dd": -0.09261414479478451,
+     "sortino": 1.5939029111840637,
+     "calmar": 0.8183114321709949,
+     "cvar95": -0.009346278349306746,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": 1.0409834916091272,
+     "cagr": 0.07854948008198215,
+     "vol": 0.075380581181512,
+     "max_dd": -0.10316300759189316,
+     "sortino": 1.3687953241143709,
+     "calmar": 0.7614113034850565,
+     "cvar95": -0.011365727528447092,
+     "n_days": 1697
+    }
+   },
+   "poche_seule": {
+    "developpement": {
+     "sharpe": 0.08703043225771233,
+     "cagr": 0.003448733047325625,
+     "vol": 0.112955910766774,
+     "max_dd": -0.27059874160811265,
+     "sortino": 0.12007593435138057,
+     "calmar": 0.012744822931660783,
+     "cvar95": -0.017033851476190593,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": 0.33745932940092294,
+     "cagr": 0.03464021410060347,
+     "vol": 0.12352732104037391,
+     "max_dd": -0.1761144154921691,
+     "sortino": 0.46793568664912744,
+     "calmar": 0.1966915314899009,
+     "cvar95": -0.017971335057671352,
+     "n_days": 1697
+    }
+   },
+   "developpement": {
+    "sharpe": 0.8605930923795873,
+    "cagr": 0.07849132684526228,
+    "vol": 0.09283276676272055,
+    "max_dd": -0.16488408710488325,
+    "sortino": 1.130652408087812,
+    "calmar": 0.47603943002294524,
+    "cvar95": -0.014074677230892594,
+    "n_days": 2685
+   },
+   "validation": {
+    "sharpe": 0.9914177155694508,
+    "cagr": 0.09885437284361864,
+    "vol": 0.1001723718456059,
+    "max_dd": -0.12459976031092394,
+    "sortino": 1.2895496137395435,
+    "calmar": 0.7933753050322029,
+    "cvar95": -0.015367332672770745,
+    "n_days": 1697
+   },
+   "correlation_poche_production": 0.15097518092717624,
+   "dsr_developpement": 0.9358728893341665,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "A4": {
+   "nom": "A4 — Équipe Matières premières",
+   "description": "6 agents, 6 tickers.",
+   "debut_mesure": "2009-05-04",
+   "reference": {
+    "developpement": {
+     "sharpe": 1.2127013829244657,
+     "cagr": 0.07578721346631201,
+     "vol": 0.061825555745329455,
+     "max_dd": -0.09261414479478451,
+     "sortino": 1.5939029111840637,
+     "calmar": 0.8183114321709949,
+     "cvar95": -0.009346278349306746,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": 1.0409834916091272,
+     "cagr": 0.07854948008198215,
+     "vol": 0.075380581181512,
+     "max_dd": -0.10316300759189316,
+     "sortino": 1.3687953241143709,
+     "calmar": 0.7614113034850565,
+     "cvar95": -0.011365727528447092,
+     "n_days": 1697
+    }
+   },
+   "poche_seule": {
+    "developpement": {
+     "sharpe": 0.4769689965322969,
+     "cagr": 0.04840049230961463,
+     "vol": 0.11230644398359062,
+     "max_dd": -0.17603081607305573,
+     "sortino": 0.70660633812612,
+     "calmar": 0.2749546550390792,
+     "cvar95": -0.01502959367002179,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": 0.21459916299251683,
+     "cagr": 0.018184329810851274,
+     "vol": 0.1145001033564846,
+     "max_dd": -0.2861486624870939,
+     "sortino": 0.32205498549739925,
+     "calmar": 0.0635485403034915,
+     "cvar95": -0.016016969845308413,
+     "n_days": 1697
+    }
+   },
+   "developpement": {
+    "sharpe": 1.105295468705591,
+    "cagr": 0.10241312913253742,
+    "vol": 0.09206523122463053,
+    "max_dd": -0.09892784683508185,
+    "sortino": 1.567870099660986,
+    "calmar": 1.0352305484143987,
+    "cvar95": -0.013050375554292176,
+    "n_days": 2685
+   },
+   "validation": {
+    "sharpe": 0.9111248831957643,
+    "cagr": 0.08956303292473611,
+    "vol": 0.09960846799722949,
+    "max_dd": -0.16446357788231503,
+    "sortino": 1.2552397673992068,
+    "calmar": 0.5445767025014171,
+    "cvar95": -0.01471741596488249,
+    "n_days": 1697
+   },
+   "correlation_poche_production": 0.16937727550393197,
+   "dsr_developpement": 0.9898852109601839,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "A5": {
+   "nom": "A5 — Équipe Crypto 24/7",
+   "description": "8 agents, 8 tickers.",
+   "debut_mesure": "2015-12-04",
+   "reference": {
+    "developpement": {
+     "sharpe": 1.0525341418585399,
+     "cagr": 0.06107354077006666,
+     "vol": 0.0579243591598313,
+     "max_dd": -0.09261414479478415,
+     "sortino": 1.3151047498672082,
+     "calmar": 0.6594407463934839,
+     "cvar95": -0.008927839184963166,
+     "n_days": 1025
+    },
+    "validation": {
+     "sharpe": 1.0409834916091272,
+     "cagr": 0.07854948008198215,
+     "vol": 0.075380581181512,
+     "max_dd": -0.10316300759189316,
+     "sortino": 1.3687953241143709,
+     "calmar": 0.7614113034850565,
+     "cvar95": -0.011365727528447092,
+     "n_days": 1697
+    }
+   },
+   "poche_seule": {
+    "developpement": {
+     "sharpe": 1.0315820293036038,
+     "cagr": 0.12815576980027021,
+     "vol": 0.12440203989659201,
+     "max_dd": -0.23816709363052005,
+     "sortino": 1.3821746888237605,
+     "calmar": 0.5380918406767157,
+     "cvar95": -0.018394651020505588,
+     "n_days": 1025
+    },
+    "validation": {
+     "sharpe": 0.8237921278434815,
+     "cagr": 0.11171707856734336,
+     "vol": 0.14046990038758572,
+     "max_dd": -0.21462288058335022,
+     "sortino": 1.3173514402657922,
+     "calmar": 0.5205273466822066,
+     "cvar95": -0.018540633103382498,
+     "n_days": 1697
+    }
+   },
+   "developpement": {
+    "sharpe": 1.4576183436302836,
+    "cagr": 0.12909996910704202,
+    "vol": 0.08584745148882077,
+    "max_dd": -0.15282738478224211,
+    "sortino": 2.080945076287878,
+    "calmar": 0.8447436910013976,
+    "cvar95": -0.012062130207296667,
+    "n_days": 1025
+   },
+   "validation": {
+    "sharpe": 1.3668484888528603,
+    "cagr": 0.14033892913428203,
+    "vol": 0.09973961326276658,
+    "max_dd": -0.13466732779369722,
+    "sortino": 2.020311631084311,
+    "calmar": 1.0421156447781705,
+    "cvar95": -0.013706788387768216,
+    "n_days": 1697
+   },
+   "correlation_poche_production": -0.038716011060542926,
+   "dsr_developpement": 0.983304599171009,
+   "criteres": {
+    "gain_developpement": true,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "A6": {
+   "nom": "A6 — Équipe Devises",
+   "description": "6 agents, 6 tickers.",
+   "debut_mesure": "2009-05-04",
+   "reference": {
+    "developpement": {
+     "sharpe": 1.2127013829244657,
+     "cagr": 0.07578721346631201,
+     "vol": 0.061825555745329455,
+     "max_dd": -0.09261414479478451,
+     "sortino": 1.5939029111840637,
+     "calmar": 0.8183114321709949,
+     "cvar95": -0.009346278349306746,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": 1.0409834916091272,
+     "cagr": 0.07854948008198215,
+     "vol": 0.075380581181512,
+     "max_dd": -0.10316300759189316,
+     "sortino": 1.3687953241143709,
+     "calmar": 0.7614113034850565,
+     "cvar95": -0.011365727528447092,
+     "n_days": 1697
+    }
+   },
+   "poche_seule": {
+    "developpement": {
+     "sharpe": -0.5188610281416265,
+     "cagr": -0.0610793915290776,
+     "vol": 0.1098201541402823,
+     "max_dd": -0.5514988928188687,
+     "sortino": -0.7709013481118627,
+     "calmar": -0.11075161224147405,
+     "cvar95": -0.01542352353234764,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": -0.08779022752797018,
+     "cagr": -0.015625488487902683,
+     "vol": 0.11025530489243547,
+     "max_dd": -0.21452160439052173,
+     "sortino": -0.13912294923293791,
+     "calmar": -0.07283876387320674,
+     "cvar95": -0.014809560836397557,
+     "n_days": 1697
+    }
+   },
+   "developpement": {
+    "sharpe": 0.5533439939564235,
+    "cagr": 0.04388592496230914,
+    "vol": 0.0840078475888293,
+    "max_dd": -0.14700955435349136,
+    "sortino": 0.7856532904913198,
+    "calmar": 0.29852430445971817,
+    "cvar95": -0.012128106336655136,
+    "n_days": 2685
+   },
+   "validation": {
+    "sharpe": 0.8083928914719634,
+    "cagr": 0.07194469196416908,
+    "vol": 0.09108228464558803,
+    "max_dd": -0.10844264432133802,
+    "sortino": 1.1517357001596034,
+    "calmar": 0.6634354262976294,
+    "cvar95": -0.013076577738403474,
+    "n_days": 1697
+   },
+   "correlation_poche_production": -0.0040246636974901355,
+   "dsr_developpement": 0.7062941676789543,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": false,
+    "validation_non_contredite": false,
+    "drawdown_validation": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "A7": {
+   "nom": "A7 — Conseil complet (6 équipes)",
+   "description": "Moyenne des 6 poches d'équipe.",
+   "debut_mesure": "2009-05-04",
+   "reference": {
+    "developpement": {
+     "sharpe": 1.2127013829244657,
+     "cagr": 0.07578721346631201,
+     "vol": 0.061825555745329455,
+     "max_dd": -0.09261414479478451,
+     "sortino": 1.5939029111840637,
+     "calmar": 0.8183114321709949,
+     "cvar95": -0.009346278349306746,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": 1.0409834916091272,
+     "cagr": 0.07854948008198215,
+     "vol": 0.075380581181512,
+     "max_dd": -0.10316300759189316,
+     "sortino": 1.3687953241143709,
+     "calmar": 0.7614113034850565,
+     "cvar95": -0.011365727528447092,
+     "n_days": 1697
+    }
+   },
+   "poche_seule": {
+    "developpement": {
+     "sharpe": 0.2994266201214109,
+     "cagr": 0.013645529705485382,
+     "vol": 0.04932601743986867,
+     "max_dd": -0.10810867236392517,
+     "sortino": 0.43514176248986725,
+     "calmar": 0.1262204909847618,
+     "cvar95": -0.006939165195831333,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": 0.49921181395998937,
+     "cagr": 0.02809704301058069,
+     "vol": 0.058980981447364314,
+     "max_dd": -0.10181656781385934,
+     "sortino": 0.7706093965652256,
+     "calmar": 0.27595747542725657,
+     "cvar95": -0.007860769600516612,
+     "n_days": 1697
+    }
+   },
+   "developpement": {
+    "sharpe": 1.1535213737331826,
+    "cagr": 0.08306678604474094,
+    "vol": 0.07139936907187304,
+    "max_dd": -0.12340950150708839,
+    "sortino": 1.5525095165449516,
+    "calmar": 0.6730987892368219,
+    "cvar95": -0.010611050574737229,
+    "n_days": 2685
+   },
+   "validation": {
+    "sharpe": 1.1380962805857897,
+    "cagr": 0.09397781080165313,
+    "vol": 0.08188405810326378,
+    "max_dd": -0.12375113481071834,
+    "sortino": 1.5208500461742505,
+    "calmar": 0.7594096890133206,
+    "cvar95": -0.0124013730157816,
+    "n_days": 1697
+   },
+   "correlation_poche_production": 0.13038874314524568,
+   "dsr_developpement": 0.9928594243070819,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "A8": {
+   "nom": "A8 — Conseil complet, bug d'agrégation corrigé",
+   "description": "Moyenne des 6 poches d'équipe.",
+   "debut_mesure": "2009-05-04",
+   "reference": {
+    "developpement": {
+     "sharpe": 1.2127013829244657,
+     "cagr": 0.07578721346631201,
+     "vol": 0.061825555745329455,
+     "max_dd": -0.09261414479478451,
+     "sortino": 1.5939029111840637,
+     "calmar": 0.8183114321709949,
+     "cvar95": -0.009346278349306746,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": 1.0409834916091272,
+     "cagr": 0.07854948008198215,
+     "vol": 0.075380581181512,
+     "max_dd": -0.10316300759189316,
+     "sortino": 1.3687953241143709,
+     "calmar": 0.7614113034850565,
+     "cvar95": -0.011365727528447092,
+     "n_days": 1697
+    }
+   },
+   "poche_seule": {
+    "developpement": {
+     "sharpe": 0.3196541251573763,
+     "cagr": 0.01686352708184935,
+     "vol": 0.05748819088454222,
+     "max_dd": -0.12261874429713121,
+     "sortino": 0.45050536878636527,
+     "calmar": 0.1375281338796412,
+     "cvar95": -0.008457301535882011,
+     "n_days": 2685
+    },
+    "validation": {
+     "sharpe": 0.8193965654481693,
+     "cagr": 0.05281061458612446,
+     "vol": 0.06541979590885745,
+     "max_dd": -0.0872964099313023,
+     "sortino": 1.19595888967274,
+     "calmar": 0.6049574619126221,
+     "cvar95": -0.009050730592152363,
+     "n_days": 1697
+    }
+   },
+   "developpement": {
+    "sharpe": 1.0851259472464285,
+    "cagr": 0.08452165986684812,
+    "vol": 0.07756160088886033,
+    "max_dd": -0.12663959736054173,
+    "sortino": 1.4331558996805016,
+    "calmar": 0.6674188928934743,
+    "cvar95": -0.01169565022144116,
+    "n_days": 2685
+   },
+   "validation": {
+    "sharpe": 1.2126959740467549,
+    "cagr": 0.10680892198328995,
+    "vol": 0.08680850014417206,
+    "max_dd": -0.11182108472917483,
+    "sortino": 1.6443578302357684,
+    "calmar": 0.9551769439723815,
+    "cvar95": -0.013049472337263154,
+    "n_days": 1697
+   },
+   "correlation_poche_production": 0.2790089310391193,
+   "dsr_developpement": 0.9870929298514312,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": true
+   },
+   "verdict": "REJETÉ"
+  }
+ }
+}

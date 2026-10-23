@@ -1,0 +1,349 @@
+{
+ "genere_le": "2026-10-04",
+ "protocole": "Campagne de recherche n° 4 (octobre 2026) — construction du portefeuille et exécution.\n\nPROTOCOLE FIGÉ ET COMMITÉ AVANT TOUT CALCUL (pré-enregistrement) :\n\nRéférence : la stratégie ETF de production (« 60/40 + couche tendance », 20 ETF,\nsocle 50 %, filtre anti micro-trades 25 % / 0,5 %, rebalancement tous les 5 jours).\nLes signaux ne changent pas : seules la construction et l'exécution varient.\n\nEssais (8) :\n  P1 Rebalancement quotidien (avec le filtre) — proche du moteur live, qui\n     réajuste en séance dès que l'écart dépasse le filtre\n  P2 Rebalancement mensuel (21 jours)\n  P3 Filtre anti micro-trades élargi (50 % de la cible / 1 % du capital)\n  P4 Sans filtre anti micro-trades\n  P5 Socle 60/40 réduit : 30 % du capital (couche tendance 70 %)\n  P6 Socle 60/40 renforcé : 70 % du capital (couche tendance 30 %)\n  P7 Contrôle du drawdown : exposition divisée par 2 quand la baisse depuis\n     le plus haut dépasse 10 %, rétablie quand elle repasse sous 5 %\n     (calculé sur la performance réalisée de la stratégie, causal)\n  P8 Plafond par classe d'actifs : la couche tendance ne peut pas dépasser\n     40 % de son exposition brute dans une même classe (actions, obligations,\n     matières premières, devises)\n\nPériodes, coûts, règle d'acceptation : identiques aux campagnes 1 à 3\n(développement -> 2019-12-31, validation 2020 -> aujourd'hui, 5 bps ;\nSharpe dév. >= réf. + 0,05, DSR >= 0,90, Sharpe validation >= réf. - 0,05,\npire baisse validation pas plus de 3 points au-delà de la réf.).\n\nTests multiples : le Deflated Sharpe Ratio est calculé sur TOUS les Sharpe de\ndéveloppement des campagnes 1, 2 et 4 (univers ETF) — 35 essais au total —\net non sur les seuls essais de cette campagne.\nUn essai accepté n'entre au portefeuille qu'avec l'accord de Tom.\n\nUsage : python3 -m gambit_ridge.research.campaign4\nSortie : data/research_campaign4_2026-10.json\n",
+ "regles": {
+  "dev_gain": 0.05,
+  "dsr": 0.9,
+  "val_tol": 0.05,
+  "dd_tol": 0.03
+ },
+ "essais_comptes_dans_le_dsr": 32,
+ "duree_s": 15,
+ "resultats": {
+  "REF": {
+   "nom": "REF — Référence — production actuelle",
+   "description": "Socle 50 %, filtre 25 % / 0,5 %, tous les 5 jours.",
+   "developpement": {
+    "sharpe": 0.9923099544101139,
+    "cagr": 0.06297856134252422,
+    "vol": 0.0635945402032036,
+    "max_dd": -0.11865478068585315,
+    "sortino": 1.331945056545143,
+    "calmar": 0.5307713770864773,
+    "cvar95": -0.009480335804550198,
+    "n_days": 2945,
+    "turnover_annuel": 8.76082729216971,
+    "gross_moyen": 1.3101445849375126,
+    "couts_annuels": 0.0043804136460848546
+   },
+   "validation": {
+    "sharpe": 1.0409834916091272,
+    "cagr": 0.07854948008198215,
+    "vol": 0.075380581181512,
+    "max_dd": -0.10316300759189316,
+    "sortino": 1.3687953241143709,
+    "calmar": 0.7614113034850565,
+    "cvar95": -0.011365727528447092,
+    "n_days": 1697,
+    "turnover_annuel": 9.227556040120785,
+    "gross_moyen": 1.279578858611669,
+    "couts_annuels": 0.0046137780200603915
+   },
+   "dsr_developpement": 0.9678958994964286
+  },
+  "P1": {
+   "nom": "P1 — Rebalancement quotidien",
+   "description": "Filtre appliqué chaque jour (proche du moteur live).",
+   "developpement": {
+    "sharpe": 0.9845064219962092,
+    "cagr": 0.06142506754631483,
+    "vol": 0.06254560196225169,
+    "max_dd": -0.10924540615041724,
+    "sortino": 1.321469985920788,
+    "calmar": 0.5622668239407724,
+    "cvar95": -0.009347186329577104,
+    "n_days": 2945,
+    "turnover_annuel": 14.147357639963788,
+    "gross_moyen": 1.303882030416711,
+    "couts_annuels": 0.007073678819981894
+   },
+   "validation": {
+    "sharpe": 1.1083909821001954,
+    "cagr": 0.08106521378007758,
+    "vol": 0.07272273490626488,
+    "max_dd": -0.08464009970197427,
+    "sortino": 1.4858064918376013,
+    "calmar": 0.957763684890682,
+    "cvar95": -0.010911039598482176,
+    "n_days": 1697,
+    "turnover_annuel": 14.945186599439424,
+    "gross_moyen": 1.2826561166276715,
+    "couts_annuels": 0.007472593299719712
+   },
+   "dsr_developpement": 0.9658794670053661,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "P2": {
+   "nom": "P2 — Rebalancement mensuel",
+   "description": "Tous les 21 jours.",
+   "developpement": {
+    "sharpe": 1.0055737056521237,
+    "cagr": 0.06571266207088322,
+    "vol": 0.0654280406628308,
+    "max_dd": -0.11864284612718509,
+    "sortino": 1.349289878266662,
+    "calmar": 0.5538695691810973,
+    "cvar95": -0.009717667612858914,
+    "n_days": 2945,
+    "turnover_annuel": 5.083676579931532,
+    "gross_moyen": 1.3096335593812145,
+    "couts_annuels": 0.002541838289965766
+   },
+   "validation": {
+    "sharpe": 0.8817208051661797,
+    "cagr": 0.07168510834985997,
+    "vol": 0.08238992739778796,
+    "max_dd": -0.14930119990039745,
+    "sortino": 1.0326106755938098,
+    "calmar": 0.4801375233265566,
+    "cvar95": -0.012583876679470786,
+    "n_days": 1697,
+    "turnover_annuel": 5.273794351169336,
+    "gross_moyen": 1.262336677022739,
+    "couts_annuels": 0.002636897175584668
+   },
+   "dsr_developpement": 0.9713226130413215,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "P3": {
+   "nom": "P3 — Filtre anti micro-trades élargi",
+   "description": "50 % de la cible / 1 % du capital.",
+   "developpement": {
+    "sharpe": 1.0106766143356447,
+    "cagr": 0.06050837685520549,
+    "vol": 0.0599108706718756,
+    "max_dd": -0.11618908807776923,
+    "sortino": 1.3632121467704486,
+    "calmar": 0.5207750388289925,
+    "cvar95": -0.00891898285340064,
+    "n_days": 2945,
+    "turnover_annuel": 6.632116048044463,
+    "gross_moyen": 1.1980748050759558,
+    "couts_annuels": 0.0033160580240222315
+   },
+   "validation": {
+    "sharpe": 0.9872418307908106,
+    "cagr": 0.06915818367823912,
+    "vol": 0.07024428104244149,
+    "max_dd": -0.09565622649951522,
+    "sortino": 1.2937997709620002,
+    "calmar": 0.7229867433521393,
+    "cvar95": -0.010609392246151933,
+    "n_days": 1697,
+    "turnover_annuel": 7.0421457817325654,
+    "gross_moyen": 1.1790247293676155,
+    "couts_annuels": 0.0035210728908662827
+   },
+   "dsr_developpement": 0.9722287872993177,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "P4": {
+   "nom": "P4 — Sans filtre anti micro-trades",
+   "description": "Cible appliquée telle quelle.",
+   "developpement": {
+    "sharpe": 0.9629747150527319,
+    "cagr": 0.06328553217622179,
+    "vol": 0.06599329664474697,
+    "max_dd": -0.10651617119335374,
+    "sortino": 1.296482110741989,
+    "calmar": 0.5941401335328002,
+    "cvar95": -0.009850793132398112,
+    "n_days": 2945,
+    "turnover_annuel": 11.220371354639237,
+    "gross_moyen": 1.3492970240696551,
+    "couts_annuels": 0.005610185677319619
+   },
+   "validation": {
+    "sharpe": 1.0430038000128041,
+    "cagr": 0.07940327195794605,
+    "vol": 0.07604217251396624,
+    "max_dd": -0.10138434551734483,
+    "sortino": 1.375791009081473,
+    "calmar": 0.7831906548566883,
+    "cvar95": -0.011504419935819465,
+    "n_days": 1697,
+    "turnover_annuel": 11.568165751183864,
+    "gross_moyen": 1.3157437780903551,
+    "couts_annuels": 0.005784082875591931
+   },
+   "dsr_developpement": 0.9602111585037112,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "P5": {
+   "nom": "P5 — Socle réduit à 30 %",
+   "description": "Couche tendance 70 %.",
+   "developpement": {
+    "sharpe": 0.8315948507094785,
+    "cagr": 0.056623507541653906,
+    "vol": 0.06911355284260969,
+    "max_dd": -0.10949014021379619,
+    "sortino": 1.1308006749225934,
+    "calmar": 0.5171562245795638,
+    "cvar95": -0.010344463631531667,
+    "n_days": 2945,
+    "turnover_annuel": 12.577342003268543,
+    "gross_moyen": 1.4701268275007415,
+    "couts_annuels": 0.006288671001634271
+   },
+   "validation": {
+    "sharpe": 0.933506759635626,
+    "cagr": 0.06979823183801037,
+    "vol": 0.07532672347703318,
+    "max_dd": -0.1497957161907843,
+    "sortino": 1.252375164045987,
+    "calmar": 0.46595612753780796,
+    "cvar95": -0.011303678597429964,
+    "n_days": 1697,
+    "turnover_annuel": 13.17437226358384,
+    "gross_moyen": 1.427101778321214,
+    "couts_annuels": 0.0065871861317919195
+   },
+   "dsr_developpement": 0.9052906162459841,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "P6": {
+   "nom": "P6 — Socle renforcé à 70 %",
+   "description": "Couche tendance 30 %.",
+   "developpement": {
+    "sharpe": 0.9284411694168835,
+    "cagr": 0.0687323985540973,
+    "vol": 0.07460188600180827,
+    "max_dd": -0.20038617134471237,
+    "sortino": 1.2186549072802484,
+    "calmar": 0.3429997094752664,
+    "cvar95": -0.011119363878525088,
+    "n_days": 2945,
+    "turnover_annuel": 5.243685409511553,
+    "gross_moyen": 1.168164090773424,
+    "couts_annuels": 0.0026218427047557764
+   },
+   "validation": {
+    "sharpe": 0.9652183069612053,
+    "cagr": 0.08373725204721039,
+    "vol": 0.08727227015448105,
+    "max_dd": -0.13311103383421072,
+    "sortino": 1.2754887035676215,
+    "calmar": 0.6290782186509408,
+    "cvar95": -0.012928899153888434,
+    "n_days": 1697,
+    "turnover_annuel": 5.467203800875941,
+    "gross_moyen": 1.1612237459895818,
+    "couts_annuels": 0.0027336019004379707
+   },
+   "dsr_developpement": 0.9507285484664636,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "P7": {
+   "nom": "P7 — Contrôle du drawdown (-10 % / -5 %)",
+   "description": "Exposition /2 au-delà de 10 % de baisse, rétablie sous 5 %.",
+   "developpement": {
+    "sharpe": 0.9775180980391066,
+    "cagr": 0.058044087867797245,
+    "vol": 0.05954103212549103,
+    "max_dd": -0.10974571717140574,
+    "sortino": 1.2736411276225554,
+    "calmar": 0.5288961552562584,
+    "cvar95": -0.009102518792166689,
+    "n_days": 2945,
+    "turnover_annuel": 8.492021286089377,
+    "gross_moyen": 1.2600975993617558,
+    "couts_annuels": 0.004246010643044688
+   },
+   "validation": {
+    "sharpe": 0.9579408870347976,
+    "cagr": 0.07088350457335646,
+    "vol": 0.07438950546454985,
+    "max_dd": -0.10316300759189316,
+    "sortino": 1.2428670596837135,
+    "calmar": 0.6871019586184175,
+    "cvar95": -0.011342973643631871,
+    "n_days": 1697,
+    "turnover_annuel": 9.16010745097418,
+    "gross_moyen": 1.2458672268079023,
+    "couts_annuels": 0.004580053725487091
+   },
+   "dsr_developpement": 0.9634445500673148,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "P8": {
+   "nom": "P8 — Plafond de 40 % par classe d'actifs",
+   "description": "Sur la couche tendance.",
+   "developpement": {
+    "sharpe": 0.9474730573328882,
+    "cagr": 0.05876243576951312,
+    "vol": 0.06232405187476254,
+    "max_dd": -0.11588634713400428,
+    "sortino": 1.2630190735292184,
+    "calmar": 0.5070695316814468,
+    "cvar95": -0.009327711131138634,
+    "n_days": 2945,
+    "turnover_annuel": 8.269546982025064,
+    "gross_moyen": 1.23755596467521,
+    "couts_annuels": 0.004134773491012532
+   },
+   "validation": {
+    "sharpe": 1.071652692974782,
+    "cagr": 0.07982228869255503,
+    "vol": 0.07424501999521214,
+    "max_dd": -0.10095502746659285,
+    "sortino": 1.4166857604387948,
+    "calmar": 0.7906717544994886,
+    "cvar95": -0.011121624409494147,
+    "n_days": 1697,
+    "turnover_annuel": 8.797268353697538,
+    "gross_moyen": 1.2384785669342604,
+    "couts_annuels": 0.0043986341768487685
+   },
+   "dsr_developpement": 0.9554627829146924,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": true
+   },
+   "verdict": "REJETÉ"
+  }
+ }
+}

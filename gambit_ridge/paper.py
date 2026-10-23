@@ -30,7 +30,7 @@ CACHE = Path(__file__).resolve().parent.parent / "data_cache"
 JOURNAL_PATH = CACHE / "paper_journal_v2.json"
 LEGACY_PATH = CACHE / "paper_journal.json"
 INITIAL_CAPITAL = 1_000_000.0
-STRATEGY_LABEL = "60/40 + couche tendance (90 %) · crypto tendance long-only (10 %)"
+STRATEGY_LABEL = "60/40 + couche tendance (95 %) · crypto tendance long-only (5 %, 1,25 % max par crypto)"
 
 # Filtre anti micro-trades (identique au backtest de sélection)
 BUFFER_REL = 0.25

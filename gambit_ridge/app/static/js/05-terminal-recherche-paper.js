@@ -65,6 +65,7 @@ function kpi(l, v, cls) { return `<div class="kpi"><div class="l">${l}</div><div
 
 /* ============ RECHERCHE ============ */
 async function renderResearch() {
+  if (RS_SEL && RS_SEL.uni === 'camp') return renderCampaigns();
   const c = document.getElementById('content');
   if (!RESEARCH) {
     c.innerHTML = '<div class="loader">Chargement du banc d’évaluation…</div>';
@@ -75,7 +76,7 @@ async function renderResearch() {
   const res = R[uni], keyRet = R[uni + '_retenue'];
   if (!RS_SEL || !RS_SEL.shown) RS_SEL = { uni, shown: new Set([keyRet, Object.keys(res).find(n => res[n].famille === 'benchmark' && /60\/40|Bitcoin/.test(n)), Object.keys(res).find(n => /Ridge|Crypto regime/.test(n))].filter(Boolean)) };
   const P = R.protocole, U = R[uni + '_univers'];
-  let html = '<div class="seg">' + ['etf','crypto'].filter(k => R[k]).map(k => `<div class="seg-i ${k===uni?'active':''}" onclick="RS_SEL={uni:'${k}'};renderResearch()">${k==='etf'?'Univers ETF (20 actifs)':'Crypto (7 actifs)'}</div>`).join('') + '</div>';
+  let html = researchSeg(uni);
   const r = res[keyRet];
   html += `<div class="verdict"><div class="v-t">STRATÉGIE RETENUE</div><div class="v-n">${esc(keyRet)}</div><div class="v-d">${esc(r.description)}</div>`;
   html += `<div class="v-k">${kpi('Sharpe développement', r.developpement.sharpe.toFixed(2))}${kpi('Sharpe validation', r.validation.sharpe.toFixed(2), r.validation.sharpe>0?'pos':'neg')}${kpi('CAGR validation', fmtPct(r.validation.cagr,1))}${kpi('Max drawdown validation', fmtPct(r.validation.max_dd,1), 'neg')}${kpi('Deflated Sharpe', fmtPct(r.dsr_developpement,0), r.dsr_developpement>0.9?'pos':'')}${r.cagr_risque_egal&&r.cagr_risque_egal.val!==undefined?kpi('CAGR à risque égal ('+esc((r.reference_risque||'').replace('Benchmark — ',''))+')', fmtPct(r.cagr_risque_egal.val,1)+' <span class="muted small">vs '+fmtPct(res[r.reference_risque].validation.cagr,1)+'</span>'):''}</div></div>`;
@@ -128,7 +129,8 @@ async function renderPaper() {
   if (PAPER.error) { c.innerHTML = '<div class="loader neg">Erreur : ' + esc(PAPER.error) + '</div>'; return; }
   if (PAPER.warning) { c.innerHTML = '<div class="loader neg">' + esc(PAPER.warning) + '</div>'; return; }
   const d = PAPER;
-  let html = '<div class="kpis">';
+  let html = '<div id="livePanel">' + await livePanel() + '</div>';
+  html += '<div class="sub-h" style="margin:4px 0 6px">Référence : portefeuille paper quotidien (clôtures, comparable au backtest)</div><div class="kpis">';
   html += kpi('Capital initial', fmtM(d.initial_capital));
   html += kpi('Équity', fmtM(d.equity));
   html += kpi('P&L total', sgn(d.total_return*100,2)+'%', d.total_return>=0?'pos':'neg');
@@ -153,7 +155,7 @@ async function renderPaper() {
   html += '<div class="panel"><div class="panel-h">Exposition <span class="rt">brute ' + fmtPct(d.gross,0) + ' · nette ' + fmtPct(d.net,0) + '</span></div><div class="panel-b">';
   const ex = d.exposure_by_class, mx = Math.max(...Object.values(ex).map(Math.abs), 0.01);
   for (const cl of CLASS_ORDER) if (ex[cl] !== undefined) html += barRow(cl, ex[cl], mx);
-  html += '<div class="muted small" style="margin-top:10px">90 % du capital : socle 27 % S&P 500 + 18 % Treasuries 7-10 ans, plus une couche tendance (long ou short) à 10 % de volatilité cible. 10 % : crypto, tendance long-only, cash quand le signal est négatif.</div>';
+  html += '<div class="muted small" style="margin-top:10px">95 % du capital : socle 28,5 % S&P 500 + 19 % Treasuries 7-10 ans, plus une couche tendance (long ou short) à 10 % de volatilité cible. 5 % : crypto, tendance long-only, 1,25 % du fonds au plus par crypto, cash quand le signal est négatif.</div>';
   html += '</div></div></div>';
   // positions par classe
   html += '<div class="panel" style="margin-top:10px"><div class="panel-h">Positions <span class="rt">' + d.positions.length + ' lignes · signal = moyenne TSMOM / EWMA / Kalman dans [-1, 1]</span></div><div class="panel-b" style="padding:4px;overflow-x:auto"><table>';
@@ -178,5 +180,6 @@ async function renderPaper() {
   if (d.errors && Object.keys(d.errors).length) html += '<div class="neg small" style="margin:8px 0">⚠ ' + esc(Object.values(d.errors).join(' · ')) + '</div>';
   html += '<div class="muted small" style="margin:10px 0">Portefeuille virtuel 100 % local — aucune connexion courtier. Prix de clôture réels (Yahoo), barre du jour exclue tant qu’elle n’est pas close. Coûts déduits : 5 bps ETF, 20 bps crypto.' + (d.legacy_journal ? ' L’ancien journal (v1) est archivé dans data_cache/paper_journal.json.' : '') + '</div>';
   c.innerHTML = html;
+  startLiveRefresh();
 }
 
