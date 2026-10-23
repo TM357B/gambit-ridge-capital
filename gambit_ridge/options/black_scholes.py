@@ -44,6 +44,28 @@ def vega(S, K, T, r, sigma, q=0.0):
     return S * math.exp(-q * T) * _npdf(d1) * math.sqrt(T)
 
 
+def grecques(S, K, T, r, sigma, type_option="call", q=0.0) -> dict:
+    """Prix et grecques Black-Scholes (unités de desk).
+
+    delta : par unité de sous-jacent ; gamma : par unité ; vega : pour 1 point de vol ;
+    theta : par jour calendaire ; rho : pour 1 point de taux.
+    """
+    d1, d2 = calcul_d1_d2(S, K, T, r, sigma, q)
+    eq, er = math.exp(-q * T), math.exp(-r * T)
+    call = type_option == "call"
+    delta = eq * _ncdf(d1) if call else -eq * _ncdf(-d1)
+    gamma = eq * _npdf(d1) / (S * sigma * math.sqrt(T))
+    commun = -S * eq * _npdf(d1) * sigma / (2 * math.sqrt(T))
+    if call:
+        theta = commun - r * K * er * _ncdf(d2) + q * S * eq * _ncdf(d1)
+        rho = K * T * er * _ncdf(d2)
+    else:
+        theta = commun + r * K * er * _ncdf(-d2) - q * S * eq * _ncdf(-d1)
+        rho = -K * T * er * _ncdf(-d2)
+    return {"prix": prix_bs(S, K, T, r, sigma, type_option, q), "delta": delta, "gamma": gamma,
+            "vega": vega(S, K, T, r, sigma, q) / 100, "theta": theta / 365, "rho": rho / 100}
+
+
 def bornes_sans_arbitrage(S, K, T, r, type_option="call", q=0.0):
     """Intervalle où doit se trouver le prix ; en dehors, aucune vol ne le redonne."""
     s_act = S * math.exp(-q * T)

@@ -11,7 +11,7 @@ Endpoints :
   GET /api/journal → historique paper-trading + P&L
   GET /api/paper   → portefeuille papier v2 (stratégie retenue)
   GET /api/research → rapport du banc d'évaluation des stratégies
-  GET /api/fn/{gp,des,fxc,wcrs,ecst,wei,gc,ovdv}[?s=TICKER] → fonctions de marché façon Bloomberg
+  GET /api/fn/{gp,des,fxc,wcrs,ecst,wei,gc,ovdv,ovml,mc,gc3d,budg,mac,ilbe}[?s=TICKER&…] → fonctions de marché façon Bloomberg
   GET /api/risk, /api/attribution, /api/ops → risque, attribution, état d'exploitation
   GET /report[/AAAA-MM] → rapport mensuel imprimable
   GET /api/health, /api/tca, /api/notes[/AAAA-Www] ; POST /api/notes/generate
@@ -325,9 +325,13 @@ class Handler(BaseHTTPRequestHandler):
 
             u = urlparse(self.path)
             name = u.path[len("/api/fn/"):]
-            sym = (parse_qs(u.query).get("s") or [""])[0]
+            qs = parse_qs(u.query)
+            sym = (qs.get("s") or [""])[0]
             handlers = {"gp": lambda: mf.gp(sym), "des": lambda: mf.des(sym), "fxc": mf.fxc, "wcrs": mf.wcrs, "ecst": mf.ecst,
-                        "wei": mf.wei, "gc": mf.gc, "ovdv": lambda: mf.ovdv(sym or "SPY")}
+                        "wei": mf.wei, "gc": mf.gc, "ovdv": lambda: mf.ovdv(sym or "SPY"),
+                        "mc": lambda: mf.mc(sym or "SPY", qs), "ovml": lambda: mf.ovml(sym or "SPY", qs),
+                        "gc3d": lambda: mf.gc3d((qs.get("y") or ["5"])[0]), "budg": mf.budg,
+                        "mac": lambda: mf.mac(sym or "USD"), "ilbe": mf.ilbe}
             if name not in handlers:
                 self._send_json({"error": f"fonction inconnue : {name}"}, 404)
                 return

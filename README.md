@@ -52,7 +52,7 @@ flowchart LR
 
 The fund runs on its own: decision after the New York close, orders replicated on an Alpaca paper account at the next open, daily data-quality checks with an independent second price source, transaction-cost analysis on real fills, a strategy-health monitor comparing live results with every comparable backtest window, monthly reports and phone alerts.
 
-A Bloomberg-style local terminal (macOS app + iPhone web app) shows the portfolio, risk (VaR, stress tests on nine historical crises, risk contributions), attribution, research results and market functions (`GP`, `DES`, `FXC`, `WCRS`, `ECST`, `WEI`, `GC`, `OVDV`).
+A Bloomberg-style local terminal (macOS app + iPhone web app) shows the portfolio, risk (VaR, stress tests on nine historical crises, risk contributions), attribution, research results and market functions modelled on the Bloomberg terminal (`GP`, `DES`, `FXC`, `WCRS`, `ECST`, `WEI`, `GC`, `GC3D`, `OVDV`, `OVML`, `MC`, `ILBE`, `BUDG`, `WCRS MAC`), all fed by free, real data — functions that need paid consensus data are deliberately not imitated.
 
 ![Risk tab: strategy health, VaR, limits, nine historical crises replayed on today's portfolio](docs/img/risk.png)
 
@@ -64,7 +64,16 @@ A Bloomberg-style local terminal (macOS app + iPhone web app) shows the portfoli
 - **Desk-style cleaning** — mid prices, quotes with a spread above 25 % of mid rejected, strikes within 75–125 % of spot, out-of-the-money options only (puts below spot, calls above).
 - **Forward per expiry from put–call parity** — using the strikes closest to spot only. SPY options are American: a regression of C − P on all strikes gives a discount factor above 1, because the early-exercise premium of in-the-money puts distorts parity.
 - **Interpolation** — along each smile, then across maturities in total variance (σ²T), the market convention. Where there is no quote, the surface stays empty instead of inventing values; calendar-arbitrage violations are counted.
-- **Output** — smiles, ATM term structure, surface heat map and an OVDV-style grid in the terminal; CSV of every computed point. A synthetic chain priced from a known surface (`--demo`) is recovered to within 0.01 vol point (median).
+- **Output** — a rotatable 3D surface (home-made canvas renderer, no library), smiles, ATM term structure, an OVDV-style grid and `OVML`, a pricer with Greeks reading its volatility off the surface; CSV of every computed point. A synthetic chain priced from a known surface (`--demo`) is recovered to within 0.01 vol point (median).
+
+## Monte-Carlo lab
+
+`SPY MC` in the terminal (or `python -m gambit_ridge.options.monte_carlo SPY --modele student --produit asian_call`) simulates any Yahoo ticker, calibrated on its own history, with every assumption exposed:
+
+- **Models** — geometric Brownian motion, Student-t shocks (degrees of freedom from the observed kurtosis: fat tails), or a block bootstrap of real daily returns (5-day blocks, re-centred: crashes and volatility clustering kept).
+- **Inputs** — volatility (1-year realised, ATM implied from the `OVDV` surface at the horizon, or fixed), drift (risk-neutral, 5-year historical, or fixed), horizon, number of paths (up to 200,000), seed.
+- **Risk view** — fan chart of quantiles, terminal distribution, VaR / CVaR, drawdown distribution.
+- **Pricing** — European, Asian (arithmetic), up-and-out / down-and-out barriers (daily monitoring) and digital options, always under the risk-neutral measure, with antithetic variates and a control variate (discounted S<sub>T</sub>, known expectation), confidence interval and a convergence chart in 1/√N. European GBM prices are checked against Black-Scholes in the UI and in the tests.
 
 ## How this was built
 
@@ -103,8 +112,8 @@ numpy is the only required dependency: every model (GARCH, Kalman, HMM, ridge…
 | `gambit_ridge/brokers/` | Alpaca paper-account replication (Saxo simulation client, unused) |
 | `gambit_ridge/app/` | local terminal (server + web UI) |
 | `gambit_ridge/ops/` | daily automated run |
-| `gambit_ridge/options/` | Black-Scholes, implied volatility, volatility surface (`OVDV`) |
-| `tests/` | 136 tests, run in CI |
+| `gambit_ridge/options/` | Black-Scholes and Greeks, implied volatility, volatility surface (`OVDV`), Monte-Carlo lab (`MC`) |
+| `tests/` | 152 tests, run in CI |
 
 ## Notes
 

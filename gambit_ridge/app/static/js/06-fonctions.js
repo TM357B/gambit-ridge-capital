@@ -4,7 +4,9 @@ const FN_LIST = [
   ['GP', 'Graphique de prix', 'SPY GP'], ['DES', 'Fiche de l’actif', 'QQQ DES'],
   ['FXC', 'Matrice des devises', 'FXC'], ['WCRS', 'Classement des devises', 'WCRS'],
   ['ECST', 'Statistiques économiques US', 'ECST'], ['WEI', 'Indices mondiaux', 'WEI'],
-  ['GC', 'Courbe des taux US', 'GC'], ['OVDV', 'Surface de vol implicite', 'SPY OVDV'], ['NH', 'Actualités', 'NH'],
+  ['GC', 'Courbe des taux US', 'GC'], ['GC3D', 'Courbe des taux en 3D', 'GC3D'], ['OVDV', 'Surface de vol implicite 3D', 'SPY OVDV'],
+  ['OVML', 'Pricer d’option et grecques', 'SPY OVML'], ['MC', 'Laboratoire Monte-Carlo', 'SPY MC'], ['ILBE', 'Inflation anticipée US', 'ILBE'],
+  ['BUDG', 'Budget fédéral US', 'BUDG'], ['MAC', 'Indice Big Mac (WCRS MAC)', 'WCRS MAC'], ['NH', 'Actualités', 'NH'],
   ['PORT', 'Portefeuille papier', 'PORT'], ['RES', 'Recherche / backtests', 'RES'],
 ];
 const TICKER_ALIAS = { BTC: 'BTC-USD', ETH: 'ETH-USD', XRP: 'XRP-USD', LTC: 'LTC-USD', ADA: 'ADA-USD', BNB: 'BNB-USD', DOGE: 'DOGE-USD', SOL: 'SOL-USD',
@@ -27,7 +29,7 @@ function runCommand(raw) {
   const toks = (raw || '').trim().toUpperCase().replace(/<GO>/g, '').split(/\s+/).filter(Boolean);
   if (!toks.length) return;
   const nav = { NOTE: 'notes', NOTES: 'notes', RISK: 'risk', RISQUE: 'risk', NH: 'news', N: 'news', NEWS: 'news', PORT: 'paper', PT: 'paper', RES: 'research', BT: 'backtest', STRAT: 'strategies', VOIX: 'voice', VOICE: 'voice', AGENTS: 'agents', RH: 'hr', HR: 'hr', MAIN: 'terminal', TERM: 'terminal', RENDUS: 'reports' };
-  const fns = ['GP', 'DES', 'FXC', 'WCRS', 'ECST', 'WEI', 'GC', 'OVDV', 'HELP'];
+  const fns = ['GP', 'DES', 'FXC', 'WCRS', 'ECST', 'WEI', 'GC', 'GC3D', 'OVDV', 'OVML', 'MC', 'ILBE', 'BUDG', 'MAC', 'HELP'];
   const last = toks[toks.length - 1];
   // CAMP : campagnes de recherche · LIVE : panneau En direct · PROJ : projection à un an (onglet Risque)
   if (toks.length === 1 && ['CAMP', 'CAMPAGNES'].includes(last)) { RS_SEL = { uni: 'camp' }; return switchTab('research'); }
@@ -52,9 +54,9 @@ async function fnFetch(name, sym) {
 async function renderFn() {
   const c = document.getElementById('content');
   const S = FN_STATE;
-  const avecSym = ['GP', 'DES', 'OVDV'];
+  const avecSym = ['GP', 'DES', 'OVDV', 'OVML', 'MC'];
   let html = '<div class="fn-bar">' + FN_LIST.map(([k, l, ex]) => `<div class="fn-chip ${S.name===k?'active':''}" onclick="runCommand('${(avecSym.includes(k) ? (S.sym||'SPY') + ' ' : '') + k}')" title="${esc(l)} — ex. ${esc(ex)}"><b>${k}</b> <span>${esc(l)}</span></div>`).join('') + '</div>';
-  c.innerHTML = html + '<div class="loader">Chargement ' + esc(S.name) + (avecSym.includes(S.name) ? ' ' + esc(S.sym) : '') + (S.name === 'OVDV' ? ' — toutes les échéances d’options, une dizaine de secondes' : '') + '…</div>';
+  c.innerHTML = html + '<div class="loader">Chargement ' + esc(S.name) + (avecSym.includes(S.name) ? ' ' + esc(S.sym) : '') + ({ OVDV: ' — toutes les échéances d’options, une dizaine de secondes', OVML: ' — lecture de la surface de vol', MC: ' — simulation en cours' }[S.name] || '') + '…</div>';
   let body = '';
   try {
     if (S.name === 'HELP') body = fnHelp();
@@ -66,8 +68,14 @@ async function renderFn() {
     else if (S.name === 'WEI') body = fnWEI(await fnFetch('WEI'));
     else if (S.name === 'GC') body = fnGC(await fnFetch('GC'));
     else if (S.name === 'OVDV') body = fnOVDV(await fnFetch('OVDV', S.sym));
+    else if (S.name === 'OVML') body = fnOVML(await fnFetchQ('OVML', S.sym, ovmlQuery(FN_STATE.ovml)), S.sym);
+    else if (S.name === 'MC') body = fnMC(await fnFetchQ('MC', S.sym, mcQuery(FN_STATE.mc)), S.sym);
+    else if (S.name === 'GC3D') body = fnGC3D(await fnFetchQ('GC3D', '', { y: FN_STATE.gc3dY }));
+    else if (S.name === 'BUDG') body = fnBUDG(await fnFetch('BUDG'));
+    else if (S.name === 'MAC') body = fnMAC(await fnFetch('MAC', ['USD', 'EUR', 'GBP', 'JPY', 'CNY'].includes(S.sym) ? S.sym : 'USD'));
+    else if (S.name === 'ILBE') body = fnILBE(await fnFetch('ILBE'));
   } catch(e) { body = `<div class="loader neg">Erreur : ${esc(e.message)}</div>`; }
-  if (currentTab === 'fn') c.innerHTML = html + body;
+  if (currentTab === 'fn') { c.innerHTML = html + body; if (typeof s3dMount === 'function') s3dMount(); }
 }
 
 function fnHeader(title, sub, right) {
@@ -281,6 +289,8 @@ function fnOVDV(d) {
     + kpi(`Skew 95 % − 105 % (${esc(k.skew_1m_expiry)})`, pt(k.skew_1m))
     + kpi('Vols calculées', `${d.n_points.toLocaleString('fr-FR')} / ${d.n_quotes.toLocaleString('fr-FR')}`)
     + kpi('Surface remplie', fmtPct(d.filled, 0)) + '</div>';
+  h += `<div class="fn-tools"><a class="lnk" onclick="runCommand('${esc(d.symbol)} OVML')">pricer une option sur cette surface (OVML) ›</a><a class="lnk" style="margin-left:16px" onclick="FN_STATE.mc.vol='impl';runCommand('${esc(d.symbol)} MC')">Monte-Carlo à la vol implicite (MC) ›</a></div>`;
+  h += '<div class="panel"><div class="panel-h">Surface de volatilité implicite <span class="rt">3D · glisser pour tourner</span></div><div class="panel-b">' + ovdv3d(d) + '</div></div><div style="height:10px"></div>';
 
   // smiles : jusqu'à 6 échéances représentatives
   const choix = [];
@@ -295,7 +305,7 @@ function fnOVDV(d) {
   h += '<div class="panel"><div class="panel-h">Smile par maturité <span class="rt">strike / spot · puts à gauche, calls à droite</span></div><div class="panel-b">' + lineChart('chOVDVs', smiles, { height: 280, yfmt: v => v.toFixed(1) + ' %' }) + '</div></div>';
   h += '<div class="panel"><div class="panel-h">Structure par terme ATM <span class="rt">interpolée en variance totale</span></div><div class="panel-b">' + lineChart('chOVDVt', terme, { height: 280, yfmt: v => v.toFixed(1) + ' %' }) + '</div></div>';
   h += '</div>';
-  h += '<div class="panel" style="margin-top:10px"><div class="panel-h">Surface <span class="rt">maturité (lignes) × strike / spot (colonnes) · case vide = pas de cotation</span></div><div class="panel-b">' + ovdvHeatmap(d) + '</div></div>';
+  h += '<div class="panel" style="margin-top:10px"><div class="panel-h">Surface vue de dessus <span class="rt">maturité (lignes) × strike / spot (colonnes) · case vide = pas de cotation</span></div><div class="panel-b">' + ovdvHeatmap(d) + '</div></div>';
 
   // grille façon OVDV : échéances cotées × moneyness
   const col = m => K.findIndex(x => Math.abs(x - m) < 1e-9);

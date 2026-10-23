@@ -59,10 +59,9 @@ class FredConnector:
             if text is not None and time.time() - path.stat().st_mtime > 24 * 3600:
                 stale, text = text, None
         if text is None:
-            req = urllib.request.Request(
-                f"{self.BASE_URL}?id={series_id}",
-                headers={"User-Agent": "gambit-ridge/0.1"},
-            )
+            # User-Agent par défaut de Python : depuis le VPS, FRED (Akamai) laisse expirer toute requête
+            # portant un User-Agent personnalisé ou de navigateur (constaté le 2026-10-23, cache figé au 04/10).
+            req = urllib.request.Request(f"{self.BASE_URL}?id={series_id}")
             last_err = None
             for attempt in range(3):
                 try:

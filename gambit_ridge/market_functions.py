@@ -336,3 +336,231 @@ def ovdv(symbol: str) -> dict:
     from .options.vol_surface import ovdv as surface
 
     return surface(_check(symbol))
+
+
+# --------------------------------------------------------------------- MC / OVML
+
+def mc(symbol: str, params: dict | None = None) -> dict:
+    """Laboratoire Monte-Carlo paramétrable (options/monte_carlo.py)."""
+    from .options.monte_carlo import mc as lancer
+
+    return lancer(_check(symbol), params)
+
+
+def ovml(symbol: str, params: dict | None = None) -> dict:
+    """Pricer d'option façon OVML : prix et grecques Black-Scholes, vol lue sur la surface OVDV.
+
+    Paramètres : type (call/put), strike (% du spot), jours (calendaires), vol (« surface » ou %),
+    quantite (contrats de 100).
+    """
+    import math
+
+    from .options.black_scholes import grecques
+    from .options.monte_carlo import taux_sans_risque
+    from .options.vol_surface import ovdv as surface
+
+    s = _check(symbol)
+    p = {k: (v[0] if isinstance(v, list) else v) for k, v in (params or {}).items()}
+    typ = p.get("type", "call")
+    if typ not in ("call", "put"):
+        raise ValueError("type : call ou put")
+    try:
+        k_pct = float(p.get("strike", 100)) / 100
+        jours = float(p.get("jours", 91))
+        qte = float(p.get("quantite", 1))
+    except ValueError:
+        raise ValueError("strike, jours et quantité doivent être des nombres") from None
+    if not (0.3 <= k_pct <= 3 and 1 <= jours <= 1100):
+        raise ValueError("strike entre 30 et 300 % du spot, maturité entre 1 et 1 100 jours")
+
+    surf, note = None, ""
+    try:
+        surf = surface(s)
+        spot, taux = surf["spot"], surf["rate"]
+    except Exception as exc:  # sous-jacent sans options cotées
+        note = f"pas de surface de vol ({exc})"
+        ds, px = _series(s)
+        spot, taux = float(px[-1]), taux_sans_risque()
+
+    div = 0.0
+    source = p.get("vol", "surface")
+    if source == "surface":
+        if surf is None:
+            raise ValueError(f"{s} : {note} — indique une vol (ex. vol=20)")
+        J = np.array(surf["grid"]["days"], dtype=float)
+        V = np.array([[np.nan if v is None else v for v in r] for r in surf["grid"]["vols"]], dtype=float)
+        Km = np.array(surf["moneyness"], dtype=float)
+        i = int(np.argmin(np.abs(J - min(max(jours, J[0]), J[-1]))))
+        ok = np.isfinite(V[i])
+        if not ok.any():
+            raise ValueError("surface vide à cette maturité")
+        vol = float(np.interp(k_pct, Km[ok], V[i, ok]))
+        if not J[0] <= jours <= J[-1]:
+            note = f"maturité hors des échéances cotées : vol lue à {J[i]:.0f} jours"
+        proche = min(surf["expiries"], key=lambda e: abs(e["days"] - jours))
+        div = proche["div"] if proche["days"] >= 30 else 0.0
+    else:
+        try:
+            vol = float(source) / 100
+        except ValueError:
+            raise ValueError("vol : « surface » ou un nombre en %") from None
+        if not 0.01 <= vol <= 3:
+            raise ValueError("vol entre 1 et 300 %")
+
+    T = jours / 365
+    K = k_pct * spot
+    g = grecques(spot, K, T, taux, vol, typ, div)
+    mult = 100 * qte
+    xs = np.linspace(0.7 * spot, 1.3 * spot, 61)
+    aujourd_hui = [grecques(x, K, T, taux, vol, typ, div)["prix"] for x in xs]
+    echeance = np.maximum(xs - K, 0) if typ == "call" else np.maximum(K - xs, 0)
+    return {"symbol": s, "spot": spot, "type": typ, "strike": K, "strike_pct": k_pct, "jours": jours, "vol": vol,
+            "vol_source": source, "taux": taux, "dividende": div, "forward": spot * math.exp((taux - div) * T),
+            "quantite": qte, "multiplicateur": mult, "note": note,
+            "grecques": g, "position": {k: v * mult for k, v in g.items()},
+            "profil": {"spot": xs.round(4).tolist(), "aujourdhui": [round(v - g["prix"], 4) for v in aujourd_hui],
+                       "echeance": [round(float(v) - g["prix"], 4) for v in echeance]}}
+
+
+# --------------------------------------------------------------------- GC3D
+
+def gc3d(years: str | float = 5) -> dict:
+    """Courbe des taux du Trésor américain dans le temps (surface date × maturité), FRED."""
+    from .data.fred import FredConnector
+
+    try:
+        ans = float(years or 5)
+    except ValueError:
+        raise ValueError("période en années invalide") from None
+    ans = min(max(ans, 1), 25)
+    conn = FredConnector()
+    series = {}
+    for label, sid in GC_SERIES:
+        ds, vals = conn.fetch_series(sid)
+        series[label] = dict(zip(ds, (float(v) for v in vals)))
+    common = sorted(set.intersection(*(set(v) for v in series.values())))
+    debut = (date.fromisoformat(common[-1]).replace(year=date.fromisoformat(common[-1]).year - int(ans))).isoformat()
+    jours = [d for d in common if d >= debut]
+    pas = max(1, len(jours) // 160)  # ~160 dates : surface fluide et légère
+    jours = jours[::-1][::pas][::-1]
+    if jours[-1] != common[-1]:
+        jours.append(common[-1])
+    labels = [lab for lab, _ in GC_SERIES]
+    z = [[series[lab][d] for lab in labels] for d in jours]
+    arr = np.array(z)
+    return {"dates": jours, "maturities": labels, "yields": z, "min": float(arr.min()), "max": float(arr.max()),
+            "last": z[-1], "first": z[0], "source": "FRED — rendements constants du Trésor américain"}
+
+
+# --------------------------------------------------------------------- BUDG
+
+def budg() -> dict:
+    """Budget fédéral américain : recettes, dépenses, solde (exercices budgétaires), FRED."""
+    from .data.fred import FredConnector
+
+    conn = FredConnector()
+
+    def annuel(sid):
+        ds, vals = conn.fetch_series(sid)
+        return {d[:4]: float(v) for d, v in zip(ds, vals)}
+
+    recettes, depenses, solde = annuel("FYFR"), annuel("FYONET"), annuel("FYFSD")
+    pib = annuel("FYFSGDA188S")
+    ds, rec = conn.fetch_series("USREC")
+    recession = sorted({d[:4] for d, v in zip(ds, rec) if float(v) >= 1})
+    annees = sorted(a for a in set(recettes) & set(depenses) & set(solde) if a >= "1940")
+    to_t = 1e-6  # millions -> milliers de milliards
+    return {"years": annees, "receipts": [recettes[a] * to_t for a in annees], "outlays": [depenses[a] * to_t for a in annees],
+            "balance": [solde[a] * to_t for a in annees], "balance_gdp": [pib.get(a) for a in annees],
+            "recession_years": [a for a in recession if a in set(annees)],
+            "source": "FRED (US Treasury, Office of Management and Budget) — exercices budgétaires d'octobre à septembre"}
+
+
+# --------------------------------------------------------------------- MAC
+
+BIGMAC_URL = "https://raw.githubusercontent.com/TheEconomist/big-mac-data/master/output-data/big-mac-full-index.csv"
+
+
+def mac(base: str = "USD") -> dict:
+    """Indice Big Mac (The Economist) : sur/sous-évaluation des devises par parité de pouvoir d'achat."""
+    import csv
+    import io
+    import time
+    import urllib.request
+
+    from .data.yahoo import CACHE_DIR
+
+    base = (base or "USD").upper()
+    if base not in ("USD", "EUR", "GBP", "JPY", "CNY"):
+        raise ValueError("base : USD, EUR, GBP, JPY ou CNY")
+    path = CACHE_DIR / "bigmac.csv"
+    if not path.exists() or time.time() - path.stat().st_mtime > 7 * 86400:
+        try:
+            req = urllib.request.Request(BIGMAC_URL, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=30) as r:
+                texte = r.read().decode()
+            CACHE_DIR.mkdir(exist_ok=True)
+            path.write_text(texte)
+        except Exception:
+            if not path.exists():
+                raise
+    rows = list(csv.DictReader(io.StringIO(path.read_text())))
+    derniere = max(r["date"] for r in rows)
+    precedente = max(r["date"] for r in rows if r["date"] < derniere)
+    avant = {r["iso_a3"]: r for r in rows if r["date"] == precedente}
+
+    def num(x):
+        try:
+            return float(x)
+        except (TypeError, ValueError):
+            return None
+
+    out = []
+    for r in rows:
+        if r["date"] != derniere or r["currency_code"] == base:
+            continue
+        brut, ajuste = num(r.get(f"{base}_raw")), num(r.get(f"{base}_adjusted"))
+        if brut is None:
+            continue
+        p = avant.get(r["iso_a3"], {})
+        out.append({"pays": r["name"], "devise": r["currency_code"], "prix_local": num(r["local_price"]),
+                    "prix_usd": num(r["dollar_price"]), "change": num(r["dollar_ex"]), "brut": brut, "ajuste": ajuste,
+                    "brut_precedent": num(p.get(f"{base}_raw"))})
+    out.sort(key=lambda x: x["brut"], reverse=True)
+    return {"date": derniere, "precedent": precedente, "base": base, "rows": out,
+            "source": "The Economist — Big Mac index (github.com/TheEconomist/big-mac-data)"}
+
+
+# --------------------------------------------------------------------- ILBE
+
+def ilbe() -> dict:
+    """Inflation anticipée américaine : points morts 5 et 10 ans, forward 5 ans dans 5 ans, inflation réalisée."""
+    from .data.fred import FredConnector
+
+    conn = FredConnector()
+    out = {}
+    for cle, sid in (("be5", "T5YIE"), ("be10", "T10YIE"), ("fwd5y5y", "T5YIFR"), ("dgs10", "DGS10"), ("tips10", "DFII10")):
+        ds, vals = conn.fetch_series(sid)
+        out[cle] = dict(zip(ds, (float(v) for v in vals)))
+    dsc, cpi = conn.fetch_series("CPIAUCSL")
+    cpi_yoy = {dsc[i]: (cpi[i] / cpi[i - 12] - 1) * 100 for i in range(12, len(dsc))}
+    jours = sorted(set(out["be5"]) & set(out["be10"]) & set(out["fwd5y5y"]))
+    debut = (date.fromisoformat(jours[-1]).replace(year=date.fromisoformat(jours[-1]).year - 10)).isoformat()
+    jours = [d for d in jours if d >= debut]
+    hebdo = jours[::5] + ([jours[-1]] if (len(jours) - 1) % 5 else [])
+    mois = sorted(d for d in cpi_yoy if d >= debut)
+    dern = jours[-1]
+
+    def il_y_a(serie, jours_avant):
+        from datetime import timedelta
+
+        cible = (date.fromisoformat(dern) - timedelta(days=jours_avant)).isoformat()
+        d = max(x for x in serie if x <= cible)
+        return serie[d]
+
+    kpi = {k: {"now": out[k][max(out[k])], "m1": il_y_a(out[k], 30), "y1": il_y_a(out[k], 365)}
+           for k in ("be5", "be10", "fwd5y5y", "dgs10", "tips10")}
+    kpi["cpi"] = {"now": cpi_yoy[mois[-1]], "date": mois[-1]}
+    return {"date": dern, "dates": hebdo, "be5": [out["be5"][d] for d in hebdo], "be10": [out["be10"][d] for d in hebdo],
+            "fwd5y5y": [out["fwd5y5y"][d] for d in hebdo], "cpi_dates": mois, "cpi_yoy": [cpi_yoy[d] for d in mois],
+            "kpi": kpi, "source": "FRED — points morts nominal vs TIPS (Réserve fédérale de St. Louis), CPI (BLS)"}

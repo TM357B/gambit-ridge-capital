@@ -206,3 +206,16 @@
     .chart-tip { min-width: 150px; font-size: 10px; }
     .sim-banner { font-size: 10.5px; }
   }
+
+  /* Fonctions quant : formulaires façon Bloomberg, surface 3D */
+  .qform { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: flex-end; padding: 8px 10px; background: #0d0d0d; border: 1px solid var(--border); margin-bottom: 8px; }
+  .qf { display: flex; flex-direction: column; gap: 3px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .qf > span { white-space: nowrap; }
+  .qf input, .qf select { background: #1a1000; border: 1px solid var(--amber-dim); color: var(--amber); font-family: var(--font-mono); font-size: 12px; padding: 4px 6px; }
+  .qf input[type=number] { width: 92px; }
+  .qf input:focus, .qf select:focus { outline: none; border-color: var(--amber); }
+  .s3d-wrap { position: relative; width: 100%; }
+  .s3d { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+  .s3d-tip { position: absolute; display: none; pointer-events: none; background: rgba(0,0,0,.88); border: 1px solid var(--amber-dim); padding: 4px 8px; font-size: 11px; white-space: nowrap; z-index: 2; }
+  .s3d-help { position: absolute; left: 8px; bottom: 4px; font-size: 10px; color: #555; pointer-events: none; }
+  @media (max-width: 700px) { .qf input, .qf select { font-size: 16px; } .qf input[type=number] { width: 84px; } .qform .btn { flex: 1 1 100%; } }
