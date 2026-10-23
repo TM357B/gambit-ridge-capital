@@ -327,6 +327,7 @@ function fnGC3D(d) {
     + kpi('Pente 2 A – 10 A', `${bp(last[ix('10 A')], last[ix('2 A')])} pb`, bp(last[ix('10 A')], last[ix('2 A')]) < 0 ? 'neg' : '') + '</div>';
   h += '<div class="panel"><div class="panel-b">' + surface3d('s3dGC3D', M, d.dates, d.yields, { xtitle: 'Maturité', ytitle: 'Date', ztitle: 'Taux %', cmap: 'jet', yfmt: s => String(s).slice(0, 7), zfmt: v => v.toFixed(1), az: -0.75, el: 0.45, height: 500,
     tip: (i, j, v) => `${esc(d.dates[i])} · ${esc(M[j])} : <b>${v.toFixed(2)} %</b>` }) + '</div></div>';
+  h += gc3dACP(d);
   h += '<div class="panel" style="margin-top:10px"><div class="panel-h">Courbe : début vs fin de période</div><div class="panel-b">' + lineChart('chGC3D', [{ name: `Aujourd’hui (${d.dates[d.dates.length - 1]})`, x: M, y: last, color: '#ff9900', width: 2 }, { name: `Début (${d.dates[0]})`, x: M, y: first, color: '#2979ff' }], { height: 220, yfmt: v => v.toFixed(2) + ' %' }) + '</div></div>';
   return h;
 }

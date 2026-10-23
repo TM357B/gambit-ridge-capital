@@ -6,7 +6,10 @@ const FN_LIST = [
   ['ECST', 'Statistiques économiques US', 'ECST'], ['WEI', 'Indices mondiaux', 'WEI'],
   ['GC', 'Courbe des taux US', 'GC'], ['GC3D', 'Courbe des taux en 3D', 'GC3D'], ['OVDV', 'Surface de vol implicite 3D', 'SPY OVDV'],
   ['OVML', 'Pricer d’option et grecques', 'SPY OVML'], ['MC', 'Laboratoire Monte-Carlo', 'SPY MC'], ['ILBE', 'Inflation anticipée US', 'ILBE'],
-  ['BUDG', 'Budget fédéral US', 'BUDG'], ['MAC', 'Indice Big Mac (WCRS MAC)', 'WCRS MAC'], ['NH', 'Actualités', 'NH'],
+  ['BUDG', 'Budget fédéral US', 'BUDG'], ['MAC', 'Indice Big Mac (WCRS MAC)', 'WCRS MAC'],
+  ['QLBS', 'Pricing d’option par RL (QLBS)', 'QLBS'], ['GPG', 'Grecques par processus gaussien', 'GPG'], ['GPVS', 'Surface de vol lissée (GP)', 'SPY GPVS'],
+  ['SVOL', 'Volatilité stochastique (particules)', 'SPY SVOL'], ['BETA', 'Bêta bayésien', 'AAPL BETA'], ['REGM', 'Régimes : mélanges et HMM', 'SPY REGM'],
+  ['TSA', 'Série temporelle (Box-Jenkins)', 'SPY TSA'], ['MODL', 'Catalogue des modèles', 'MODL'], ['NH', 'Actualités', 'NH'],
   ['PORT', 'Portefeuille papier', 'PORT'], ['RES', 'Recherche / backtests', 'RES'],
 ];
 const TICKER_ALIAS = { BTC: 'BTC-USD', ETH: 'ETH-USD', XRP: 'XRP-USD', LTC: 'LTC-USD', ADA: 'ADA-USD', BNB: 'BNB-USD', DOGE: 'DOGE-USD', SOL: 'SOL-USD',
@@ -29,7 +32,7 @@ function runCommand(raw) {
   const toks = (raw || '').trim().toUpperCase().replace(/<GO>/g, '').split(/\s+/).filter(Boolean);
   if (!toks.length) return;
   const nav = { NOTE: 'notes', NOTES: 'notes', RISK: 'risk', RISQUE: 'risk', NH: 'news', N: 'news', NEWS: 'news', PORT: 'paper', PT: 'paper', RES: 'research', BT: 'backtest', STRAT: 'strategies', VOIX: 'voice', VOICE: 'voice', AGENTS: 'agents', RH: 'hr', HR: 'hr', MAIN: 'terminal', TERM: 'terminal', RENDUS: 'reports' };
-  const fns = ['GP', 'DES', 'FXC', 'WCRS', 'ECST', 'WEI', 'GC', 'GC3D', 'OVDV', 'OVML', 'MC', 'ILBE', 'BUDG', 'MAC', 'HELP'];
+  const fns = ['GP', 'DES', 'FXC', 'WCRS', 'ECST', 'WEI', 'GC', 'GC3D', 'OVDV', 'OVML', 'MC', 'ILBE', 'BUDG', 'MAC', 'QLBS', 'GPG', 'GPVS', 'SVOL', 'BETA', 'REGM', 'TSA', 'MODL', 'HELP'];
   const last = toks[toks.length - 1];
   // CAMP : campagnes de recherche · LIVE : panneau En direct · PROJ : projection à un an (onglet Risque)
   if (toks.length === 1 && ['CAMP', 'CAMPAGNES'].includes(last)) { RS_SEL = { uni: 'camp' }; return switchTab('research'); }
@@ -54,9 +57,9 @@ async function fnFetch(name, sym) {
 async function renderFn() {
   const c = document.getElementById('content');
   const S = FN_STATE;
-  const avecSym = ['GP', 'DES', 'OVDV', 'OVML', 'MC'];
+  const avecSym = ['GP', 'DES', 'OVDV', 'OVML', 'MC', 'GPVS', 'SVOL', 'BETA', 'REGM', 'TSA'];
   let html = '<div class="fn-bar">' + FN_LIST.map(([k, l, ex]) => `<div class="fn-chip ${S.name===k?'active':''}" onclick="runCommand('${(avecSym.includes(k) ? (S.sym||'SPY') + ' ' : '') + k}')" title="${esc(l)} — ex. ${esc(ex)}"><b>${k}</b> <span>${esc(l)}</span></div>`).join('') + '</div>';
-  c.innerHTML = html + '<div class="loader">Chargement ' + esc(S.name) + (avecSym.includes(S.name) ? ' ' + esc(S.sym) : '') + ({ OVDV: ' — toutes les échéances d’options, une dizaine de secondes', OVML: ' — lecture de la surface de vol', MC: ' — simulation en cours' }[S.name] || '') + '…</div>';
+  c.innerHTML = html + '<div class="loader">Chargement ' + esc(S.name) + (avecSym.includes(S.name) ? ' ' + esc(S.sym) : '') + ({ OVDV: ' — toutes les échéances d’options, une dizaine de secondes', OVML: ' — lecture de la surface de vol', MC: ' — simulation en cours', QLBS: ' — programmation dynamique sur les trajectoires', GPVS: ' — apprentissage du processus gaussien', SVOL: ' — calibrage du filtre particulaire, une vingtaine de secondes', REGM: ' — EM et Baum-Welch' }[S.name] || '') + '…</div>';
   let body = '';
   try {
     if (S.name === 'HELP') body = fnHelp();
@@ -74,6 +77,14 @@ async function renderFn() {
     else if (S.name === 'BUDG') body = fnBUDG(await fnFetch('BUDG'));
     else if (S.name === 'MAC') body = fnMAC(await fnFetch('MAC', ['USD', 'EUR', 'GBP', 'JPY', 'CNY'].includes(S.sym) ? S.sym : 'USD'));
     else if (S.name === 'ILBE') body = fnILBE(await fnFetch('ILBE'));
+    else if (S.name === 'QLBS') body = fnQLBS(await fnFetchQ('QLBS', '', FN_STATE.qlbs));
+    else if (S.name === 'GPG') body = fnGPG(await fnFetchQ('GPG', '', FN_STATE.gpg));
+    else if (S.name === 'GPVS') body = fnGPVS(await fnFetch('GPVS', S.sym));
+    else if (S.name === 'SVOL') body = fnSVOL(await fnFetchQ('SVOL', S.sym, FN_STATE.svol), S.sym);
+    else if (S.name === 'BETA') body = fnBETA(await fnFetchQ('BETA', S.sym, FN_STATE.beta), S.sym);
+    else if (S.name === 'REGM') body = fnREGM(await fnFetch('REGM', S.sym));
+    else if (S.name === 'TSA') body = fnTSA(await fnFetch('TSA', S.sym));
+    else if (S.name === 'MODL') body = fnMODL(await fnFetch('MODL'));
   } catch(e) { body = `<div class="loader neg">Erreur : ${esc(e.message)}</div>`; }
   if (currentTab === 'fn') { c.innerHTML = html + body; if (typeof s3dMount === 'function') s3dMount(); }
 }

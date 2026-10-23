@@ -164,46 +164,72 @@ final class VoiceBridge: NSObject, WKScriptMessageHandler, AVSpeechSynthesizerDe
 final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate {
     var window: NSWindow!
     var webView: WKWebView!
-    var serverProcess: Process?
+    var horsLigne: Timer?
     let voice = VoiceBridge()
+    let adresse = "http://127.0.0.1:8765"
 
+    // Le terminal tourne sur le serveur ; le Mac l'atteint par le tunnel SSH (agent launchd
+    // com.gambitridgecapital.tunnel, 127.0.0.1:8765). L'app ne lance JAMAIS de serveur local :
+    // au démarrage du Mac, le tunnel n'était pas encore prêt, l'app lançait la vieille copie de
+    // ~/gambit-ridge-capital, qui prenait le port du tunnel et affichait une version périmée (2026-10-23).
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let url = "http://127.0.0.1:8765"
-        launchServerIfNeeded()
-        waitForServer(url: url) { [weak self] in
-            self?.showWindow(url: URL(string: url)!)
+        relancerTunnelSiAbsent()
+        attendreServeur(secondes: 60) { [weak self] ok in
+            guard let self = self else { return }
+            self.showWindow()
+            ok ? self.chargerTerminal() : self.afficherHorsLigne()
         }
     }
 
-    func launchServerIfNeeded() {
-        // évite le double lancement : vérifie si le port répond déjà
+    @discardableResult
+    func shell(_ commande: String) -> Int32 {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/bin/sh")
-        task.arguments = ["-c", "curl -s -m 2 -o /dev/null http://127.0.0.1:8765 && exit 1 || exit 0"]
+        task.arguments = ["-c", commande]
         task.standardOutput = FileHandle.nullDevice
         task.standardError = FileHandle.nullDevice
-        try? task.run(); task.waitUntilExit()
-        if task.terminationStatus == 0 {
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: "/bin/sh")
-            p.arguments = ["-c", "cd \"$HOME/gambit-ridge-capital\" && \"$HOME/gambit-ridge-capital/run_server.sh\" >> \"$HOME/gambit-ridge-capital/app.log\" 2>&1 &"]
-            try? p.run()
-            serverProcess = p
+        do { try task.run() } catch { return -1 }
+        task.waitUntilExit()
+        return task.terminationStatus
+    }
+
+    func relancerTunnelSiAbsent() {
+        if shell("curl -s -m 2 -o /dev/null \(adresse)") != 0 {
+            shell("launchctl kickstart -k gui/$(id -u)/com.gambitridgecapital.tunnel")
         }
     }
 
-    func waitForServer(url: String, done: @escaping () -> Void) {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/bin/sh")
-        task.arguments = ["-c", "for i in $(seq 1 60); do curl -s -m 2 -o /dev/null '\(url)' && exit 0; sleep 1; done; exit 1"]
-        try? task.run()
+    func attendreServeur(secondes: Int, done: @escaping (Bool) -> Void) {
         DispatchQueue.global().async {
-            task.waitUntilExit()
-            DispatchQueue.main.async { done() }
+            let ok = self.shell("for i in $(seq 1 \(secondes)); do curl -s -m 2 -o /dev/null '\(self.adresse)' && exit 0; sleep 1; done; exit 1") == 0
+            DispatchQueue.main.async { done(ok) }
         }
     }
 
-    func showWindow(url: URL) {
+    func chargerTerminal() {
+        horsLigne?.invalidate(); horsLigne = nil
+        var req = URLRequest(url: URL(string: adresse)!)
+        req.cachePolicy = .reloadIgnoringLocalCacheData
+        webView.load(req)
+    }
+
+    // Serveur injoignable : page explicite qui réessaie seule (toutes les 3 s), et relance du tunnel toutes les 30 s.
+    func afficherHorsLigne() {
+        let html = """
+        <html><body style="background:#000;color:#e8e8e8;font-family:Menlo,monospace;padding:60px">
+        <div style="color:#ff9900;font-weight:700;font-size:16px;letter-spacing:1px">GAMBIT RIDGE CAPITAL</div>
+        <p style="margin-top:24px">Le serveur ne répond pas encore (tunnel SSH vers le serveur en cours de connexion).</p>
+        <p style="color:#888">Nouvelle tentative automatique toutes les 3 secondes. Vérifie la connexion internet si cela dure.</p>
+        <script>setInterval(function(){fetch('/api/market',{cache:'no-store'}).then(function(r){if(r.ok)location.replace('/')}).catch(function(){})},3000)</script>
+        </body></html>
+        """
+        webView.loadHTMLString(html, baseURL: URL(string: adresse))
+        horsLigne = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            DispatchQueue.global().async { self?.relancerTunnelSiAbsent() }
+        }
+    }
+
+    func showWindow() {
         let cfg = WKWebViewConfiguration()
         cfg.userContentController.add(voice, name: "grcVoice")
         cfg.websiteDataStore = WKWebsiteDataStore.nonPersistent()
@@ -211,9 +237,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         webView.navigationDelegate = self
         webView.uiDelegate = self
         voice.webView = webView
-        var req = URLRequest(url: url)
-        req.cachePolicy = .reloadIgnoringLocalCacheData
-        webView.load(req)
         window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 1440, height: 900),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
@@ -240,16 +263,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
                  initiatedByFrame frame: WKFrameInfo, type: WKMediaCaptureType,
                  decisionHandler: @escaping (WKPermissionDecision) -> Void) {
         decisionHandler(origin.host == "127.0.0.1" ? .grant : .deny)
-    }
-
-    func applicationWillTerminate(_ notification: Notification) {
-        // arrête le serveur Python si on l'a lancé
-        if serverProcess != nil {
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: "/bin/sh")
-            p.arguments = ["-c", "pkill -f gambit_ridge.app.server 2>/dev/null; true"]
-            try? p.run(); p.waitUntilExit()
-        }
     }
 }
 

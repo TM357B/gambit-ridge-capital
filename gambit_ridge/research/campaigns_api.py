@@ -27,6 +27,9 @@ META = [
     {"n": 5, "file": "research_campaign5_2026-10.json", "titre": "Période 2002-2007 jamais utilisée",
      "question": "La stratégie tient-elle sur des données qui n'ont servi ni à la concevoir ni à aucun essai ? Les variantes restées neutres y gagnent-elles ?",
      "lecon": "La stratégie tient (Sharpe 1,57, pire baisse -8,9 % contre -33 % pour le S&P 500). Aucune variante ne fait mieux : elle est maintenant validée sur trois périodes indépendantes."},
+    {"n": 6, "file": "research_campaign6_2026-10.json", "titre": "Volatilité stochastique pour dimensionner les positions",
+     "question": "Un modèle de volatilité stochastique avec levier (filtre particulaire, Dixon et al. ch. 7), calibré sur 2000-2007 seulement, dimensionne-t-il mieux que la GARCH ?",
+     "lecon": "Non. Il décrit mieux la volatilité (vraisemblance) mais ne gagne rien en stratégie : Sharpe de développement 0,94 à 0,97 contre 0,99. Mieux prévoir la vol au jour le jour ne change presque pas des poids de risque égal ; le gain statistique ne passe pas dans le portefeuille."},
 ]
 
 

@@ -23,7 +23,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <dict>
   <key>CFBundleName</key><string>Gambit Ridge Capital</string>
   <key>CFBundleIdentifier</key><string>com.gambitridgecapital.app</string>
-  <key>CFBundleVersion</key><string>25</string>
+  <key>CFBundleVersion</key><string>26</string>
   <key>CFBundleExecutable</key><string>Gambit Ridge Capital</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>NSHighResolutionCapable</key><true/>

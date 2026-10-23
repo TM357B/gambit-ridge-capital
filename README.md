@@ -27,6 +27,7 @@ The trend layer is nearly uncorrelated with the 60/40 core (≈0.05) and halves 
 - **The ML model.** A cross-sectional ridge regression credited with a +0.63 Sharpe turned out to lose money (−0.48) once tested on a genuinely tradable universe: the original figure came from eight FRED series, some of them untradable spot prices.
 - **FX carry (G10).** A textbook risk premium, yet a Sharpe of ≈0.03 over 2006–2019; adding it lowers the retained strategy's development Sharpe from 0.99 to 0.75–0.80. Rejected — even though one variant looked good on the validation period, because choosing there would be cheating.
 - **HMM regime filter.** Slightly lower drawdown, no Sharpe gain: not worth an extra layer.
+- **Stochastic volatility for position sizing.** A stochastic-volatility model with leverage (particle filter, calibrated on 2000–2007 only) fits volatility far better than GARCH by likelihood, yet sizing positions with it lowers the development Sharpe (0.94–0.97 vs 0.99). A better statistical model is not automatically a better portfolio. In all, 42 pre-registered trials over six campaigns, none accepted.
 
 ## Method
 
@@ -52,7 +53,7 @@ flowchart LR
 
 The fund runs on its own: decision after the New York close, orders replicated on an Alpaca paper account at the next open, daily data-quality checks with an independent second price source, transaction-cost analysis on real fills, a strategy-health monitor comparing live results with every comparable backtest window, monthly reports and phone alerts.
 
-A Bloomberg-style local terminal (macOS app + iPhone web app) shows the portfolio, risk (VaR, stress tests on nine historical crises, risk contributions), attribution, research results and market functions modelled on the Bloomberg terminal (`GP`, `DES`, `FXC`, `WCRS`, `ECST`, `WEI`, `GC`, `GC3D`, `OVDV`, `OVML`, `MC`, `ILBE`, `BUDG`, `WCRS MAC`), all fed by free, real data — functions that need paid consensus data are deliberately not imitated.
+A Bloomberg-style local terminal (macOS app + iPhone web app) shows the portfolio, risk (VaR, stress tests on nine historical crises, risk contributions), attribution, research results and market functions modelled on the Bloomberg terminal (`GP`, `DES`, `FXC`, `WCRS`, `ECST`, `WEI`, `GC`, `GC3D`, `OVDV`, `OVML`, `MC`, `ILBE`, `BUDG`, `WCRS MAC`, `QLBS`, `GPVS`, `SVOL`, `BETA`, `REGM`, `TSA`, `MODL`), all fed by free, real data — functions that need paid consensus data are deliberately not imitated.
 
 ![Risk tab: strategy health, VaR, limits, nine historical crises replayed on today's portfolio](docs/img/risk.png)
 
@@ -65,6 +66,18 @@ A Bloomberg-style local terminal (macOS app + iPhone web app) shows the portfoli
 - **Forward per expiry from put–call parity** — using the strikes closest to spot only. SPY options are American: a regression of C − P on all strikes gives a discount factor above 1, because the early-exercise premium of in-the-money puts distorts parity.
 - **Interpolation** — along each smile, then across maturities in total variance (σ²T), the market convention. Where there is no quote, the surface stays empty instead of inventing values; calendar-arbitrage violations are counted.
 - **Output** — a rotatable 3D surface (home-made canvas renderer, no library), smiles, ATM term structure, an OVDV-style grid and `OVML`, a pricer with Greeks reading its volatility off the surface; CSV of every computed point. A synthetic chain priced from a known surface (`--demo`) is recovered to within 0.01 vol point (median).
+
+## Models from *Machine Learning in Finance*
+
+Beyond the trend models in production, the terminal implements models from Dixon, Halperin & Bilokon (2020) that the fund did not have, each checked against the book or a known answer (numpy only, `gambit_ridge/quant/`):
+
+- **QLBS** (ch. 10) — option pricing and hedging as a Markov decision process, solved by dynamic programming on B-splines; reproduces the book's example (ATM put, λ = 0.001, 24 rehedges: 4.92 vs 4.90 ± 0.12; Black-Scholes 4.53). The off-policy Fitted Q Iteration variant was tested and left out: path by path, the action's effect (~0.02) is drowned in target noise (~5).
+- **Gaussian processes** (ch. 3) — prices and Greeks learned from 12 points (delta within 0.001), and a GP-smoothed implied-volatility surface with its uncertainty.
+- **Particle filter** (ch. 7) — stochastic volatility with leverage and jumps, calibrated by particle likelihood.
+- **Bayesian inference** (ch. 2–3) — sequential conjugate regression (Bayesian beta), Gaussian mixtures by EM, BIC model selection and averaging, against a persistent HMM.
+- **Box-Jenkins and PCA** (ch. 6) — ADF, ACF/PACF, Ljung-Box, AR order by AIC/BIC and time-series cross-validation; level, slope and curvature of the Treasury curve.
+
+`MODL` in the terminal lists every model with its status: in production, rejected after a pre-registered campaign, or analysis only.
 
 ## Monte-Carlo lab
 
@@ -113,7 +126,8 @@ numpy is the only required dependency: every model (GARCH, Kalman, HMM, ridge…
 | `gambit_ridge/app/` | local terminal (server + web UI) |
 | `gambit_ridge/ops/` | daily automated run |
 | `gambit_ridge/options/` | Black-Scholes and Greeks, implied volatility, volatility surface (`OVDV`), Monte-Carlo lab (`MC`) |
-| `tests/` | 152 tests, run in CI |
+| `gambit_ridge/quant/` | QLBS, Gaussian processes, particle filter, Bayesian models, Box-Jenkins, PCA |
+| `tests/` | 171 tests, run in CI |
 
 ## Notes
 

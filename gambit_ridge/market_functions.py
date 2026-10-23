@@ -441,15 +441,27 @@ def gc3d(years: str | float = 5) -> dict:
     common = sorted(set.intersection(*(set(v) for v in series.values())))
     debut = (date.fromisoformat(common[-1]).replace(year=date.fromisoformat(common[-1]).year - int(ans))).isoformat()
     jours = [d for d in common if d >= debut]
+    labels = [lab for lab, _ in GC_SERIES]
+    # ACP des variations quotidiennes (Dixon et al., ch. 6 § 5) : niveau, pente, courbure
+    from .quant.timeseries import acp
+
+    # le 1 mois est exclu : bruit propre aux T-bills (plafond de la dette, fins de mois) qui capterait un facteur
+    lab_acp = labels[1:]
+    Y = np.array([[series[lab][d] for lab in lab_acp] for d in jours])
+    a = acp(np.diff(Y, axis=0) * 100)  # en points de base
+    scores = np.vstack([np.zeros((1, 3)), np.cumsum(a["scores"][:, :3], axis=0)])
     pas = max(1, len(jours) // 160)  # ~160 dates : surface fluide et légère
     jours = jours[::-1][::pas][::-1]
     if jours[-1] != common[-1]:
         jours.append(common[-1])
-    labels = [lab for lab, _ in GC_SERIES]
     z = [[series[lab][d] for lab in labels] for d in jours]
     arr = np.array(z)
+    pos = {d: i for i, d in enumerate(d for d in common if d >= debut)}
     return {"dates": jours, "maturities": labels, "yields": z, "min": float(arr.min()), "max": float(arr.max()),
-            "last": z[-1], "first": z[0], "source": "FRED — rendements constants du Trésor américain"}
+            "last": z[-1], "first": z[0], "source": "FRED — rendements constants du Trésor américain",
+            "acp": {"maturites": lab_acp, "part": a["part"][:5].tolist(), "vecteurs": a["vecteurs"][:, :3].T.tolist(),
+                    "vol_pb_jour": np.sqrt(a["valeurs"][:3]).tolist(),
+                    "scores": [[float(scores[pos[d], k]) for d in jours] for k in range(3)]}}
 
 
 # --------------------------------------------------------------------- BUDG
@@ -564,3 +576,118 @@ def ilbe() -> dict:
     return {"date": dern, "dates": hebdo, "be5": [out["be5"][d] for d in hebdo], "be10": [out["be10"][d] for d in hebdo],
             "fwd5y5y": [out["fwd5y5y"][d] for d in hebdo], "cpi_dates": mois, "cpi_yoy": [cpi_yoy[d] for d in mois],
             "kpi": kpi, "source": "FRED — points morts nominal vs TIPS (Réserve fédérale de St. Louis), CPI (BLS)"}
+
+
+# --------------------------------------------------------------------- Modèles « Machine Learning in Finance »
+
+def _p(params):
+    return {k: (v[0] if isinstance(v, list) else v) for k, v in (params or {}).items()}
+
+
+def qlbs(params: dict | None = None) -> dict:
+    """QLBS : pricing et couverture d'options par programmation dynamique (Dixon et al., ch. 10)."""
+    from .quant.qlbs import qlbs as calcul
+
+    return calcul(_p(params))
+
+
+def gpg(params: dict | None = None) -> dict:
+    """Prix, delta et gamma appris par processus gaussien (ch. 3 § 5)."""
+    from .quant.gp import gp_greeks
+
+    return gp_greeks(_p(params))
+
+
+def gpvs(symbol: str) -> dict:
+    """Surface de vol implicite lissée par processus gaussien, avec incertitude (ch. 3)."""
+    from .quant.gp import gp_vol_surface
+
+    return gp_vol_surface(_check(symbol))
+
+
+def svol(symbol: str, params: dict | None = None) -> dict:
+    """Volatilité stochastique (SVL/SVLJ) par filtre particulaire, contre GARCH (ch. 7)."""
+    from .quant.particle import svol as calcul
+
+    return calcul(_check(symbol), _p(params))
+
+
+def beta(symbol: str, params: dict | None = None) -> dict:
+    """Bêta bayésien avec intervalle de crédibilité et apprentissage séquentiel (ch. 2-3)."""
+    from .quant.bayes import beta as calcul
+
+    p = _p(params)
+    if "indice" in p:
+        p["indice"] = _check(p["indice"])
+    return calcul(_check(symbol), p)
+
+
+def regm(symbol: str, params: dict | None = None) -> dict:
+    """Régimes : mélanges gaussiens (EM, BIC) contre HMM à persistance (ch. 2 et 7)."""
+    from .quant.bayes import regm as calcul
+
+    return calcul(_check(symbol), _p(params))
+
+
+def tsa(symbol: str, params: dict | None = None) -> dict:
+    """Box-Jenkins : ADF, ACF/PACF, AR par AIC/BIC, Ljung-Box, validation croisée, prévision (ch. 6)."""
+    from .quant.timeseries import tsa as calcul
+
+    return calcul(_check(symbol), _p(params))
+
+
+# Catalogue des modèles du fonds — une seule source pour l'écran MODL.
+# statut : production | analyse | rejeté (n'a pas battu la référence hors échantillon) | désactivé
+CATALOGUE = [
+    ("Stratégie de production", [
+        ("Momentum de série temporelle 12 mois (TSMOM)", "research/signals.py", "ch. 6", "production", "RES"),
+        ("Lissage exponentiel multi-vitesses (EWMA)", "research/signals.py", "ch. 6 § 2.10", "production", "RES"),
+        ("Tendance par filtre de Kalman (niveau local + pente)", "research/signals.py", "ch. 7 § 2.2", "production", "RES"),
+        ("Volatilité GARCH(1,1) pour le dimensionnement", "research/signals.py", "ch. 6 § 2.9", "production", "SPY SVOL"),
+        ("Covariance EWMA rétrécie, risque égal, vol cible 10 %", "research/portfolio.py", "ch. 6", "production", "RISK"),
+        ("Socle 60/40 + couche tendance, 95 % ETF / 5 % crypto", "research/production.py", "—", "production", "PORT"),
+    ]),
+    ("Modèles évalués et rejetés (banc et 6 campagnes, 42 essais)", [
+        ("Volatilité stochastique (SVL, SVLJ, moyenne avec GARCH) pour le dimensionnement", "research/campaign6.py", "ch. 7 § 3-4", "rejeté", "CAMP"),
+        ("Régression ridge transversale (classement ML)", "models/signals/linear.py", "ch. 3-4", "rejeté", "RES"),
+        ("Réseau feedforward / autoencodeur", "models/signals/", "ch. 4, 8 § 6", "rejeté", "RES"),
+        ("Filtre de régimes HMM (Baum-Welch, Viterbi)", "models/regimes/hmm.py", "ch. 7 § 2", "rejeté", "SPY REGM"),
+        ("Allocation par Q-learning et G-learning", "models/allocation/", "ch. 9-10 § 5", "désactivé", "RES"),
+        ("Portage de change G10 (carry)", "research/carry.py", "—", "rejeté", "RES"),
+        ("Variantes de campagnes (filtre de courbe, vol gérée, rebalancement…)", "research/campaign*.py", "—", "rejeté", "CAMP"),
+    ]),
+    ("Options et dérivés", [
+        ("Black-Scholes, grecques, vol implicite", "options/black_scholes.py", "ch. 10 § 3.4", "analyse", "SPY OVML"),
+        ("Surface de volatilité implicite (parité call-put, variance totale)", "options/vol_surface.py", "—", "analyse", "SPY OVDV"),
+        ("Surface de vol lissée par processus gaussien", "quant/gp.py", "ch. 3", "analyse", "SPY GPVS"),
+        ("Prix et grecques appris par processus gaussien", "quant/gp.py", "ch. 3 § 5", "analyse", "GPG"),
+        ("QLBS : pricing par apprentissage par renforcement (prog. dynamique)", "quant/qlbs.py", "ch. 10 § 2-4", "analyse", "QLBS"),
+        ("Monte-Carlo : GBM, Student, bootstrap ; exotiques ; variable de contrôle", "options/monte_carlo.py", "ch. 9 § 5.1", "analyse", "SPY MC"),
+    ]),
+    ("Volatilité, régimes et séries temporelles", [
+        ("Volatilité stochastique avec levier et sauts, filtre particulaire", "quant/particle.py", "ch. 7 § 3-4", "analyse", "SPY SVOL"),
+        ("Mélanges gaussiens (EM) et sélection BIC / moyenne de modèles", "quant/bayes.py", "ch. 2 § 7-8", "analyse", "SPY REGM"),
+        ("Box-Jenkins : ADF, ACF/PACF, AR, Ljung-Box, validation croisée", "quant/timeseries.py", "ch. 6 § 3-4", "analyse", "SPY TSA"),
+        ("Bêta bayésien séquentiel (Normale-Gamma inverse)", "quant/bayes.py", "ch. 2 § 6, ch. 3 § 2", "analyse", "AAPL BETA"),
+        ("ACP de la courbe des taux : niveau, pente, courbure", "quant/timeseries.py", "ch. 6 § 5", "analyse", "GC3D"),
+        ("Projection à un an par bootstrap par blocs", "projection.py", "—", "analyse", "PROJ"),
+    ]),
+]
+
+
+def modl() -> dict:
+    """Catalogue de tous les modèles du fonds, avec leur statut et la commande du terminal qui les montre."""
+    import json
+    from pathlib import Path
+
+    racine = Path(__file__).resolve().parent.parent / "data"
+    essais = 0
+    for f in sorted(racine.glob("research_campaign*_2026-10.json")):
+        try:
+            essais += len(json.loads(f.read_text()).get("resultats", []))
+        except Exception:
+            pass
+    return {"sections": [{"titre": t, "modeles": [{"nom": n, "fichier": f, "livre": c, "statut": s, "commande": cmd}
+                                                   for n, f, c, s, cmd in rows]} for t, rows in CATALOGUE],
+            "livre": "Dixon, Halperin & Bilokon — Machine Learning in Finance: From Theory to Practice (Springer, 2020)",
+            "lignes_resultats_campagnes": essais}

@@ -10,6 +10,10 @@ journal/
 ._*
 .DS_Store
 
+# app Mac compilée (mac/build_mac_app.sh)
+mac/GambitRidgeCapital
+mac/Gambit Ridge Capital.app/
+
 # données de marché téléchargées (non redistribuables)
 data/equity_prices.csv
 data/eval_fundamentals.json

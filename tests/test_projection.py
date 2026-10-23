@@ -41,7 +41,7 @@ class TestCampaignsApi(unittest.TestCase):
         from gambit_ridge.research.campaigns_api import campaigns
 
         c = campaigns()
-        self.assertEqual([x["n"] for x in c["campagnes"]], [1, 2, 3, 4, 5])
+        self.assertEqual([x["n"] for x in c["campagnes"]], [1, 2, 3, 4, 5, 6])
         self.assertEqual(c["total_essais"], sum(x["n_essais"] for x in c["campagnes"]))
         for x in c["campagnes"]:
             for t in x["essais"]:

@@ -11,7 +11,7 @@ Endpoints :
   GET /api/journal → historique paper-trading + P&L
   GET /api/paper   → portefeuille papier v2 (stratégie retenue)
   GET /api/research → rapport du banc d'évaluation des stratégies
-  GET /api/fn/{gp,des,fxc,wcrs,ecst,wei,gc,ovdv,ovml,mc,gc3d,budg,mac,ilbe}[?s=TICKER&…] → fonctions de marché façon Bloomberg
+  GET /api/fn/{gp,des,fxc,wcrs,ecst,wei,gc,ovdv,ovml,mc,gc3d,budg,mac,ilbe,qlbs,gpg,gpvs,svol,beta,regm,tsa,modl}[?s=TICKER&…] → fonctions de marché façon Bloomberg
   GET /api/risk, /api/attribution, /api/ops → risque, attribution, état d'exploitation
   GET /report[/AAAA-MM] → rapport mensuel imprimable
   GET /api/health, /api/tca, /api/notes[/AAAA-Www] ; POST /api/notes/generate
@@ -331,7 +331,10 @@ class Handler(BaseHTTPRequestHandler):
                         "wei": mf.wei, "gc": mf.gc, "ovdv": lambda: mf.ovdv(sym or "SPY"),
                         "mc": lambda: mf.mc(sym or "SPY", qs), "ovml": lambda: mf.ovml(sym or "SPY", qs),
                         "gc3d": lambda: mf.gc3d((qs.get("y") or ["5"])[0]), "budg": mf.budg,
-                        "mac": lambda: mf.mac(sym or "USD"), "ilbe": mf.ilbe}
+                        "mac": lambda: mf.mac(sym or "USD"), "ilbe": mf.ilbe,
+                        "qlbs": lambda: mf.qlbs(qs), "gpg": lambda: mf.gpg(qs), "gpvs": lambda: mf.gpvs(sym or "SPY"),
+                        "svol": lambda: mf.svol(sym or "SPY", qs), "beta": lambda: mf.beta(sym or "AAPL", qs),
+                        "regm": lambda: mf.regm(sym or "SPY", qs), "tsa": lambda: mf.tsa(sym or "SPY", qs), "modl": mf.modl}
             if name not in handlers:
                 self._send_json({"error": f"fonction inconnue : {name}"}, 404)
                 return
