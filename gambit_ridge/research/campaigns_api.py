@@ -30,6 +30,9 @@ META = [
     {"n": 6, "file": "research_campaign6_2026-10.json", "titre": "Volatilité stochastique pour dimensionner les positions",
      "question": "Un modèle de volatilité stochastique avec levier (filtre particulaire, Dixon et al. ch. 7), calibré sur 2000-2007 seulement, dimensionne-t-il mieux que la GARCH ?",
      "lecon": "Non. Il décrit mieux la volatilité (vraisemblance) mais ne gagne rien en stratégie : Sharpe de développement 0,94 à 0,97 contre 0,99. Mieux prévoir la vol au jour le jour ne change presque pas des poids de risque égal ; le gain statistique ne passe pas dans le portefeuille."},
+    {"n": 7, "file": "research_campaign7_2026-10.json", "titre": "Règles d'entrée, de sortie et sens des positions",
+     "question": "Des cassures de Donchian, des stops suiveurs, une zone neutre, une hystérésis, le long seul ou l'interdiction de vendre des actions font-ils mieux que le signal continu de production ?",
+     "lecon": "Non. Les stops coupent les tendances trop tôt (Sharpe de développement 0,62 à 0,87) ; zone neutre et hystérésis font jeu égal (1,02-1,03 contre 0,99, sous le seuil de +0,05) et moins bien sur 2001-2007. Supprimer les ventes à découvert fait monter la pire baisse de validation de -10 % à -17 % : les positions vendeuses servent de couverture."},
 ]
 
 

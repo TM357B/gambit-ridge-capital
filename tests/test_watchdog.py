@@ -18,7 +18,8 @@ class TestWatchdog(unittest.TestCase):
         services = services or {n: "active" for n in W.SERVICES}
         with mock.patch.object(W, "_load", side_effect=lambda p: live if p.name == "live_state.json" else {}), \
              mock.patch.object(W, "_service_states", return_value=services), \
-             mock.patch("gambit_ridge.live.engine.enabled", return_value=True):
+             mock.patch("gambit_ridge.live.engine.enabled", return_value=True), \
+             mock.patch.object(W.shutil, "disk_usage", return_value=W.shutil._ntuple_diskusage(100e9, 40e9, 60e9)):  # pas le vrai disque
             return W.check(baseline)
 
     def _keys(self, res):

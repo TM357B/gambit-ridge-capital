@@ -1,0 +1,391 @@
+{
+ "genere_le": "2026-10-24",
+ "protocole": "Campagne de recherche n° 7 (octobre 2026) — règles d'entrée, de sortie et sens des positions.\n\nPROTOCOLE FIGÉ ET COMMITÉ AVANT TOUT CALCUL (pré-enregistrement) :\n\nQuestion : la couche tendance entre, sort et se retourne au fil d'un signal continu (moyenne\nTSMOM 12 mois / EWMA multi-vitesses / Kalman), à la hausse comme à la baisse. Des règles\nexplicites d'entrée et de sortie (cassures, stops, zone neutre, hystérésis) ou une restriction\ndu sens des positions (long seul, pas de vente d'actions) font-elles mieux ?\n\nRéférence : la stratégie ETF de production (« 60/40 + couche tendance », 20 ETF, socle 50 %,\nvol GARCH, covariance EWMA, vol cible 10 %, filtre anti micro-trades 25 % / 0,5 %, rebalancement\ntous les 5 jours, 5 bps). Le socle 60/40 ne change pas. Seul change le SIGNAL de la couche\ntendance passé à build_weights ; dimensionnement, covariance, filtre, coûts identiques.\n\nParamètres tirés de la littérature ou fixés par construction, AUCUNE grille, aucun réglage a\nposteriori. « ATR » : nous n'avons que des clôtures, donc ATR approchée par la moyenne sur\n20 séances de |P_t − P_t−1|. Toutes les règles sont causales (décision à la clôture t avec les\nseules clôtures jusqu'à t).\n\nEssais (6) :\n  E1 Cassures de Donchian + stop suiveur (Clenow, « Following the Trend », 2013) : achat quand\n     la clôture dépasse le plus haut des 50 séances précédentes, vente à découvert quand elle\n     passe sous le plus bas ; sortie quand le prix recule de 3 ATR depuis son extrême atteint\n     depuis l'entrée. Signal ±1 tant que la position est ouverte, 0 sinon. Remplace l'ensemble.\n  E2 Ensemble + stop suiveur 3 ATR : on suit le signal de production, mais si le prix recule\n     de 3 ATR depuis son extrême depuis l'entrée, on sort et on reste à plat jusqu'à ce que le\n     signal change de signe (nouvelle tendance).\n  E3 Zone neutre : signal ramené à 0 quand |ensemble| < 1/3, c'est-à-dire quand les trois\n     composantes ne s'accordent pas franchement.\n  E4 Hystérésis (entrée confirmée, sortie rapide) : entrée longue quand l'ensemble atteint\n     +0,5, tenue jusqu'à ce qu'il repasse sous 0 ; symétrique à la baisse. Hors position : 0.\n  L1 Long seul : les signaux négatifs sont ramenés à 0 (la couche tendance n'est jamais\n     vendeuse ; elle peut rester à plat).\n  L2 Pas de vente à découvert d'actions : signaux négatifs ramenés à 0 sur les 7 ETF actions\n     (SPY QQQ IWM EFA EEM EWJ VNQ), ventes autorisées ailleurs (taux, matières, devises).\n     Littérature : les ventes d'actions sont la partie la plus faible du suivi de tendance.\n\nPériodes et règle d'acceptation : identiques aux campagnes 1 à 6 (développement -> 2019-12-31\naprès 260 séances de rodage, validation 2020 -> aujourd'hui ; Sharpe dév. >= réf. + 0,05 ;\nDSR >= 0,90 ; Sharpe validation >= réf. − 0,05 ; pire baisse validation pas plus de 3 points\nau-delà de la réf.), PLUS un 5e critère : sur l'échantillon 2001-2007 reconstitué de la\ncampagne 5 (proxys, research/campaign5.PROXY), Sharpe >= réf. − 0,05. La validation 2020-2026\na trop servi : elle ne fait que vérifier qu'elle ne contredit pas, elle ne choisit rien.\n\nTests multiples : DSR calculé sur tous les Sharpe de développement des campagnes 1, 2, 4 et 6\nplus les 6 essais de cette campagne. Un essai accepté n'entre au portefeuille qu'avec\nl'accord de Tom.\n\nUsage : python3 -m gambit_ridge.research.campaign7\nSortie : data/research_campaign7_2026-10.json\n",
+ "regles": {
+  "dev_gain": 0.05,
+  "dsr": 0.9,
+  "val_tol": 0.05,
+  "dd_tol": 0.03
+ },
+ "parametres": {
+  "cassure": 50,
+  "atr": 20,
+  "stop_atr": 3.0,
+  "zone_neutre": 0.3333333333333333,
+  "entree_hysteresis": 0.5
+ },
+ "essais_comptes_dans_le_dsr": 43,
+ "duree_s": 257,
+ "resultats": {
+  "REF": {
+   "nom": "REF — Référence — production actuelle",
+   "description": "Ensemble TSMOM / EWMA / Kalman, long et short.",
+   "developpement": {
+    "sharpe": 0.9923112686734696,
+    "cagr": 0.06297863675396997,
+    "vol": 0.0635945266564652,
+    "max_dd": -0.11865416151482594,
+    "sortino": 1.3319451225629333,
+    "calmar": 0.5307747823585668,
+    "cvar95": -0.009480346187975289,
+    "n_days": 2945,
+    "turnover_annuel": 8.760829846168932,
+    "gross_moyen": 1.3101445055439986,
+    "couts_annuels": 0.004380414923084466
+   },
+   "validation": {
+    "sharpe": 1.0095815292266526,
+    "cagr": 0.075881799817473,
+    "vol": 0.07526276772373763,
+    "max_dd": -0.10316323071684397,
+    "sortino": 1.3285015621285998,
+    "calmar": 0.7355508284317759,
+    "cvar95": -0.011336362706523152,
+    "n_days": 1712,
+    "turnover_annuel": 9.20413464780452,
+    "gross_moyen": 1.278930231271715,
+    "couts_annuels": 0.00460206732390226
+   },
+   "exposition_tendance": 1.0,
+   "part_vendeuse": 0.3663624651062916,
+   "echantillon_2001_2007": {
+    "sharpe": 1.5658575621156543,
+    "cagr": 0.10640688785083441,
+    "vol": 0.06597876629262647,
+    "max_dd": -0.08932994568387993,
+    "sortino": 2.4089392401974146,
+    "calmar": 1.191167049707902,
+    "cvar95": -0.008703735874413485,
+    "n_days": 1270,
+    "turnover_annuel": 6.945398376177731,
+    "gross_moyen": 1.3857661588223444,
+    "couts_annuels": 0.0034726991880888658
+   },
+   "dsr_developpement": 0.9726597655884778
+  },
+  "E1": {
+   "nom": "E1 — Cassures de Donchian 50 j + stop suiveur 3 ATR",
+   "description": "Clenow (2013), remplace l'ensemble.",
+   "developpement": {
+    "sharpe": 0.8667409301149427,
+    "cagr": 0.05414395612842271,
+    "vol": 0.06314412540042576,
+    "max_dd": -0.09009639813489108,
+    "sortino": 1.154480396371126,
+    "calmar": 0.600955834520256,
+    "cvar95": -0.00946486031496283,
+    "n_days": 2945,
+    "turnover_annuel": 28.126415975266784,
+    "gross_moyen": 1.1398568545835577,
+    "couts_annuels": 0.014063207987633393
+   },
+   "validation": {
+    "sharpe": 0.628779587018121,
+    "cagr": 0.043092964208629736,
+    "vol": 0.07112995969445149,
+    "max_dd": -0.09611592295256965,
+    "sortino": 0.8637045468608399,
+    "calmar": 0.4483436550871475,
+    "cvar95": -0.010432141802669192,
+    "n_days": 1712,
+    "turnover_annuel": 27.68497333456384,
+    "gross_moyen": 1.1142236254246392,
+    "couts_annuels": 0.01384248666728192
+   },
+   "exposition_tendance": 0.40661369980674256,
+   "part_vendeuse": 0.1464891561090831,
+   "echantillon_2001_2007": {
+    "sharpe": 0.673417200274364,
+    "cagr": 0.0434226900521526,
+    "vol": 0.06639779581312369,
+    "max_dd": -0.08402715880749884,
+    "sortino": 1.0644178293316697,
+    "calmar": 0.5167697048002227,
+    "cvar95": -0.008689258718037326,
+    "n_days": 1270,
+    "turnover_annuel": 29.222713212064306,
+    "gross_moyen": 1.2165159952688587,
+    "couts_annuels": 0.014611356606032154
+   },
+   "dsr_developpement": 0.9329674913727768,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "E2": {
+   "nom": "E2 — Ensemble + stop suiveur 3 ATR",
+   "description": "Sortie sur recul de 3 ATR, réentrée au changement de signe.",
+   "developpement": {
+    "sharpe": 0.6200815796444182,
+    "cagr": 0.036572435340674225,
+    "vol": 0.06092266581757565,
+    "max_dd": -0.1441631044592394,
+    "sortino": 0.831462947972004,
+    "calmar": 0.2536879007833429,
+    "cvar95": -0.009156226350275062,
+    "n_days": 2945,
+    "turnover_annuel": 17.82596279197325,
+    "gross_moyen": 0.9083041578911342,
+    "couts_annuels": 0.008912981395986626
+   },
+   "validation": {
+    "sharpe": 0.8207689704760551,
+    "cagr": 0.05070895854831736,
+    "vol": 0.06266464754648783,
+    "max_dd": -0.1039326749589339,
+    "sortino": 1.177997516799796,
+    "calmar": 0.4879019862459385,
+    "cvar95": -0.00885029745984674,
+    "n_days": 1712,
+    "turnover_annuel": 15.896604929103056,
+    "gross_moyen": 0.8519587892751513,
+    "couts_annuels": 0.007948302464551528
+   },
+   "exposition_tendance": 0.2070109512561735,
+   "part_vendeuse": 0.09260253382005583,
+   "echantillon_2001_2007": {
+    "sharpe": 0.5936203858332653,
+    "cagr": 0.03398697762029457,
+    "vol": 0.05926094749842858,
+    "max_dd": -0.09878668693264503,
+    "sortino": 0.9372564915147965,
+    "calmar": 0.3440441083267389,
+    "cvar95": -0.007868495793521498,
+    "n_days": 1270,
+    "turnover_annuel": 13.46503518443788,
+    "gross_moyen": 0.8045256987999292,
+    "couts_annuels": 0.006732517592218942
+   },
+   "dsr_developpement": 0.7506076451598224,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": false,
+    "validation_non_contredite": false,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "E3": {
+   "nom": "E3 — Zone neutre |signal| < 1/3",
+   "description": "À plat quand les composantes ne s'accordent pas.",
+   "developpement": {
+    "sharpe": 1.0317853008923241,
+    "cagr": 0.06628700374882324,
+    "vol": 0.06421293019018011,
+    "max_dd": -0.0869851688562824,
+    "sortino": 1.3865778305021452,
+    "calmar": 0.7620494921190895,
+    "cvar95": -0.00959036506221423,
+    "n_days": 2945,
+    "turnover_annuel": 10.380568968199157,
+    "gross_moyen": 1.3033214260988069,
+    "couts_annuels": 0.005190284484099578
+   },
+   "validation": {
+    "sharpe": 1.011097156931036,
+    "cagr": 0.08080984318698858,
+    "vol": 0.0800371712253677,
+    "max_dd": -0.10898643110324222,
+    "sortino": 1.3305462174630558,
+    "calmar": 0.7414670098742648,
+    "cvar95": -0.012042515109090877,
+    "n_days": 1712,
+    "turnover_annuel": 10.943724167507412,
+    "gross_moyen": 1.2845112099943894,
+    "couts_annuels": 0.005471862083753708
+   },
+   "exposition_tendance": 0.7438909168992914,
+   "part_vendeuse": 0.2496456946532102,
+   "echantillon_2001_2007": {
+    "sharpe": 1.4361600690170804,
+    "cagr": 0.09738711823775947,
+    "vol": 0.06624767623870104,
+    "max_dd": -0.09847147219222475,
+    "sortino": 2.219356375966711,
+    "calmar": 0.9889881411303719,
+    "cvar95": -0.008724941407184373,
+    "n_days": 1270,
+    "turnover_annuel": 8.806777599159838,
+    "gross_moyen": 1.363001828191092,
+    "couts_annuels": 0.004403388799579919
+   },
+   "dsr_developpement": 0.9796549464137865,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "E4": {
+   "nom": "E4 — Hystérésis : entrée à ±0,5, sortie à 0",
+   "description": "Entrée confirmée, sortie rapide.",
+   "developpement": {
+    "sharpe": 1.0187451758496606,
+    "cagr": 0.06597129315064842,
+    "vol": 0.06477937135226391,
+    "max_dd": -0.11698475151113272,
+    "sortino": 1.3794716090714982,
+    "calmar": 0.5639307029204601,
+    "cvar95": -0.009582672204040365,
+    "n_days": 2945,
+    "turnover_annuel": 8.419539990096977,
+    "gross_moyen": 1.3058775735074268,
+    "couts_annuels": 0.004209769995048488
+   },
+   "validation": {
+    "sharpe": 0.9869948010889588,
+    "cagr": 0.07586814605552328,
+    "vol": 0.07711493107365451,
+    "max_dd": -0.1056583745703359,
+    "sortino": 1.2929585962234857,
+    "calmar": 0.7180514215181162,
+    "cvar95": -0.011638954744300408,
+    "n_days": 1712,
+    "turnover_annuel": 9.042579380650169,
+    "gross_moyen": 1.2780670498107873,
+    "couts_annuels": 0.004521289690325085
+   },
+   "exposition_tendance": 0.8476057547777539,
+   "part_vendeuse": 0.2924200128838308,
+   "echantillon_2001_2007": {
+    "sharpe": 1.50873755143814,
+    "cagr": 0.10265259569337504,
+    "vol": 0.06623411511689921,
+    "max_dd": -0.09059465833793114,
+    "sortino": 2.304558856245702,
+    "calmar": 1.1330976635561234,
+    "cvar95": -0.00873828620826082,
+    "n_days": 1270,
+    "turnover_annuel": 6.7173868519716295,
+    "gross_moyen": 1.3844989746867666,
+    "couts_annuels": 0.0033586934259858155
+   },
+   "dsr_developpement": 0.9778226163236935,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "L1": {
+   "nom": "L1 — Long seul",
+   "description": "La couche tendance n'est jamais vendeuse.",
+   "developpement": {
+    "sharpe": 0.9225221161094525,
+    "cagr": 0.07280529247638068,
+    "vol": 0.0796284574366509,
+    "max_dd": -0.19000840622225915,
+    "sortino": 1.2365239786226783,
+    "calmar": 0.3831687972332019,
+    "cvar95": -0.011777249385476826,
+    "n_days": 2945,
+    "turnover_annuel": 7.102369254569531,
+    "gross_moyen": 1.2970476742683072,
+    "couts_annuels": 0.003551184627284765
+   },
+   "validation": {
+    "sharpe": 0.8841520198128996,
+    "cagr": 0.08561625477332568,
+    "vol": 0.09841155203021082,
+    "max_dd": -0.17174108331931495,
+    "sortino": 1.1299418802225765,
+    "calmar": 0.4985193590175567,
+    "cvar95": -0.014866360971691334,
+    "n_days": 1712,
+    "turnover_annuel": 6.77514573227687,
+    "gross_moyen": 1.245756415012878,
+    "couts_annuels": 0.0033875728661384346
+   },
+   "exposition_tendance": 0.6336375348937084,
+   "part_vendeuse": 0.0,
+   "echantillon_2001_2007": {
+    "sharpe": 1.6685460508509553,
+    "cagr": 0.12645310435627088,
+    "vol": 0.07297548954954099,
+    "max_dd": -0.08601655537985087,
+    "sortino": 2.571611096110515,
+    "calmar": 1.4701019332598404,
+    "cvar95": -0.009636080405691066,
+    "n_days": 1270,
+    "turnover_annuel": 5.481989960160908,
+    "gross_moyen": 1.3883742490030957,
+    "couts_annuels": 0.002740994980080454
+   },
+   "dsr_developpement": 0.9545074230707098,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": false,
+    "echantillon_2001_2007": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "L2": {
+   "nom": "L2 — Pas de vente d'actions",
+   "description": "Ventes interdites sur les 7 ETF actions, permises ailleurs.",
+   "developpement": {
+    "sharpe": 0.9289861164635206,
+    "cagr": 0.06400635220082584,
+    "vol": 0.06938428951527713,
+    "max_dd": -0.17682317155932037,
+    "sortino": 1.251168191894023,
+    "calmar": 0.36197943762903884,
+    "cvar95": -0.010331809811423046,
+    "n_days": 2945,
+    "turnover_annuel": 8.76050906914981,
+    "gross_moyen": 1.3296127883846065,
+    "couts_annuels": 0.004380254534574905
+   },
+   "validation": {
+    "sharpe": 0.9559961992327604,
+    "cagr": 0.07862553439015763,
+    "vol": 0.08276844872531636,
+    "max_dd": -0.12548726264409418,
+    "sortino": 1.2335033968782254,
+    "calmar": 0.6265618735596667,
+    "cvar95": -0.012402900233091181,
+    "n_days": 1712,
+    "turnover_annuel": 9.146429264363723,
+    "gross_moyen": 1.3011160890491424,
+    "couts_annuels": 0.0045732146321818615
+   },
+   "exposition_tendance": 0.9012347004509341,
+   "part_vendeuse": 0.2675971655572257,
+   "echantillon_2001_2007": {
+    "sharpe": 1.4959241274262982,
+    "cagr": 0.1064598730071884,
+    "vol": 0.06924252990219146,
+    "max_dd": -0.08871699354311366,
+    "sortino": 2.319449395393697,
+    "calmar": 1.1999941471805202,
+    "cvar95": -0.009054448575726787,
+    "n_days": 1270,
+    "turnover_annuel": 6.767943441467168,
+    "gross_moyen": 1.3915393703126513,
+    "couts_annuels": 0.0033839717207335847
+   },
+   "dsr_developpement": 0.9566790206094253,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": false
+   },
+   "verdict": "REJETÉ"
+  }
+ }
+}

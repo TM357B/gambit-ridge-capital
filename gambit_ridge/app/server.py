@@ -12,6 +12,7 @@ Endpoints :
   GET /api/paper   → portefeuille papier v2 (stratégie retenue)
   GET /api/research → rapport du banc d'évaluation des stratégies
   GET /api/grql?q=…[&format=csv], /api/bdp?s=&f=, /api/bdh?s=&f=&debut=&fin= → langage de requête et API Excel
+  GET /api/xl?fn=bdp|bdh|bds|bql&s=&f=&d=&e=&o=Per=W|Dts=H&u=&x= → complément Excel (TSV, syntaxe Bloomberg)
   GET /api/fn/{gp,des,fxc,wcrs,ecst,wei,gc,ovdv,ovml,mc,gc3d,budg,mac,ilbe,qlbs,gpg,gpvs,svol,beta,regm,tsa,modl,fa,eqs,gew}[?s=TICKER&…] → fonctions de marché façon Bloomberg
   GET /api/risk, /api/attribution, /api/ops → risque, attribution, état d'exploitation
   GET /report[/AAAA-MM] → rapport mensuel imprimable
@@ -249,6 +250,16 @@ class Handler(BaseHTTPRequestHandler):
             self._send_static(self.path.split("?", 1)[0][len("/static/"):])
         elif self.path.split("?", 1)[0] in ("/api/grql", "/api/bdp", "/api/bdh"):
             self._grql()
+        elif self.path.split("?", 1)[0] == "/api/xl":  # complément Excel : BDP, BDH, BDS, BQL façon Bloomberg
+            from urllib.parse import parse_qs, urlparse
+
+            from ..query.bloomberg import repondre
+
+            qs = {k: v[0] for k, v in parse_qs(urlparse(self.path).query).items()}
+            try:
+                self._send_text(repondre(qs.get("fn", ""), qs))
+            except Exception as exc:  # noqa: BLE001 — une cellule d'erreur plutôt qu'une page 500
+                self._send_text(f"#N/A {type(exc).__name__}: {exc}"[:250])
         elif self.path == "/api/state":
             self._send_json(_get_state())
         elif self.path == "/api/agents":

@@ -87,5 +87,13 @@ function bqlExcel(base) {
     Requête complète, en CSV :<br>${ex(`${base}/api/grql?format=csv&q=` + encodeURIComponent(FN_STATE.bql.q))}<br>
     <b>Actualiser tout</b> (Données) remet les chiffres à jour.</div>`);
   h += '</div>';
+  h += pan('Complément Gambit Ridge : la syntaxe Bloomberg', 'excel/GambitRidge.xlam', `<div style="padding:6px 10px;line-height:2">
+    Mêmes fonctions et mêmes mnémoniques que le complément Bloomberg, Windows et Mac :<br>
+    ${ex('=BDP("AAPL US Equity"; "PX_LAST")')} · ${ex('=BDP("AAPL US Equity"; "PE_RATIO")')}<br>
+    ${ex('=BDH("SPY US Equity"; "PX_LAST"; "20240101"; ""; "Per=W")')} · ${ex('=BDH(A2; B1:D1; "-1Y")')}<br>
+    ${ex('=BDS("AAPL US Equity"; "DVD_HIST_ALL")')} · ${ex('=BDS("SPY US Equity"; "OPT_CHAIN")')}<br>
+    ${ex(`=BQL("members('MAG7')"; "px_last")`)} · ${ex(`=BQL("get(px_last) for(['AAPL'])")`)}<br>
+    Unités Bloomberg (%, millions). Champs payants (consensus, notations, CDS…) : « #N/A Field Not Available ».
+    Macros : <b>GRC_Actualiser</b> (recalcul, comme Refresh) et <b>GRC_Configurer</b> (adresse du terminal).</div>`, 'margin-top:10px');
   return h + noteBas(`L’adresse ${esc(base)} est celle du terminal : sur le Mac, le tunnel vers le serveur ; sur un autre appareil du réseau Tailscale, l’adresse Tailscale. Le serveur n’est jamais exposé sur Internet, donc Google Sheets (qui interroge depuis les serveurs de Google) ne peut pas l’atteindre. Lecture seule : aucune requête ne modifie le portefeuille.`);
 }

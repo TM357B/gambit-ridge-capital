@@ -27,7 +27,8 @@ The trend layer is nearly uncorrelated with the 60/40 core (≈0.05) and halves 
 - **The ML model.** A cross-sectional ridge regression credited with a +0.63 Sharpe turned out to lose money (−0.48) once tested on a genuinely tradable universe: the original figure came from eight FRED series, some of them untradable spot prices.
 - **FX carry (G10).** A textbook risk premium, yet a Sharpe of ≈0.03 over 2006–2019; adding it lowers the retained strategy's development Sharpe from 0.99 to 0.75–0.80. Rejected — even though one variant looked good on the validation period, because choosing there would be cheating.
 - **HMM regime filter.** Slightly lower drawdown, no Sharpe gain: not worth an extra layer.
-- **Stochastic volatility for position sizing.** A stochastic-volatility model with leverage (particle filter, calibrated on 2000–2007 only) fits volatility far better than GARCH by likelihood, yet sizing positions with it lowers the development Sharpe (0.94–0.97 vs 0.99). A better statistical model is not automatically a better portfolio. In all, 42 pre-registered trials over six campaigns, none accepted.
+- **Stochastic volatility for position sizing.** A stochastic-volatility model with leverage (particle filter, calibrated on 2000–2007 only) fits volatility far better than GARCH by likelihood, yet sizing positions with it lowers the development Sharpe (0.94–0.97 vs 0.99). A better statistical model is not automatically a better portfolio.
+- **Entry and exit rules.** Donchian breakouts with ATR trailing stops, stops on the production signal, a neutral zone, entry/exit hysteresis, long-only, and no equity shorts. Stops cut trends too early (development Sharpe 0.62–0.87); the neutral zone and hysteresis tie the reference (1.02–1.03 vs 0.99, below the +0.05 bar) and lose on 2001–2007; dropping short positions raises the worst validation drawdown from −10% to −17% — shorts act as a hedge. In all, 48 pre-registered trials over seven campaigns, none accepted.
 
 ## Method
 
@@ -99,6 +100,8 @@ with(dates = range(-1y, 0d), currency = 'EUR')
 ```
 
 Universes (`members`, the `EQS` screener presets, `filter`, `top`), market and risk fields, SEC fundamentals, arithmetic and boolean logic, Bloomberg-style identifiers (`AAPL US Equity`, `SPX Index`, `EURUSD Curncy`). The same engine answers `BDP`- and `BDH`-like HTTP calls (`/api/bdp`, `/api/bdh`, `/api/grql?format=csv`) for Excel's `WEBSERVICE` or Power Query.
+
+An Excel add-in (`excel/GambitRidge.bas`, Windows and Mac) defines `BDP`, `BDH`, `BDS` and `BQL` with Bloomberg's exact signatures, field mnemonics (`PX_LAST`, `CHG_PCT_YTD`, `VOLATILITY_30D`, `PE_RATIO`, `DVD_HIST_ALL`, `OPT_CHAIN`…), units and `#N/A` messages, so a sheet written for a Bloomberg terminal recalculates against Gambit Ridge for every field available from free data. Paid-only fields (consensus, ratings, CDS) return `#N/A Field Not Available` rather than a made-up number.
 
 ## Monte-Carlo lab
 
