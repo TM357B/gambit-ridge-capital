@@ -1,7 +1,7 @@
 /* Gambit Ridge Capital — terminal : 06-fonctions.js (scripts classiques, globals partagés, chargés dans l'ordre) */
 /* ============ FONCTIONS « BLOOMBERG » + BARRE DE COMMANDE ============ */
 const FN_LIST = [
-  ['GP', 'Graphique de prix', 'SPY GP'], ['DES', 'Fiche de l’actif', 'QQQ DES'],
+  ['GP', 'Graphique de prix', 'SPY GP'], ['DES', 'Fiche de l’actif', 'QQQ DES'], ['FA', 'Comptes de la société (SEC)', 'AAPL FA'], ['EQS', 'Screener d’actions', 'EQS'], ['GEW', 'Économie mondiale (FMI, BRI)', 'GEW'],
   ['FXC', 'Matrice des devises', 'FXC'], ['WCRS', 'Classement des devises', 'WCRS'],
   ['ECST', 'Statistiques économiques US', 'ECST'], ['WEI', 'Indices mondiaux', 'WEI'],
   ['GC', 'Courbe des taux US', 'GC'], ['GC3D', 'Courbe des taux en 3D', 'GC3D'], ['OVDV', 'Surface de vol implicite 3D', 'SPY OVDV'],
@@ -32,7 +32,7 @@ function runCommand(raw) {
   const toks = (raw || '').trim().toUpperCase().replace(/<GO>/g, '').split(/\s+/).filter(Boolean);
   if (!toks.length) return;
   const nav = { NOTE: 'notes', NOTES: 'notes', RISK: 'risk', RISQUE: 'risk', NH: 'news', N: 'news', NEWS: 'news', PORT: 'paper', PT: 'paper', RES: 'research', BT: 'backtest', STRAT: 'strategies', VOIX: 'voice', VOICE: 'voice', AGENTS: 'agents', RH: 'hr', HR: 'hr', MAIN: 'terminal', TERM: 'terminal', RENDUS: 'reports' };
-  const fns = ['GP', 'DES', 'FXC', 'WCRS', 'ECST', 'WEI', 'GC', 'GC3D', 'OVDV', 'OVML', 'MC', 'ILBE', 'BUDG', 'MAC', 'QLBS', 'GPG', 'GPVS', 'SVOL', 'BETA', 'REGM', 'TSA', 'MODL', 'HELP'];
+  const fns = ['GP', 'DES', 'FXC', 'WCRS', 'ECST', 'WEI', 'GC', 'GC3D', 'OVDV', 'OVML', 'MC', 'ILBE', 'BUDG', 'MAC', 'QLBS', 'GPG', 'GPVS', 'SVOL', 'BETA', 'REGM', 'TSA', 'MODL', 'FA', 'EQS', 'GEW', 'HELP'];
   const last = toks[toks.length - 1];
   // CAMP : campagnes de recherche · LIVE : panneau En direct · PROJ : projection à un an (onglet Risque)
   if (toks.length === 1 && ['CAMP', 'CAMPAGNES'].includes(last)) { RS_SEL = { uni: 'camp' }; return switchTab('research'); }
@@ -57,9 +57,9 @@ async function fnFetch(name, sym) {
 async function renderFn() {
   const c = document.getElementById('content');
   const S = FN_STATE;
-  const avecSym = ['GP', 'DES', 'OVDV', 'OVML', 'MC', 'GPVS', 'SVOL', 'BETA', 'REGM', 'TSA'];
+  const avecSym = ['GP', 'DES', 'OVDV', 'OVML', 'MC', 'GPVS', 'SVOL', 'BETA', 'REGM', 'TSA', 'FA'];
   let html = '<div class="fn-bar">' + FN_LIST.map(([k, l, ex]) => `<div class="fn-chip ${S.name===k?'active':''}" onclick="runCommand('${(avecSym.includes(k) ? (S.sym||'SPY') + ' ' : '') + k}')" title="${esc(l)} — ex. ${esc(ex)}"><b>${k}</b> <span>${esc(l)}</span></div>`).join('') + '</div>';
-  c.innerHTML = html + '<div class="loader">Chargement ' + esc(S.name) + (avecSym.includes(S.name) ? ' ' + esc(S.sym) : '') + ({ OVDV: ' — toutes les échéances d’options, une dizaine de secondes', OVML: ' — lecture de la surface de vol', MC: ' — simulation en cours', QLBS: ' — programmation dynamique sur les trajectoires', GPVS: ' — apprentissage du processus gaussien', SVOL: ' — calibrage du filtre particulaire, une vingtaine de secondes', REGM: ' — EM et Baum-Welch' }[S.name] || '') + '…</div>';
+  c.innerHTML = html + '<div class="loader">Chargement ' + esc(S.name) + (avecSym.includes(S.name) ? ' ' + esc(S.sym) : '') + ({ OVDV: ' — toutes les échéances d’options, une dizaine de secondes', OVML: ' — lecture de la surface de vol', MC: ' — simulation en cours', QLBS: ' — programmation dynamique sur les trajectoires', GPVS: ' — apprentissage du processus gaussien', SVOL: ' — calibrage du filtre particulaire, une vingtaine de secondes', REGM: ' — EM et Baum-Welch', FA: ' — comptes SEC EDGAR', EQS: ' — premier chargement de l’univers : une vingtaine de secondes', GEW: ' — FMI, BRI et OCDE' }[S.name] || '') + '…</div>';
   let body = '';
   try {
     if (S.name === 'HELP') body = fnHelp();
@@ -85,6 +85,9 @@ async function renderFn() {
     else if (S.name === 'REGM') body = fnREGM(await fnFetch('REGM', S.sym));
     else if (S.name === 'TSA') body = fnTSA(await fnFetch('TSA', S.sym));
     else if (S.name === 'MODL') body = fnMODL(await fnFetch('MODL'));
+    else if (S.name === 'FA') body = fnFA(await fnFetch('FA', S.sym));
+    else if (S.name === 'EQS') body = fnEQS(await fnFetchQ('EQS', '', eqsQuery()));
+    else if (S.name === 'GEW') body = fnGEW(await fnFetch('GEW'));
   } catch(e) { body = `<div class="loader neg">Erreur : ${esc(e.message)}</div>`; }
   if (currentTab === 'fn') { c.innerHTML = html + body; if (typeof s3dMount === 'function') s3dMount(); }
 }

@@ -691,3 +691,26 @@ def modl() -> dict:
                                                    for n, f, c, s, cmd in rows]} for t, rows in CATALOGUE],
             "livre": "Dixon, Halperin & Bilokon — Machine Learning in Finance: From Theory to Practice (Springer, 2020)",
             "lignes_resultats_campagnes": essais}
+
+
+# --------------------------------------------------------------------- Actions et macro (sources officielles gratuites)
+
+def fa(symbol: str) -> dict:
+    """Fiche financière d'une société cotée aux États-Unis (SEC EDGAR)."""
+    from .equity.fa import fa as fiche
+
+    return fiche(_check(symbol))
+
+
+def eqs(params: dict | None = None) -> dict:
+    """Screener d'actions américaines (SEC EDGAR + cours)."""
+    from .equity.eqs import eqs as screener
+
+    return screener(_p(params))
+
+
+def gew() -> dict:
+    """Économie mondiale : FMI (réalisé et prévisions), BRI (taux directeurs), FRED/OCDE (taux à 10 ans)."""
+    from .data.macro_monde import gew as monde
+
+    return monde()

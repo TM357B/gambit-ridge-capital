@@ -53,7 +53,7 @@ flowchart LR
 
 The fund runs on its own: decision after the New York close, orders replicated on an Alpaca paper account at the next open, daily data-quality checks with an independent second price source, transaction-cost analysis on real fills, a strategy-health monitor comparing live results with every comparable backtest window, monthly reports and phone alerts.
 
-A Bloomberg-style local terminal (macOS app + iPhone web app) shows the portfolio, risk (VaR, stress tests on nine historical crises, risk contributions), attribution, research results and market functions modelled on the Bloomberg terminal (`GP`, `DES`, `FXC`, `WCRS`, `ECST`, `WEI`, `GC`, `GC3D`, `OVDV`, `OVML`, `MC`, `ILBE`, `BUDG`, `WCRS MAC`, `QLBS`, `GPVS`, `SVOL`, `BETA`, `REGM`, `TSA`, `MODL`), all fed by free, real data — functions that need paid consensus data are deliberately not imitated.
+A Bloomberg-style local terminal (macOS app + iPhone web app) shows the portfolio, risk (VaR, stress tests on nine historical crises, risk contributions), attribution, research results and market functions modelled on the Bloomberg terminal (`GP`, `DES`, `FXC`, `WCRS`, `ECST`, `WEI`, `GC`, `GC3D`, `OVDV`, `OVML`, `MC`, `ILBE`, `BUDG`, `WCRS MAC`, `QLBS`, `GPVS`, `SVOL`, `BETA`, `REGM`, `TSA`, `MODL`, `FA`, `EQS`, `GEW`), all fed by free, real data — including SEC EDGAR financial statements and insider filings, a screener over ~1,600 US companies, and IMF / BIS world macro with official forecasts — functions that need paid consensus data are deliberately not imitated.
 
 ![Risk tab: strategy health, VaR, limits, nine historical crises replayed on today's portfolio](docs/img/risk.png)
 
@@ -127,7 +127,8 @@ numpy is the only required dependency: every model (GARCH, Kalman, HMM, ridge…
 | `gambit_ridge/ops/` | daily automated run |
 | `gambit_ridge/options/` | Black-Scholes and Greeks, implied volatility, volatility surface (`OVDV`), Monte-Carlo lab (`MC`) |
 | `gambit_ridge/quant/` | QLBS, Gaussian processes, particle filter, Bayesian models, Box-Jenkins, PCA |
-| `tests/` | 171 tests, run in CI |
+| `gambit_ridge/equity/` | company financials from SEC EDGAR (`FA`), stock screener (`EQS`) |
+| `tests/` | 178 tests, run in CI |
 
 ## Notes
 

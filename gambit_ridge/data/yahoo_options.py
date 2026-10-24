@@ -92,3 +92,34 @@ def fetch_option_chain(symbol: str, refresh: bool = False, max_age_minutes: floa
     path.parent.mkdir(exist_ok=True)
     path.write_text(json.dumps(data))
     return data
+
+
+def cotations(symboles: list[str], max_age_minutes: float = 15.0, cache_dir: Path | None = None) -> dict[str, dict]:
+    """Cours et capitalisation de nombreux tickers d'un coup (API v7 quote, lots de 150), cache court par lot."""
+    import hashlib
+
+    out: dict[str, dict] = {}
+    syms = sorted({s.upper() for s in symboles if s})
+    op = crumb = None
+    for i in range(0, len(syms), 150):
+        lot = syms[i:i + 150]
+        cle = hashlib.sha1(",".join(lot).encode()).hexdigest()[:16]
+        path = (cache_dir or CACHE_DIR) / f"yahoo_quotes_{cle}.json"
+        if path.exists() and time.time() - path.stat().st_mtime < max_age_minutes * 60:
+            res = json.loads(path.read_text())
+        else:
+            if op is None:
+                op, crumb = _opener()
+            try:
+                res = _get(op, f"{BASE}/v7/finance/quote?symbols={','.join(lot)}&crumb={crumb}")["quoteResponse"]["result"]
+            except Exception:
+                if not path.exists():
+                    raise
+                res = json.loads(path.read_text())
+            path.parent.mkdir(exist_ok=True)
+            path.write_text(json.dumps(res))
+        for q in res:
+            out[q["symbol"]] = {"prix": q.get("regularMarketPrice"), "capitalisation": q.get("marketCap"), "devise": q.get("currency"),
+                                "variation_jour": q.get("regularMarketChangePercent"), "nom": q.get("longName") or q.get("shortName"),
+                                "per_yahoo": q.get("trailingPE"), "plus_haut_52s": q.get("fiftyTwoWeekHigh"), "plus_bas_52s": q.get("fiftyTwoWeekLow")}
+    return out
