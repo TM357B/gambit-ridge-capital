@@ -1,7 +1,7 @@
 /* Gambit Ridge Capital — terminal : 06-fonctions.js (scripts classiques, globals partagés, chargés dans l'ordre) */
 /* ============ FONCTIONS « BLOOMBERG » + BARRE DE COMMANDE ============ */
 const FN_LIST = [
-  ['GP', 'Graphique de prix', 'SPY GP'], ['DES', 'Fiche de l’actif', 'QQQ DES'], ['FA', 'Comptes de la société (SEC)', 'AAPL FA'], ['EQS', 'Screener d’actions', 'EQS'], ['GEW', 'Économie mondiale (FMI, BRI)', 'GEW'],
+  ['GP', 'Graphique de prix', 'SPY GP'], ['DES', 'Fiche de l’actif', 'QQQ DES'], ['BQL', 'Langage de requête et API Excel', 'BQL'], ['FA', 'Comptes de la société (SEC)', 'AAPL FA'], ['EQS', 'Screener d’actions', 'EQS'], ['GEW', 'Économie mondiale (FMI, BRI)', 'GEW'],
   ['FXC', 'Matrice des devises', 'FXC'], ['WCRS', 'Classement des devises', 'WCRS'],
   ['ECST', 'Statistiques économiques US', 'ECST'], ['WEI', 'Indices mondiaux', 'WEI'],
   ['GC', 'Courbe des taux US', 'GC'], ['GC3D', 'Courbe des taux en 3D', 'GC3D'], ['OVDV', 'Surface de vol implicite 3D', 'SPY OVDV'],
@@ -9,7 +9,7 @@ const FN_LIST = [
   ['BUDG', 'Budget fédéral US', 'BUDG'], ['MAC', 'Indice Big Mac (WCRS MAC)', 'WCRS MAC'],
   ['QLBS', 'Pricing d’option par RL (QLBS)', 'QLBS'], ['GPG', 'Grecques par processus gaussien', 'GPG'], ['GPVS', 'Surface de vol lissée (GP)', 'SPY GPVS'],
   ['SVOL', 'Volatilité stochastique (particules)', 'SPY SVOL'], ['BETA', 'Bêta bayésien', 'AAPL BETA'], ['REGM', 'Régimes : mélanges et HMM', 'SPY REGM'],
-  ['TSA', 'Série temporelle (Box-Jenkins)', 'SPY TSA'], ['MODL', 'Catalogue des modèles', 'MODL'], ['NH', 'Actualités', 'NH'],
+  ['TSA', 'Série temporelle (Box-Jenkins)', 'SPY TSA'], ['MODL', 'Catalogue des modèles', 'MODL'], ['ROB', 'Robustesse : hasard, PBO, stats', 'ROB'], ['NH', 'Actualités', 'NH'],
   ['PORT', 'Portefeuille papier', 'PORT'], ['RES', 'Recherche / backtests', 'RES'],
 ];
 const TICKER_ALIAS = { BTC: 'BTC-USD', ETH: 'ETH-USD', XRP: 'XRP-USD', LTC: 'LTC-USD', ADA: 'ADA-USD', BNB: 'BNB-USD', DOGE: 'DOGE-USD', SOL: 'SOL-USD',
@@ -32,12 +32,13 @@ function runCommand(raw) {
   const toks = (raw || '').trim().toUpperCase().replace(/<GO>/g, '').split(/\s+/).filter(Boolean);
   if (!toks.length) return;
   const nav = { NOTE: 'notes', NOTES: 'notes', RISK: 'risk', RISQUE: 'risk', NH: 'news', N: 'news', NEWS: 'news', PORT: 'paper', PT: 'paper', RES: 'research', BT: 'backtest', STRAT: 'strategies', VOIX: 'voice', VOICE: 'voice', AGENTS: 'agents', RH: 'hr', HR: 'hr', MAIN: 'terminal', TERM: 'terminal', RENDUS: 'reports' };
-  const fns = ['GP', 'DES', 'FXC', 'WCRS', 'ECST', 'WEI', 'GC', 'GC3D', 'OVDV', 'OVML', 'MC', 'ILBE', 'BUDG', 'MAC', 'QLBS', 'GPG', 'GPVS', 'SVOL', 'BETA', 'REGM', 'TSA', 'MODL', 'FA', 'EQS', 'GEW', 'HELP'];
+  const fns = ['GP', 'DES', 'FXC', 'WCRS', 'ECST', 'WEI', 'GC', 'GC3D', 'OVDV', 'OVML', 'MC', 'ILBE', 'BUDG', 'MAC', 'QLBS', 'GPG', 'GPVS', 'SVOL', 'BETA', 'REGM', 'TSA', 'MODL', 'FA', 'EQS', 'GEW', 'BQL', 'ROB', 'HELP'];
   const last = toks[toks.length - 1];
   // CAMP : campagnes de recherche · LIVE : panneau En direct · PROJ : projection à un an (onglet Risque)
   if (toks.length === 1 && ['CAMP', 'CAMPAGNES'].includes(last)) { RS_SEL = { uni: 'camp' }; return switchTab('research'); }
   if (toks.length === 1 && last === 'LIVE') return switchTab('paper');
   if (toks.length === 1 && ['PROJ', 'PROJECTION'].includes(last)) { switchTab('risk'); return setTimeout(() => { const e = document.getElementById('chProj'); if (e) e.closest('.panel').scrollIntoView({ behavior: 'smooth' }); }, 2500); }
+  if (toks.length === 1 && ['GRQL', 'XLS', 'EXCEL'].includes(last)) { FN_STATE.name = 'BQL'; if (last !== 'GRQL' && FN_STATE.bql) FN_STATE.bql.vue = 'excel'; return switchTab('fn'); }
   if (toks.length === 1 && nav[last]) return switchTab(nav[last]);
   if (toks.length === 1 && fns.includes(last)) { FN_STATE.name = last; return switchTab('fn'); }
   if (toks.length >= 2 && fns.includes(last)) { FN_STATE.name = last; FN_STATE.sym = normTicker(toks.slice(0, -1).join('')); return switchTab('fn'); }
@@ -88,6 +89,8 @@ async function renderFn() {
     else if (S.name === 'FA') body = fnFA(await fnFetch('FA', S.sym));
     else if (S.name === 'EQS') body = fnEQS(await fnFetchQ('EQS', '', eqsQuery()));
     else if (S.name === 'GEW') body = fnGEW(await fnFetch('GEW'));
+    else if (S.name === 'BQL') body = await fnBQL();
+    else if (S.name === 'ROB') body = fnROB(await fnFetch('ROB'));
   } catch(e) { body = `<div class="loader neg">Erreur : ${esc(e.message)}</div>`; }
   if (currentTab === 'fn') { c.innerHTML = html + body; if (typeof s3dMount === 'function') s3dMount(); }
 }

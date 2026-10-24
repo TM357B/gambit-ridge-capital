@@ -53,7 +53,7 @@ flowchart LR
 
 The fund runs on its own: decision after the New York close, orders replicated on an Alpaca paper account at the next open, daily data-quality checks with an independent second price source, transaction-cost analysis on real fills, a strategy-health monitor comparing live results with every comparable backtest window, monthly reports and phone alerts.
 
-A Bloomberg-style local terminal (macOS app + iPhone web app) shows the portfolio, risk (VaR, stress tests on nine historical crises, risk contributions), attribution, research results and market functions modelled on the Bloomberg terminal (`GP`, `DES`, `FXC`, `WCRS`, `ECST`, `WEI`, `GC`, `GC3D`, `OVDV`, `OVML`, `MC`, `ILBE`, `BUDG`, `WCRS MAC`, `QLBS`, `GPVS`, `SVOL`, `BETA`, `REGM`, `TSA`, `MODL`, `FA`, `EQS`, `GEW`), all fed by free, real data — including SEC EDGAR financial statements and insider filings, a screener over ~1,600 US companies, and IMF / BIS world macro with official forecasts — functions that need paid consensus data are deliberately not imitated.
+A Bloomberg-style local terminal (macOS app + iPhone web app) shows the portfolio, risk (VaR, stress tests on nine historical crises, risk contributions), attribution, research results and market functions modelled on the Bloomberg terminal (`GP`, `DES`, `FXC`, `WCRS`, `ECST`, `WEI`, `GC`, `GC3D`, `OVDV`, `OVML`, `MC`, `ILBE`, `BUDG`, `WCRS MAC`, `QLBS`, `GPVS`, `SVOL`, `BETA`, `REGM`, `TSA`, `MODL`, `FA`, `EQS`, `GEW`, `BQL`, `ROB`), all fed by free, real data — including SEC EDGAR financial statements and insider filings, a screener over ~1,600 US companies, and IMF / BIS world macro with official forecasts — functions that need paid consensus data are deliberately not imitated.
 
 ![Risk tab: strategy health, VaR, limits, nine historical crises replayed on today's portfolio](docs/img/risk.png)
 
@@ -78,6 +78,27 @@ Beyond the trend models in production, the terminal implements models from Dixon
 - **Box-Jenkins and PCA** (ch. 6) — ADF, ACF/PACF, Ljung-Box, AR order by AIC/BIC and time-series cross-validation; level, slope and curvature of the Treasury curve.
 
 `MODL` in the terminal lists every model with its status: in production, rejected after a pre-registered campaign, or analysis only.
+
+## Robustness checks
+
+`ROB` in the terminal (`python -m gambit_ridge.research.robustesse 2000`) asks whether the edge is skill or luck:
+
+- **Random baseline** — 2,000 strategies with the fund's exact rules (60/40 core, equal risk, 10% vol target, buffer, costs) but the direction of each trend position drawn at random, with the same holding period and size. The fund sits at the 99.9th percentile on 2008-2019 (p = 0.002) and the 99.3rd on 2020-2026 (p = 0.008).
+- **Probability of backtest overfitting** (Bailey, Borwein, López de Prado & Zhu) — combinatorially symmetric cross-validation over 108 variants (4 signals × 3 core weights × 3 vol targets × 3 rebalancing speeds), 12,870 splits. PBO is 65%: the variants are near-equivalent, so picking the in-sample "best" is picking noise. Parameters are therefore fixed before any calculation (production ranks 13th, not 1st), and even the noise-picked best keeps an out-of-sample Sharpe of 0.84, well above the random median of 0.53.
+- **Trading statistics** — daily, weekly and monthly win rate, profit factor, payoff ratio, worst losing streak, monthly heat map, and the 1,829 positions of the trend layer: 31% winners, gains 3.9× the size of losses, profit factor 1.74 — the usual signature of trend following.
+
+## Query language and Excel API
+
+`BQL` in the terminal opens a query language modelled on Bloomberg's `=BQL.Query` (let / get / for / with), running on the terminal's own data:
+
+```
+let(#perf = return(1y); #risk = volatility(1y);)
+get(name, #perf / #risk, pe_ratio)
+for(filter(members('ETF'), volatility(1y) < 0.20))
+with(dates = range(-1y, 0d), currency = 'EUR')
+```
+
+Universes (`members`, the `EQS` screener presets, `filter`, `top`), market and risk fields, SEC fundamentals, arithmetic and boolean logic, Bloomberg-style identifiers (`AAPL US Equity`, `SPX Index`, `EURUSD Curncy`). The same engine answers `BDP`- and `BDH`-like HTTP calls (`/api/bdp`, `/api/bdh`, `/api/grql?format=csv`) for Excel's `WEBSERVICE` or Power Query.
 
 ## Monte-Carlo lab
 
@@ -128,7 +149,8 @@ numpy is the only required dependency: every model (GARCH, Kalman, HMM, ridge…
 | `gambit_ridge/options/` | Black-Scholes and Greeks, implied volatility, volatility surface (`OVDV`), Monte-Carlo lab (`MC`) |
 | `gambit_ridge/quant/` | QLBS, Gaussian processes, particle filter, Bayesian models, Box-Jenkins, PCA |
 | `gambit_ridge/equity/` | company financials from SEC EDGAR (`FA`), stock screener (`EQS`) |
-| `tests/` | 178 tests, run in CI |
+| `gambit_ridge/query/` | the query language and its evaluator |
+| `tests/` | 188 tests, run in CI |
 
 ## Notes
 

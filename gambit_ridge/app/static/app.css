@@ -219,3 +219,12 @@
   .s3d-tip { position: absolute; display: none; pointer-events: none; background: rgba(0,0,0,.88); border: 1px solid var(--amber-dim); padding: 4px 8px; font-size: 11px; white-space: nowrap; z-index: 2; }
   .s3d-help { position: absolute; left: 8px; bottom: 4px; font-size: 10px; color: #555; pointer-events: none; }
   @media (max-width: 700px) { .qf input, .qf select { font-size: 16px; } .qf input[type=number] { width: 84px; } .qform .btn { flex: 1 1 100%; } }
+
+  /* BQL : éditeur de requêtes */
+  .bql-editeur { margin-bottom: 8px; }
+  .bql-editeur textarea { width: 100%; min-height: 96px; resize: vertical; background: #0b0700; color: var(--amber); border: 1px solid var(--amber-dim); font-family: var(--font-mono); font-size: 13px; line-height: 1.5; padding: 8px 10px; }
+  .bql-editeur textarea:focus { outline: none; border-color: var(--amber); }
+  .bql-actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  @media (max-width: 700px) { .bql-editeur textarea { font-size: 16px; } }
+
+  .heat td { padding: 3px 6px; } .heat td.num { min-width: 38px; }

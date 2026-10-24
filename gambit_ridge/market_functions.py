@@ -656,6 +656,11 @@ CATALOGUE = [
         ("Portage de change G10 (carry)", "research/carry.py", "—", "rejeté", "RES"),
         ("Variantes de campagnes (filtre de courbe, vol gérée, rebalancement…)", "research/campaign*.py", "—", "rejeté", "CAMP"),
     ]),
+    ("Contrôles de robustesse", [
+        ("Référence aléatoire : 2 000 stratégies au timing tiré au hasard (test de permutation)", "research/robustesse.py", "—", "analyse", "ROB"),
+        ("Probabilité de surapprentissage (PBO, CSCV) sur 108 variantes", "research/robustesse.py", "—", "analyse", "ROB"),
+        ("Statistiques de trading : taux de gain, profit factor, séries de pertes", "research/robustesse.py", "—", "analyse", "ROB"),
+    ]),
     ("Options et dérivés", [
         ("Black-Scholes, grecques, vol implicite", "options/black_scholes.py", "ch. 10 § 3.4", "analyse", "SPY OVML"),
         ("Surface de volatilité implicite (parité call-put, variance totale)", "options/vol_surface.py", "—", "analyse", "SPY OVDV"),
@@ -714,3 +719,27 @@ def gew() -> dict:
     from .data.macro_monde import gew as monde
 
     return monde()
+
+
+# --------------------------------------------------------------------- ROB : robustesse
+
+def rob() -> dict:
+    """Robustesse : référence aléatoire, PBO, statistiques de trading (rapport research/robustesse.py) + réel (paper)."""
+    import json
+    from pathlib import Path
+
+    from .research.robustesse import OUT, stats_rendements
+
+    if not OUT.exists():
+        raise ValueError("rapport absent — lancer python3 -m gambit_ridge.research.robustesse")
+    rep = json.loads(OUT.read_text())
+    rep.pop("protocole", None)
+    journal = Path(__file__).resolve().parent.parent / "data_cache" / "paper_journal_v2.json"
+    rep["reel"] = None
+    if journal.exists():
+        h = json.loads(journal.read_text()).get("equity_history", [])
+        eq = np.array([x["equity"] for x in h], dtype=float)
+        if len(eq) >= 6:
+            r = np.concatenate([[eq[0] / 1_000_000 - 1], eq[1:] / eq[:-1] - 1])
+            rep["reel"] = {"debut": h[0]["date"], "fin": h[-1]["date"], **stats_rendements(r, [x["date"] for x in h])}
+    return rep

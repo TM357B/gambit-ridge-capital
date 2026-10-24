@@ -11,6 +11,7 @@ Endpoints :
   GET /api/journal → historique paper-trading + P&L
   GET /api/paper   → portefeuille papier v2 (stratégie retenue)
   GET /api/research → rapport du banc d'évaluation des stratégies
+  GET /api/grql?q=…[&format=csv], /api/bdp?s=&f=, /api/bdh?s=&f=&debut=&fin= → langage de requête et API Excel
   GET /api/fn/{gp,des,fxc,wcrs,ecst,wei,gc,ovdv,ovml,mc,gc3d,budg,mac,ilbe,qlbs,gpg,gpvs,svol,beta,regm,tsa,modl,fa,eqs,gew}[?s=TICKER&…] → fonctions de marché façon Bloomberg
   GET /api/risk, /api/attribution, /api/ops → risque, attribution, état d'exploitation
   GET /report[/AAAA-MM] → rapport mensuel imprimable
@@ -164,6 +165,58 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _send_text(self, text: str, ctype: str = "text/plain", code: int = 200, nom: str | None = None) -> None:
+        body = text.encode()
+        self.send_response(code)
+        self.send_header("Content-Type", f"{ctype}; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        if nom:
+            self.send_header("Content-Disposition", f'inline; filename="{nom}"')
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _grql(self) -> None:
+        """Langage de requête et API Excel : /api/grql?q=…&format=json|csv, /api/bdp?s=&f=, /api/bdh?s=&f=&debut=&fin=."""
+        from urllib.parse import parse_qs, urlparse
+
+        from ..query.grql import ErreurRequete, en_csv, executer
+
+        u = urlparse(self.path)
+        qs = {k: v[0] for k, v in parse_qs(u.query).items()}
+        route = u.path
+        try:
+            if route == "/api/grql":
+                res = executer(qs.get("q", ""))
+                if qs.get("format") == "csv":
+                    self._send_text(en_csv(res), "text/csv", nom="grql.csv")
+                else:
+                    self._send_json(res)
+                return
+            s, f = qs.get("s", ""), qs.get("f", "px_last")
+            if not s or "'" in s or "'" in f or len(f) > 200:
+                raise ErreurRequete("paramètres s (titre) et f (champ) attendus")
+            if route == "/api/bdp":  # une valeur, en texte brut : =WEBSERVICE(...) dans Excel
+                res = executer(f"get({f}) for(['{s}'])")
+                v = res["lignes"][0]["valeurs"][0] if res["lignes"] else None
+                err = res["erreurs"].get(res["lignes"][0]["id"]) if res["lignes"] else None
+                self._send_text("#N/A" if v is None else str(v), code=200 if v is not None or not err else 404)
+            else:  # /api/bdh : série datée en CSV
+                debut, fin = qs.get("debut", "-1y"), qs.get("fin", "0d")
+                for x in (debut, fin):
+                    if not (__import__("re").fullmatch(r"-?\d+(\.\d+)?[dwmy]|\d{4}-\d{2}-\d{2}", x)):
+                        raise ErreurRequete("debut et fin : durée (-1y, -6m, 0d) ou date AAAA-MM-JJ")
+                arg = lambda x: f"'{x}'" if "-" in x[1:] and len(x) == 10 else x
+                res = executer(f"get({f}) for(['{s}']) with(dates=range({arg(debut)}, {arg(fin)}))")
+                self._send_text(en_csv(res), "text/csv", nom=f"{s}_{f}.csv")
+        except ErreurRequete as exc:
+            if route == "/api/grql" and qs.get("format") != "csv":
+                self._send_json({"error": str(exc)}, 400)
+            else:
+                self._send_text(f"#ERREUR {exc}", code=400)
+        except Exception as exc:  # noqa: BLE001
+            self._send_json({"error": f"données indisponibles ({exc})"}, 502)
+
     def _send_html(self, html: str) -> None:
         body = html.encode()
         self.send_response(200)
@@ -194,6 +247,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send_html((APP_DIR / "index.html").read_text().replace("{{V}}", _static_version()))
         elif self.path.startswith("/static/"):
             self._send_static(self.path.split("?", 1)[0][len("/static/"):])
+        elif self.path.split("?", 1)[0] in ("/api/grql", "/api/bdp", "/api/bdh"):
+            self._grql()
         elif self.path == "/api/state":
             self._send_json(_get_state())
         elif self.path == "/api/agents":
@@ -335,7 +390,7 @@ class Handler(BaseHTTPRequestHandler):
                         "qlbs": lambda: mf.qlbs(qs), "gpg": lambda: mf.gpg(qs), "gpvs": lambda: mf.gpvs(sym or "SPY"),
                         "svol": lambda: mf.svol(sym or "SPY", qs), "beta": lambda: mf.beta(sym or "AAPL", qs),
                         "regm": lambda: mf.regm(sym or "SPY", qs), "tsa": lambda: mf.tsa(sym or "SPY", qs), "modl": mf.modl,
-                        "fa": lambda: mf.fa(sym or "AAPL"), "eqs": lambda: mf.eqs(qs), "gew": mf.gew}
+                        "fa": lambda: mf.fa(sym or "AAPL"), "eqs": lambda: mf.eqs(qs), "gew": mf.gew, "rob": mf.rob}
             if name not in handlers:
                 self._send_json({"error": f"fonction inconnue : {name}"}, 404)
                 return
