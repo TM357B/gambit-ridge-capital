@@ -22,6 +22,7 @@ YAHOO_MAP = {
     "USDCNH": "CNY=X",  # Yahoo n'a pas l'historique du CNH offshore : CNY onshore (écart minime)
     "EURUSD": "EURUSD=X", "USDJPY": "JPY=X", "GBPUSD": "GBPUSD=X", "AUDUSD": "AUDUSD=X",
     "USDCHF": "CHF=X", "USDCAD": "CAD=X",
+    "NZDUSD": "NZDUSD=X", "EURGBP": "EURGBP=X", "EURJPY": "EURJPY=X", "USDMXN": "MXN=X", "USDSEK": "SEK=X",
     "BTC": "BTC-USD", "ETH": "ETH-USD", "SOL": "SOL-USD", "BNB": "BNB-USD",
     "XRP": "XRP-USD", "ADA": "ADA-USD", "AVAX": "AVAX-USD", "DOGE": "DOGE-USD",
 }

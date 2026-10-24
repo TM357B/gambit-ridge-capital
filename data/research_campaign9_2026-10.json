@@ -1,0 +1,310 @@
+{
+ "genere_le": "2026-10-24",
+ "protocole": "Campagne de recherche n° 9 (octobre 2026) — diversification par classes d'actifs et niveau de risque.\n\nPROTOCOLE FIGÉ ET COMMITÉ AVANT TOUT CALCUL (pré-enregistrement) :\n\nDemande de Tom (24/10) : viser ~15 % par an sans s'exposer à la première crise, en ajoutant une vraie source de\nrendement hors actions (matières premières, devises, obligations hors États-Unis).\n\nConstat préalable : la campagne 1 a déjà ajouté des diversifiants (A3) avec la pondération ACTUELLE (risque égal\nactif par actif) et a dégradé (Sharpe dév. 0,91 contre 0,99). Hypothèse testée ici, différente : c'est la RÉPARTITION\ndu risque qui compte. Les grands fonds de tendance donnent la même part de risque à chaque CLASSE (actions,\nobligations, matières premières, devises) ; aujourd'hui les actions et leurs proches (crédit, immobilier) pèsent\ndavantage parce qu'elles sont plus nombreuses et corrélées.\n\nRéférence : stratégie ETF de production (socle 60/40 50 % + couche tendance TSMOM/EWMA/Kalman, vol GARCH, covariance\nEWMA, vol cible 10 %, filtre 25 % / 0,5 %, rebalancement 5 jours, 5 bps).\n\nPARTIE A — essais (jugés avec les règles habituelles) :\n  K1 Budget de risque par classe, univers actuel (20 ETF) : la couche tendance est construite classe par classe\n     (vol cible 10 %/√4 chacune), puis ramenée ensemble à 10 % de vol ex ante (positions ≤ 40 %, brut ≤ 2).\n  K2 Univers élargi (30 ETF), pondération actuelle actif par actif — contrôle : + gaz naturel UNG, pétrole DBO,\n     métaux industriels DBB, essence UGA, dollar australien FXA, canadien FXC, franc suisse FXF, livre FXB,\n     obligations d'États hors US BWX, obligations émergentes EMB (aucune action ajoutée).\n  K3 Univers élargi (30 ETF) + budget de risque par classe : l'hypothèse principale.\n  Classes : Actions (7), Obligations (5 + BWX, EMB), Matières premières (5 + UNG, DBO, DBB, UGA), Devises (3 + 4).\n\nPériodes : dates communes aux 30 ETF (début ≈ 2007-12) pour TOUS les essais et la référence, rodage 260 séances,\ndéveloppement → 2019-12-31, validation 2020 → aujourd'hui. Règle d'acceptation inchangée : Sharpe dév. >= réf. + 0,05 ;\nDSR >= 0,90 ; Sharpe validation >= réf. − 0,05 ; pire baisse validation pas plus de 3 points au-delà de la réf. ; et,\npour K1 seulement (seul essai sur l'univers actuel), Sharpe 2001-2007 (proxys de la campagne 5) >= réf. − 0,05. Les\n10 ETF ajoutés n'ont pas de proxys sur 2001-2007 : ce critère ne peut pas s'appliquer à K2 et K3 (limite assumée).\nDSR sur tous les Sharpe de développement des campagnes 1, 2, 4, 6, 7, 8 et 9.\n\nPARTIE B — menu de risque (ce n'est PAS un essai ; aide à la décision de Tom) :\nLa stratégie de référence (et l'essai accepté s'il y en a un) multipliée par k = 1 ; 1,5 ; 2 ; 2,5 ; 3 sur l'univers\nactuel depuis 2008 (crise de 2008 incluse). Coûts : frais de transaction multipliés par k ; intérêts sur la part\nachetée à crédit = max(k × exposition acheteuse − 1, 0) × (taux à 3 mois du Trésor + 1 point) ; prêt de titres pour\nla part vendeuse : k × exposition vendeuse × 0,5 %/an. Mesures : rendement annuel, volatilité, Sharpe, pire baisse,\npire année glissante, années négatives, baisses pendant 2008-2009, 2020 et 2022, levier brut moyen. Limite\nassumée : au-delà d'un levier brut de 2, un compte-titres ne suffit plus (contrats à terme ou marge de portefeuille).\n\nUn essai accepté n'entre au portefeuille qu'avec l'accord de Tom ; un niveau de risque n'est choisi que par Tom.\n\nUsage : python3 -m gambit_ridge.research.campaign9\nSortie : data/research_campaign9_2026-10.json\n",
+ "regles": {
+  "dev_gain": 0.05,
+  "dsr": 0.9,
+  "val_tol": 0.05,
+  "dd_tol": 0.03
+ },
+ "ajouts": {
+  "UNG": "Matières premières",
+  "DBO": "Matières premières",
+  "DBB": "Matières premières",
+  "UGA": "Matières premières",
+  "FXA": "Devises",
+  "FXC": "Devises",
+  "FXF": "Devises",
+  "FXB": "Devises",
+  "BWX": "Obligations",
+  "EMB": "Obligations"
+ },
+ "periode_essais": [
+  "2009-03-11",
+  "2026-10-23"
+ ],
+ "essais_comptes_dans_le_dsr": 53,
+ "duree_s": 246,
+ "resultats": {
+  "REF": {
+   "nom": "REF — Référence — production actuelle (20 ETF)",
+   "description": "Risque égal actif par actif.",
+   "developpement": {
+    "sharpe": 1.2353833177231632,
+    "cagr": 0.07758680542925278,
+    "vol": 0.06205497899772963,
+    "max_dd": -0.0991800824157406,
+    "sortino": 1.6328283310004277,
+    "calmar": 0.7822821229773368,
+    "cvar95": -0.00925545710869792,
+    "n_days": 2722,
+    "turnover_annuel": 9.209445227073404,
+    "gross_moyen": 1.3333715170204776,
+    "couts_annuels": 0.004604722613536702
+   },
+   "validation": {
+    "sharpe": 1.061372594643878,
+    "cagr": 0.0778342832423975,
+    "vol": 0.07315458153893085,
+    "max_dd": -0.10297256595882902,
+    "sortino": 1.383070787166215,
+    "calmar": 0.7558739798085402,
+    "cvar95": -0.011083237280972217,
+    "n_days": 1712,
+    "turnover_annuel": 9.198900032374205,
+    "gross_moyen": 1.285738606895654,
+    "couts_annuels": 0.004599450016187103
+   },
+   "exposition_moyenne_par_classe": {
+    "Actions": 0.4816461960682615,
+    "Obligations": 0.5133130163014328,
+    "Matières premières": 0.13643677002430143,
+    "Devises": 0.1835841178168972
+   },
+   "echantillon_2001_2007": {
+    "sharpe": 1.5658590611436443,
+    "cagr": 0.10640696560042451,
+    "vol": 0.06597874726068073,
+    "max_dd": -0.0893294862196339,
+    "sortino": 2.4089280078183837,
+    "calmar": 1.191174046818117,
+    "cvar95": -0.008703767309645389,
+    "n_days": 1270
+   },
+   "dsr_developpement": 0.9956274101832171
+  },
+  "K1": {
+   "nom": "K1 — Budget de risque par classe, univers actuel (20 ETF)",
+   "description": "Même part de risque pour actions, obligations, matières, devises.",
+   "developpement": {
+    "sharpe": 1.1984261571612835,
+    "cagr": 0.07147524498962343,
+    "vol": 0.05906996252754309,
+    "max_dd": -0.0844127336403389,
+    "sortino": 1.5882541135791413,
+    "calmar": 0.8467353432026168,
+    "cvar95": -0.008846007541979535,
+    "n_days": 2722,
+    "turnover_annuel": 10.016979900149122,
+    "gross_moyen": 1.3591942624952114,
+    "couts_annuels": 0.005008489950074561
+   },
+   "validation": {
+    "sharpe": 1.1638206238589028,
+    "cagr": 0.07681323409659524,
+    "vol": 0.0654395422631682,
+    "max_dd": -0.07877222819308996,
+    "sortino": 1.5393393448250159,
+    "calmar": 0.9751309041088345,
+    "cvar95": -0.009859909005973567,
+    "n_days": 1712,
+    "turnover_annuel": 9.557985633943126,
+    "gross_moyen": 1.3182833856107818,
+    "couts_annuels": 0.004778992816971562
+   },
+   "exposition_moyenne_par_classe": {
+    "Actions": 0.4155436784607818,
+    "Obligations": 0.5006948447850489,
+    "Matières premières": 0.15613780848102743,
+    "Devises": 0.27102194041514105
+   },
+   "echantillon_2001_2007": {
+    "sharpe": 1.6006590791767417,
+    "cagr": 0.10495903122096784,
+    "vol": 0.06363066777601067,
+    "max_dd": -0.07807102278875418,
+    "sortino": 2.4832708352549964,
+    "calmar": 1.34440445983355,
+    "cvar95": -0.00847334861664213,
+    "n_days": 1270
+   },
+   "dsr_developpement": 0.9940242593244353,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "K2": {
+   "nom": "K2 — Univers élargi (30 ETF), pondération actuelle",
+   "description": "Contrôle : + matières, devises, obligations hors US, risque actif par actif.",
+   "developpement": {
+    "sharpe": 1.133326490950548,
+    "cagr": 0.06957707791161405,
+    "vol": 0.06100069374315045,
+    "max_dd": -0.0888729662332147,
+    "sortino": 1.5033095438091686,
+    "calmar": 0.7828823641267286,
+    "cvar95": -0.009184305335503887,
+    "n_days": 2722,
+    "turnover_annuel": 9.870489956729978,
+    "gross_moyen": 1.3597119010201868,
+    "couts_annuels": 0.00493524497836499
+   },
+   "validation": {
+    "sharpe": 0.9975530194119054,
+    "cagr": 0.06866864645871762,
+    "vol": 0.06897217854683887,
+    "max_dd": -0.08508063229947926,
+    "sortino": 1.3268181519085565,
+    "calmar": 0.8071008007675315,
+    "cvar95": -0.010354506110498977,
+    "n_days": 1712,
+    "turnover_annuel": 10.104228583870098,
+    "gross_moyen": 1.3222409800377735,
+    "couts_annuels": 0.005052114291935048
+   },
+   "exposition_moyenne_par_classe": {
+    "Actions": 0.4155618190317125,
+    "Obligations": 0.5150741897919078,
+    "Matières premières": 0.144512510185857,
+    "Devises": 0.2700955839227772
+   },
+   "dsr_developpement": 0.98932431483659,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "K3": {
+   "nom": "K3 — Univers élargi (30 ETF) + budget de risque par classe",
+   "description": "Hypothèse principale.",
+   "developpement": {
+    "sharpe": 1.1012442496502568,
+    "cagr": 0.06546232087363135,
+    "vol": 0.059177410161697946,
+    "max_dd": -0.08520923335903642,
+    "sortino": 1.430464824685522,
+    "calmar": 0.7682538416676071,
+    "cvar95": -0.009025036357577898,
+    "n_days": 2722,
+    "turnover_annuel": 11.055560662914427,
+    "gross_moyen": 1.377024323315011,
+    "couts_annuels": 0.005527780331457214
+   },
+   "validation": {
+    "sharpe": 1.0139526168177164,
+    "cagr": 0.06723234635072717,
+    "vol": 0.06635388324035921,
+    "max_dd": -0.07956183183250466,
+    "sortino": 1.3856783220689597,
+    "calmar": 0.8450326595328549,
+    "cvar95": -0.009873682223362653,
+    "n_days": 1712,
+    "turnover_annuel": 11.24487820107506,
+    "gross_moyen": 1.3526881754338738,
+    "couts_annuels": 0.0056224391005375305
+   },
+   "exposition_moyenne_par_classe": {
+    "Actions": 0.4062531122746563,
+    "Obligations": 0.5069046785762189,
+    "Matières premières": 0.1372253550949196,
+    "Devises": 0.31724481174618796
+   },
+   "dsr_developpement": 0.9858912406309599,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": true
+   },
+   "verdict": "REJETÉ"
+  }
+ },
+ "menu_risque": [
+  {
+   "nom": "Référence — production actuelle",
+   "debut": "2008-04-22",
+   "fin": "2026-10-23",
+   "lignes": [
+    {
+     "levier": 1.0,
+     "cagr": 0.06227538745697414,
+     "vol": 0.06810722861938381,
+     "sharpe": 0.9212113186606586,
+     "max_dd": -0.11986799111135238,
+     "pire_annee_glissante": -0.08943622221405412,
+     "annees_negatives": 1,
+     "annees": 18,
+     "crises": {
+      "2008-2009": -0.11986799111135182,
+      "Covid 2020": -0.09714639632587363,
+      "2022": -0.037003986743173956
+     },
+     "levier_brut_moyen": 1.2986698630150146
+    },
+    {
+     "levier": 1.5,
+     "cagr": 0.08250428763799356,
+     "vol": 0.10215761210166914,
+     "sharpe": 0.8272856076789438,
+     "max_dd": -0.1789452872452487,
+     "pire_annee_glissante": -0.14108366117470572,
+     "annees_negatives": 2,
+     "annees": 18,
+     "crises": {
+      "2008-2009": -0.17894528724524783,
+      "Covid 2020": -0.14382200479552165,
+      "2022": -0.055253953720466376
+     },
+     "levier_brut_moyen": 1.948004794522522
+    },
+    {
+     "levier": 2.0,
+     "cagr": 0.10045878892258853,
+     "vol": 0.13621411623705418,
+     "sharpe": 0.7711233370184281,
+     "max_dd": -0.23691355875122527,
+     "pire_annee_glissante": -0.19327726792940148,
+     "annees_negatives": 2,
+     "annees": 18,
+     "crises": {
+      "2008-2009": -0.23691355875122566,
+      "Covid 2020": -0.18880233020972526,
+      "2022": -0.07332268147152199
+     },
+     "levier_brut_moyen": 2.5973397260300293
+    },
+    {
+     "levier": 2.5,
+     "cagr": 0.11696148434038123,
+     "vol": 0.17027318246274684,
+     "sharpe": 0.7350844735046641,
+     "max_dd": -0.2918523569952861,
+     "pire_annee_glissante": -0.24372798226154946,
+     "annees_negatives": 2,
+     "annees": 18,
+     "crises": {
+      "2008-2009": -0.2918523569952859,
+      "Covid 2020": -0.23208440851076384,
+      "2022": -0.09111704084475192
+     },
+     "levier_brut_moyen": 3.2466746575375365
+    },
+    {
+     "levier": 3.0,
+     "cagr": 0.13238139518592162,
+     "vol": 0.20433258191899176,
+     "sharpe": 0.7110404613125659,
+     "max_dd": -0.34371116577955113,
+     "pire_annee_glissante": -0.29208915945265057,
+     "annees_negatives": 2,
+     "annees": 18,
+     "crises": {
+      "2008-2009": -0.3437111657795514,
+      "Covid 2020": -0.2736940293998368,
+      "2022": -0.1086400386737083
+     },
+     "levier_brut_moyen": 3.896009589045044
+    }
+   ],
+   "premier_levier_a_15_pourcent": null
+  }
+ ]
+}

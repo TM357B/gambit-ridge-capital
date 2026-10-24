@@ -49,7 +49,7 @@ class TestCouncil(unittest.TestCase):
         council = build_fund()
         data = simulate_market_data(all_configured_tickers(), 90, 42)
         briefing = council.meeting(data)
-        self.assertEqual(len(briefing.sections), 6)
+        self.assertEqual(len(briefing.sections), 8)
         self.assertLessEqual(
             sum(abs(w) for w in briefing.proposed_allocation.values()),
             RiskLimits().max_total_gross + 1e-9,

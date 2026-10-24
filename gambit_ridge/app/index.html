@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Gambit Ridge Capital — Terminal</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#16161A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,11 +12,13 @@
 <link rel="apple-touch-icon" href="/static/icons/icon-180.png">
 <link rel="icon" type="image/png" href="/static/icons/icon-192.png">
 <link rel="manifest" href="/static/manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="/static/app.css?v={{V}}">
 </head>
 <body>
 <div id="lockScreen">
-  <div class="lock-logo">GAMBIT RIDGE CAPITAL</div>
+  <div class="lock-logo"><img class="logo-crete" src="/static/icons/icon-192.png" alt="" width="56" height="56"><br>Gambit Ridge Capital</div>
   <div class="lock-sub">Terminal — accès restreint</div>
   <div class="lock-box">
     <input type="password" id="lockInput" placeholder="Code d'accès" autocomplete="off" onkeydown="if(event.key==='Enter')tryUnlock()">
@@ -26,13 +28,14 @@
   <div class="lock-foot">GRC SECURITY · ACCÈS SOUVENT JOURNALISÉ</div>
 </div>
 <div class="topbar">
-  <span class="brand">GAMBIT RIDGE CAPITAL<span class="beta"> · TERMINAL</span></span>
+  <span class="brand"><img class="logo-crete" src="/static/icons/icon-192.png" alt="" width="30" height="30">Gambit Ridge<span class="beta">Capital</span></span>
   <span id="connDot" style="color:var(--green)">● LIVE</span>
   <span id="opsDot" class="small" style="cursor:help"></span>
   <form class="cmd" onsubmit="event.preventDefault();runCommand(this.c.value);this.c.blur()"><input id="cmdInput" name="c" autocomplete="off" spellcheck="false" placeholder="Commande… ex. NVDA GP · FXC · ECST · HELP  ( / )"><button class="go">GO</button></form>
   <span class="clock" id="clock"></span>
 </div>
 <div class="tabs">
+  <div class="side-brand"><img class="logo-crete" src="/static/icons/icon-192.png" alt="" width="36" height="36"><div><b>Gambit Ridge</b><span>Capital · paper</span></div></div>
   <div class="tab active" id="tab-terminal" onclick="switchTab('terminal')">Terminal</div>
   <div class="tab" id="tab-research" onclick="switchTab('research')">Recherche</div>
   <div class="tab" id="tab-risk" onclick="switchTab('risk')">Risque</div>

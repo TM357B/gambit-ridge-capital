@@ -1,0 +1,1386 @@
+{
+ "genere_le": "2026-10-24",
+ "protocole": "Campagne de recherche n° 10 (octobre 2026) — une vraie deuxième source : 52 marchés à terme, données gratuites.\n\nPROTOCOLE FIGÉ ET COMMITÉ AVANT TOUT CALCUL DE STRATÉGIE (pré-enregistrement) :\n\nDemande de Tom (24/10) : viser ~15 %/an sans s'exposer à la première crise. La campagne 9 a montré que le levier\nseul n'y suffit pas (3x : 13,2 %/an pour −34 %) : il faut une source de rendement peu liée à l'existant. Hypothèse :\nla même tendance que la production, mais sur ~50 marchés à terme peu corrélés (24 matières premières, 4 échéances\nde taux américains, 12 devises, 13 indices actions mondiaux), avec un budget de risque égal par classe — ce que font\nles fonds « managed futures ». Seconde hypothèse : ajouter le portage (carry) des devises et des taux.\n\nDonnées (module data/contrats_gratuits.py, construit et vérifié AVANT ce protocole, sans aucun calcul de stratégie) :\nrendements « en excès du monétaire » sur le calendrier de New York ; matières premières = contrats continus Yahoo\ncorrigés des changements d'échéance, l'ETF témoin faisant foi dès sa création pour 12 d'entre elles, dérive mise à\nzéro pour les 11 sans témoin ; taux = reconstruits depuis les rendements FRED ; devises = change FRED + écart de taux\nOCDE (mois précédent) ; indices = prix + 2 %/an de dividende − taux local. Les 52 marchés sont tous cotés dès 2002-05.\n\nProgramme « contrats à terme » (commun à F1-F3) : signal tendance de production (TSMOM 252 j + EWMA + Kalman) sur\nl'indice de rendement de chaque marché ; vol GARCH ; covariance EWMA ; budget de risque égal par classe (10 %/√4\nchacune, positions ≤ 3 en notionnel, brut ≤ 10), puis l'ensemble ramené à 10 % de vol ex ante (positions ≤ 3,\nbrut ≤ 10) ; aucun signal avant 260 séances de cotation. Coûts : 3 bps par unité échangée (rebalancement tous les\n5 jours, même filtre 25 % / 0,5 % que la production) + changement d'échéance facturé 2 bps × |position| (chaque\nmois pour les matières premières, chaque trimestre pour le reste).\n\nEssais (même structure que la production : socle 60/40 à 50 % + couche tendance à 50 %, vol cible 10 %) :\n  REF Production actuelle (20 ETF).\n  F1  Couche tendance remplacée par le programme contrats à terme (socle 60/40 ETF inchangé).\n  F2  Deux couches tendance à parts égales (ETF actuelle + contrats à terme), remise à l'échelle par\n      1/√((1+ρ)/2), ρ = corrélation des deux couches sur les 252 séances précédentes (plafond 1,41).\n  F3  F1 avec signal = ½ tendance + ½ portage (devises : écart de taux ; taux : rendement − taux à 3 mois ; signal\n      = écart / vol annuelle ×2, borné à ±1 ; portage nul pour actions et matières, faute de données gratuites).\n\nPériodes : dates de la référence (ETF, début 2007-04), rodage 260 séances, développement → 2019-12-31, validation\n2020 → aujourd'hui. Échantillon 2003-05 → 2007-04 (proxys ETF de la campagne 5 pour le socle et la référence ;\ncontrats à terme natifs), même fenêtre pour tous.\nRègle d'acceptation : Sharpe dév. >= réf. + 0,05 ; DSR >= 0,90 ; Sharpe validation >= réf. − 0,05 ; pire baisse\nvalidation pas plus de 3 points au-delà de la réf. ; Sharpe 2003-2007 >= réf. − 0,05 ; ET test de robustesse\n(nouveau) : avec la dérive de TOUTES les matières premières mise à zéro, gain de développement et validation non\ncontredite doivent tenir aussi (un biais de données sur les matières ne peut pas fabriquer un succès).\nDSR sur tous les Sharpe de développement des campagnes 1, 2, 4, 6, 7, 8, 9 et 10.\n\nPour information (pas des essais) : programme contrats à terme seul (Sharpe par période et par classe, corrélation\navec la référence) ; menu de risque en contrats à terme (rendement = taux sans risque + k × rendement en excès,\nk = 1 à 3, 0,2 %/an × k sur le notionnel brut ETF pour la base), pour REF et F1-F3.\n\nUn essai accepté n'entre au portefeuille qu'avec l'accord de Tom ; passer aux contrats à terme suppose un compte\nInteractive Brokers et des données de marché payantes avant tout argent réel.\n\nUsage : python3 -m gambit_ridge.research.campaign10\nSortie : data/research_campaign10_2026-10.json\n",
+ "regles": {
+  "dev_gain": 0.05,
+  "dsr": 0.9,
+  "val_tol": 0.05,
+  "dd_tol": 0.03
+ },
+ "univers": [
+  {
+   "marche": "CL=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "NG=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "HO=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "RB=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "GC=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "SI=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "HG=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "PL=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "PA=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "ZC=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "ZW=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "KE=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "ZS=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "ZM=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "ZL=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "KC=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "SB=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "CC=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "CT=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "OJ=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "LE=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "HE=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "GF=F",
+   "classe": "Matières premières"
+  },
+  {
+   "marche": "US2",
+   "classe": "Taux"
+  },
+  {
+   "marche": "US5",
+   "classe": "Taux"
+  },
+  {
+   "marche": "US10",
+   "classe": "Taux"
+  },
+  {
+   "marche": "US30",
+   "classe": "Taux"
+  },
+  {
+   "marche": "EURUSD",
+   "classe": "Devises"
+  },
+  {
+   "marche": "GBPUSD",
+   "classe": "Devises"
+  },
+  {
+   "marche": "AUDUSD",
+   "classe": "Devises"
+  },
+  {
+   "marche": "NZDUSD",
+   "classe": "Devises"
+  },
+  {
+   "marche": "USDJPY",
+   "classe": "Devises"
+  },
+  {
+   "marche": "USDCHF",
+   "classe": "Devises"
+  },
+  {
+   "marche": "USDCAD",
+   "classe": "Devises"
+  },
+  {
+   "marche": "USDSEK",
+   "classe": "Devises"
+  },
+  {
+   "marche": "USDNOK",
+   "classe": "Devises"
+  },
+  {
+   "marche": "USDMXN",
+   "classe": "Devises"
+  },
+  {
+   "marche": "USDKRW",
+   "classe": "Devises"
+  },
+  {
+   "marche": "USDZAR",
+   "classe": "Devises"
+  },
+  {
+   "marche": "^GSPC",
+   "classe": "Actions"
+  },
+  {
+   "marche": "^NDX",
+   "classe": "Actions"
+  },
+  {
+   "marche": "^RUT",
+   "classe": "Actions"
+  },
+  {
+   "marche": "^GDAXI",
+   "classe": "Actions"
+  },
+  {
+   "marche": "^FCHI",
+   "classe": "Actions"
+  },
+  {
+   "marche": "^FTSE",
+   "classe": "Actions"
+  },
+  {
+   "marche": "^SSMI",
+   "classe": "Actions"
+  },
+  {
+   "marche": "^N225",
+   "classe": "Actions"
+  },
+  {
+   "marche": "^HSI",
+   "classe": "Actions"
+  },
+  {
+   "marche": "^AXJO",
+   "classe": "Actions"
+  },
+  {
+   "marche": "^GSPTSE",
+   "classe": "Actions"
+  },
+  {
+   "marche": "^KS11",
+   "classe": "Actions"
+  },
+  {
+   "marche": "^TWII",
+   "classe": "Actions"
+  }
+ ],
+ "periode_essais": [
+  "2008-04-22",
+  "2026-10-23"
+ ],
+ "essais_comptes_dans_le_dsr": 57,
+ "duree_s": 180,
+ "resultats": {
+  "REF": {
+   "nom": "REF — Référence — production actuelle (20 ETF)",
+   "description": "Socle 60/40 + tendance sur 20 ETF.",
+   "developpement": {
+    "sharpe": 0.9923097804837815,
+    "cagr": 0.06297862292703149,
+    "vol": 0.06359461453525708,
+    "max_dd": -0.11865519398296413,
+    "sortino": 1.3319415936839092,
+    "calmar": 0.5307700473362643,
+    "cvar95": -0.009480363117425067,
+    "n_days": 2945,
+    "turnover_annuel": 8.76081893345847,
+    "gross_moyen": 1.3101449289329115,
+    "couts_annuels": 0.004380409466729235
+   },
+   "validation": {
+    "sharpe": 1.0095813063879286,
+    "cagr": 0.07588176868886709,
+    "vol": 0.07526275467193881,
+    "max_dd": -0.10316298176036882,
+    "sortino": 1.3285022356706035,
+    "calmar": 0.7355523017464574,
+    "cvar95": -0.011336350658261288,
+    "n_days": 1712,
+    "turnover_annuel": 9.20413095043394,
+    "gross_moyen": 1.2789303366550808,
+    "couts_annuels": 0.004602065475216971
+   },
+   "echantillon_2003_2007": {
+    "sharpe": 1.6621390348938387,
+    "cagr": 0.11768708812956263,
+    "vol": 0.068358266534934,
+    "max_dd": -0.08932948621963456,
+    "sortino": 2.505872168753066,
+    "calmar": 1.3174495131451354,
+    "cvar95": -0.00914125410110012,
+    "n_days": 980
+   },
+   "dsr_developpement": 0.9709540169864234
+  },
+  "F1": {
+   "nom": "F1 — Tendance sur 52 marchés à terme",
+   "description": "Socle 60/40 ETF + couche tendance remplacée par le programme contrats à terme.",
+   "developpement": {
+    "sharpe": 0.714241155644064,
+    "cagr": 0.05177929046935237,
+    "vol": 0.07458179188543415,
+    "max_dd": -0.13259271695011957,
+    "sortino": 1.0202456349462827,
+    "calmar": 0.3905138356040428,
+    "cvar95": -0.010708206979523882,
+    "n_days": 2945
+   },
+   "validation": {
+    "sharpe": 0.9315482706659799,
+    "cagr": 0.06831723283759539,
+    "vol": 0.0738820166342414,
+    "max_dd": -0.11628861154414886,
+    "sortino": 1.2759374082176513,
+    "calmar": 0.5874799942181682,
+    "cvar95": -0.011122003005727403,
+    "n_days": 1712
+   },
+   "robustesse_sans_derive_matieres": {
+    "developpement": {
+     "sharpe": 0.686099758265825,
+     "cagr": 0.04949795725977113,
+     "vol": 0.07446270765136456,
+     "max_dd": -0.11912350701780948,
+     "sortino": 0.9754975445986984,
+     "calmar": 0.41551796533635443,
+     "cvar95": -0.010692984714686942,
+     "n_days": 2945
+    },
+    "validation": {
+     "sharpe": 0.8857860932094068,
+     "cagr": 0.06420505734979076,
+     "vol": 0.07329519154420892,
+     "max_dd": -0.11895745726147981,
+     "sortino": 1.2080959828028732,
+     "calmar": 0.5397312520614991,
+     "cvar95": -0.011107443022720282,
+     "n_days": 1712
+    }
+   },
+   "echantillon_2003_2007": {
+    "sharpe": 0.8512265502145501,
+    "cagr": 0.06072215856874208,
+    "vol": 0.07233648630577114,
+    "max_dd": -0.10780532164253824,
+    "sortino": 1.175146854250108,
+    "calmar": 0.5632575242443514,
+    "cvar95": -0.01065269735062865,
+    "n_days": 980
+   },
+   "dsr_developpement": 0.8335357741582216,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": false,
+    "validation_non_contredite": false,
+    "drawdown_validation": true,
+    "echantillon_2003_2007": false,
+    "robustesse_developpement": false,
+    "robustesse_validation": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "F2": {
+   "nom": "F2 — Deux couches tendance (ETF + contrats à terme)",
+   "description": "Parts égales, remise à l'échelle par la corrélation passée.",
+   "developpement": {
+    "sharpe": 0.9241965712023056,
+    "cagr": 0.06443194162880705,
+    "vol": 0.07024153798153039,
+    "max_dd": -0.11408432124287386,
+    "sortino": 1.28283059621046,
+    "calmar": 0.5647747291377404,
+    "cvar95": -0.010280504156373412,
+    "n_days": 2945
+   },
+   "validation": {
+    "sharpe": 1.0095387998008085,
+    "cagr": 0.07591741041006683,
+    "vol": 0.07530329262970042,
+    "max_dd": -0.10188381101353619,
+    "sortino": 1.3483454279098877,
+    "calmar": 0.7451371288023424,
+    "cvar95": -0.0114117782138575,
+    "n_days": 1712
+   },
+   "robustesse_sans_derive_matieres": {
+    "developpement": {
+     "sharpe": 0.8936462836314268,
+     "cagr": 0.06193590158061779,
+     "vol": 0.06999589725398302,
+     "max_dd": -0.10556889656816544,
+     "sortino": 1.239062063142455,
+     "calmar": 0.5866870223525166,
+     "cvar95": -0.010286688364094429,
+     "n_days": 2945
+    },
+    "validation": {
+     "sharpe": 0.9703243352881827,
+     "cagr": 0.07256984301697367,
+     "vol": 0.0751198748892737,
+     "max_dd": -0.10633561255063455,
+     "sortino": 1.2969805689346727,
+     "calmar": 0.6824603844024277,
+     "cvar95": -0.01137432209432552,
+     "n_days": 1712
+    }
+   },
+   "echantillon_2003_2007": {
+    "sharpe": 1.2680787832637244,
+    "cagr": 0.09356418260030774,
+    "vol": 0.07262635496225274,
+    "max_dd": -0.09774538361790508,
+    "sortino": 1.7917924839037986,
+    "calmar": 0.9572235448587322,
+    "cvar95": -0.010391350199514402,
+    "n_days": 980
+   },
+   "dsr_developpement": 0.9526368902261485,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": true,
+    "echantillon_2003_2007": false,
+    "robustesse_developpement": false,
+    "robustesse_validation": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "F3": {
+   "nom": "F3 — Tendance + portage sur 52 marchés à terme",
+   "description": "F1 avec ½ tendance + ½ portage (devises, taux).",
+   "developpement": {
+    "sharpe": 0.7714540900651577,
+    "cagr": 0.05691562177103027,
+    "vol": 0.07545048256630504,
+    "max_dd": -0.12595440194043225,
+    "sortino": 1.1214487723771895,
+    "calmar": 0.451874812584537,
+    "cvar95": -0.010685505534645326,
+    "n_days": 2945
+   },
+   "validation": {
+    "sharpe": 0.8548518584103432,
+    "cagr": 0.06344079423226301,
+    "vol": 0.07528234979730754,
+    "max_dd": -0.1265963045254589,
+    "sortino": 1.106736428016819,
+    "calmar": 0.5011267467092997,
+    "cvar95": -0.011583755336615558,
+    "n_days": 1712
+   },
+   "robustesse_sans_derive_matieres": {
+    "developpement": {
+     "sharpe": 0.7546706583417223,
+     "cagr": 0.05538867079370258,
+     "vol": 0.07518617553729687,
+     "max_dd": -0.1143981831153316,
+     "sortino": 1.0948572308782498,
+     "calmar": 0.4841743923315807,
+     "cvar95": -0.010688393382554711,
+     "n_days": 2945
+    },
+    "validation": {
+     "sharpe": 0.8014438904195247,
+     "cagr": 0.05844823998982762,
+     "vol": 0.07433735438796149,
+     "max_dd": -0.13167408006673775,
+     "sortino": 1.0434897375014005,
+     "calmar": 0.4438856907920199,
+     "cvar95": -0.01141956263096828,
+     "n_days": 1712
+    }
+   },
+   "echantillon_2003_2007": {
+    "sharpe": 1.174357567461971,
+    "cagr": 0.08888203053799915,
+    "vol": 0.07491225686866818,
+    "max_dd": -0.09127741627988245,
+    "sortino": 1.5912395109441035,
+    "calmar": 0.973757082096426,
+    "cvar95": -0.011204878374094977,
+    "n_days": 980
+   },
+   "dsr_developpement": 0.8778199036084002,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": false,
+    "validation_non_contredite": false,
+    "drawdown_validation": true,
+    "echantillon_2003_2007": false,
+    "robustesse_developpement": false,
+    "robustesse_validation": false
+   },
+   "verdict": "REJETÉ"
+  }
+ },
+ "information": {
+  "programme_seul": {
+   "2003_2007": {
+    "sharpe": 0.4478802348819444,
+    "cagr": 0.046631559759351404,
+    "vol": 0.11710789833073332,
+    "max_dd": -0.2314721396937721,
+    "sortino": 0.6097049003812486,
+    "calmar": 0.201456468242973,
+    "cvar95": -0.017856771442423824,
+    "n_days": 1168,
+    "turnover_annuel": 62.716700339739496,
+    "gross_moyen": 4.246748972985152,
+    "couts_annuels": 0.01881501010192185
+   },
+   "developpement_2008_2019": {
+    "sharpe": 0.18908946883490094,
+    "cagr": 0.015308715919329252,
+    "vol": 0.11574646658729836,
+    "max_dd": -0.2739119467624004,
+    "sortino": 0.28625444648926823,
+    "calmar": 0.055889186653872026,
+    "cvar95": -0.016249935926178058,
+    "n_days": 2945,
+    "turnover_annuel": 58.61602935952423,
+    "gross_moyen": 3.938366680900319,
+    "couts_annuels": 0.017584808807857264
+   },
+   "validation": {
+    "sharpe": 0.3965472577100257,
+    "cagr": 0.03905228727830434,
+    "vol": 0.1126067897724962,
+    "max_dd": -0.3022277597129849,
+    "sortino": 0.5567988568365952,
+    "calmar": 0.12921475947606842,
+    "cvar95": -0.016613247075519477,
+    "n_days": 1712,
+    "turnover_annuel": 53.3618745365093,
+    "gross_moyen": 3.8420527180210997,
+    "couts_annuels": 0.016008562360952786
+   }
+  },
+  "programme_seul_par_classe_sharpe": {
+   "Actions": {
+    "2003_2007": 0.7019357229602796,
+    "developpement_2008_2019": 0.3387025038250788,
+    "validation": -0.08522714670820299
+   },
+   "Devises": {
+    "2003_2007": 0.4610603625425913,
+    "developpement_2008_2019": 0.09182410806093395,
+    "validation": 0.24271953547470088
+   },
+   "Matières premières": {
+    "2003_2007": 0.3727182573054654,
+    "developpement_2008_2019": 0.10066214352410438,
+    "validation": 0.7663946944218026
+   },
+   "Taux": {
+    "2003_2007": -0.08114184112484468,
+    "developpement_2008_2019": 0.37524755659016895,
+    "validation": 0.39991802497567985
+   }
+  },
+  "correlation_avec_reference": {
+   "developpement": 0.4337898229305215,
+   "validation": 0.21435645592703448
+  },
+  "calage_changements": {
+   "CL=F": {
+    "t": 2.4851660570327976,
+    "mois": "cotés",
+    "mois_liste": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12
+    ],
+    "decalage": -2,
+    "ancre": "debut",
+    "k": -7,
+    "saut_moyen": 0.0038626319860032726,
+    "n": 231,
+    "applique": false,
+    "derive_retiree": 0.1286,
+    "etf_depuis": "2006-04-10"
+   },
+   "NG=F": {
+    "t": 7.536968649014187,
+    "mois": "cotés",
+    "mois_liste": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12
+    ],
+    "decalage": -2,
+    "ancre": "fin",
+    "k": -1,
+    "saut_moyen": 0.016597011338470146,
+    "n": 232,
+    "applique": true,
+    "derive_retiree": 0.1154,
+    "etf_depuis": "2007-04-18"
+   },
+   "HO=F": {
+    "t": -2.5519303306033225,
+    "mois": "cotés",
+    "mois_liste": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12
+    ],
+    "decalage": -2,
+    "ancre": "fin",
+    "k": 11,
+    "saut_moyen": -0.00365766449131922,
+    "n": 231,
+    "applique": false
+   },
+   "RB=F": {
+    "t": -6.9174695572068154,
+    "mois": "cotés",
+    "mois_liste": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12
+    ],
+    "decalage": -2,
+    "ancre": "j25",
+    "k": 5,
+    "saut_moyen": -0.011762728509468223,
+    "n": 229,
+    "applique": false,
+    "derive_retiree": 0.0186,
+    "etf_depuis": "2008-02-28"
+   },
+   "GC=F": {
+    "t": 3.7415733937685984,
+    "mois": "tous",
+    "mois_liste": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12
+    ],
+    "decalage": -2,
+    "ancre": "debut",
+    "k": -9,
+    "saut_moyen": 0.0027150112163626793,
+    "n": 231,
+    "applique": false,
+    "derive_retiree": 0.0189,
+    "etf_depuis": "2004-11-18"
+   },
+   "SI=F": {
+    "t": -2.730193540018279,
+    "mois": "tous",
+    "mois_liste": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12
+    ],
+    "decalage": -2,
+    "ancre": "fin",
+    "k": 11,
+    "saut_moyen": -0.003462727809961963,
+    "n": 232,
+    "applique": false,
+    "derive_retiree": 0.0211,
+    "etf_depuis": "2006-04-28"
+   },
+   "HG=F": {
+    "t": 3.466778816537082,
+    "mois": "tous",
+    "mois_liste": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12
+    ],
+    "decalage": -2,
+    "ancre": "j25",
+    "k": 0,
+    "saut_moyen": 0.003916833416865059,
+    "n": 232,
+    "applique": false,
+    "derive_retiree": 0.0318,
+    "etf_depuis": "2011-11-15"
+   },
+   "PL=F": {
+    "t": -4.785116929618709,
+    "mois": "cotés",
+    "mois_liste": [
+     1,
+     4,
+     7,
+     10
+    ],
+    "decalage": -2,
+    "ancre": "debut",
+    "k": -3,
+    "saut_moyen": -0.011363716736717587,
+    "n": 67,
+    "applique": false,
+    "derive_retiree": 0.0234,
+    "etf_depuis": "2010-01-08"
+   },
+   "PA=F": {
+    "t": 4.0415595735355545,
+    "mois": "cotés",
+    "mois_liste": [
+     3,
+     6,
+     9,
+     12
+    ],
+    "decalage": 0,
+    "ancre": "fin",
+    "k": 1,
+    "saut_moyen": 0.010280856412356123,
+    "n": 79,
+    "applique": false,
+    "derive_retiree": 0.0209,
+    "etf_depuis": "2010-01-08"
+   },
+   "ZC=F": {
+    "t": 7.493943341717312,
+    "mois": "cotés",
+    "mois_liste": [
+     3,
+     5,
+     7,
+     9,
+     12
+    ],
+    "decalage": 0,
+    "ancre": "j15",
+    "k": 0,
+    "saut_moyen": 0.013737024681893466,
+    "n": 97,
+    "applique": true,
+    "derive_retiree": 0.0673,
+    "etf_depuis": "2010-06-09"
+   },
+   "ZW=F": {
+    "t": 9.74733377346097,
+    "mois": "cotés",
+    "mois_liste": [
+     3,
+     5,
+     7,
+     9,
+     12
+    ],
+    "decalage": 0,
+    "ancre": "j15",
+    "k": 0,
+    "saut_moyen": 0.019837866517307477,
+    "n": 97,
+    "applique": true,
+    "derive_retiree": 0.1094,
+    "etf_depuis": "2011-09-19"
+   },
+   "KE=F": {
+    "t": 7.036784867480176,
+    "mois": "cotés",
+    "mois_liste": [
+     3,
+     5,
+     7,
+     9,
+     12
+    ],
+    "decalage": 0,
+    "ancre": "j15",
+    "k": 0,
+    "saut_moyen": 0.0131030548645647,
+    "n": 96,
+    "applique": true
+   },
+   "ZS=F": {
+    "t": -7.429295563326635,
+    "mois": "cotés",
+    "mois_liste": [
+     1,
+     3,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "decalage": -1,
+    "ancre": "j15",
+    "k": 0,
+    "saut_moyen": -0.010165812799903827,
+    "n": 135,
+    "applique": false,
+    "derive_retiree": 0.0258,
+    "etf_depuis": "2011-09-19"
+   },
+   "ZM=F": {
+    "t": -13.065176723073607,
+    "mois": "cotés",
+    "mois_liste": [
+     1,
+     3,
+     5,
+     7,
+     8,
+     9,
+     10,
+     12
+    ],
+    "decalage": 0,
+    "ancre": "j15",
+    "k": 0,
+    "saut_moyen": -0.019733384591265148,
+    "n": 157,
+    "applique": true
+   },
+   "ZL=F": {
+    "t": -3.10225124337713,
+    "mois": "cotés",
+    "mois_liste": [
+     1,
+     3,
+     5,
+     7,
+     8,
+     9,
+     10,
+     12
+    ],
+    "decalage": 0,
+    "ancre": "debut",
+    "k": 3,
+    "saut_moyen": -0.0036234028100258714,
+    "n": 159,
+    "applique": false
+   },
+   "KC=F": {
+    "t": 6.424417184412809,
+    "mois": "cotés",
+    "mois_liste": [
+     3,
+     5,
+     7,
+     9,
+     12
+    ],
+    "decalage": 0,
+    "ancre": "fin",
+    "k": -7,
+    "saut_moyen": 0.013565170537162876,
+    "n": 100,
+    "applique": true
+   },
+   "SB=F": {
+    "t": 5.205893719954599,
+    "mois": "cotés",
+    "mois_liste": [
+     3,
+     5,
+     7,
+     10
+    ],
+    "decalage": -1,
+    "ancre": "j25",
+    "k": 4,
+    "saut_moyen": 0.012698545635976648,
+    "n": 79,
+    "applique": true,
+    "derive_retiree": -0.0085,
+    "etf_depuis": "2011-09-19"
+   },
+   "CC=F": {
+    "t": 4.088272458762042,
+    "mois": "cotés",
+    "mois_liste": [
+     3,
+     5,
+     7,
+     9,
+     12
+    ],
+    "decalage": -1,
+    "ancre": "fin",
+    "k": -9,
+    "saut_moyen": 0.007924351629636889,
+    "n": 100,
+    "applique": false
+   },
+   "CT=F": {
+    "t": 4.163273650775202,
+    "mois": "cotés",
+    "mois_liste": [
+     3,
+     5,
+     7,
+     10,
+     12
+    ],
+    "decalage": 0,
+    "ancre": "j25",
+    "k": -11,
+    "saut_moyen": 0.007806868646189855,
+    "n": 100,
+    "applique": false
+   },
+   "OJ=F": {
+    "t": 4.472027849027535,
+    "mois": "cotés",
+    "mois_liste": [
+     1,
+     3,
+     5,
+     7,
+     9,
+     11
+    ],
+    "decalage": -2,
+    "ancre": "debut",
+    "k": 1,
+    "saut_moyen": 0.008670686243298248,
+    "n": 110,
+    "applique": false
+   },
+   "LE=F": {
+    "t": -9.975869147413537,
+    "mois": "cotés",
+    "mois_liste": [
+     2,
+     4,
+     6,
+     8,
+     10,
+     12
+    ],
+    "decalage": -1,
+    "ancre": "j15",
+    "k": -10,
+    "saut_moyen": -0.01081285491636832,
+    "n": 111,
+    "applique": true
+   },
+   "HE=F": {
+    "t": -8.254960579738627,
+    "mois": "cotés",
+    "mois_liste": [
+     2,
+     4,
+     5,
+     6,
+     7,
+     8,
+     10,
+     12
+    ],
+    "decalage": 0,
+    "ancre": "fin",
+    "k": 11,
+    "saut_moyen": -0.01511384662923652,
+    "n": 152,
+    "applique": true
+   },
+   "GF=F": {
+    "t": -3.7362171917272486,
+    "mois": "cotés",
+    "mois_liste": [
+     1,
+     3,
+     4,
+     5,
+     8,
+     9,
+     10,
+     11
+    ],
+    "decalage": 0,
+    "ancre": "j25",
+    "k": 4,
+    "saut_moyen": -0.0030460461617325763,
+    "n": 150,
+    "applique": false
+   }
+  },
+  "controle_etf": [
+   {
+    "marche": "CL=F",
+    "etf": "USO",
+    "avant_2020": -0.0083,
+    "depuis_2020": -0.0238
+   },
+   {
+    "marche": "NG=F",
+    "etf": "UNG",
+    "avant_2020": -0.0053,
+    "depuis_2020": -0.0238
+   },
+   {
+    "marche": "RB=F",
+    "etf": "UGA",
+    "avant_2020": -0.0025,
+    "depuis_2020": -0.0238
+   },
+   {
+    "marche": "GC=F",
+    "etf": "GLD",
+    "avant_2020": -0.0101,
+    "depuis_2020": -0.0238
+   },
+   {
+    "marche": "SI=F",
+    "etf": "SLV",
+    "avant_2020": -0.0082,
+    "depuis_2020": -0.0238
+   },
+   {
+    "marche": "PL=F",
+    "etf": "PPLT",
+    "avant_2020": -0.0013,
+    "depuis_2020": -0.0238
+   },
+   {
+    "marche": "PA=F",
+    "etf": "PALL",
+    "avant_2020": -0.0013,
+    "depuis_2020": -0.0238
+   },
+   {
+    "marche": "ZC=F",
+    "etf": "CORN",
+    "avant_2020": -0.0015,
+    "depuis_2020": -0.0238
+   },
+   {
+    "marche": "ZW=F",
+    "etf": "WEAT",
+    "avant_2020": -0.0022,
+    "depuis_2020": -0.0238
+   },
+   {
+    "marche": "ZS=F",
+    "etf": "SOYB",
+    "avant_2020": -0.0022,
+    "depuis_2020": -0.0238
+   },
+   {
+    "marche": "SB=F",
+    "etf": "CANE",
+    "avant_2020": -0.0022,
+    "depuis_2020": -0.0238
+   },
+   {
+    "marche": "HG=F",
+    "etf": "CPER",
+    "avant_2020": -0.0023,
+    "depuis_2020": -0.0238
+   }
+  ]
+ },
+ "menu_risque": [
+  {
+   "nom": "REF — Référence — production actuelle (20 ETF)",
+   "debut": "2008-04-22",
+   "fin": "2026-10-23",
+   "lignes": [
+    {
+     "levier": 1.0,
+     "cagr": 0.06712829806091447,
+     "vol": 0.0680934951851406,
+     "sharpe": 0.9883372270448497,
+     "max_dd": -0.11836912190746211,
+     "pire_annee_glissante": -0.08014211330288235,
+     "crises": {
+      "2008-2009": -0.11836912190746174,
+      "Covid 2020": -0.09699916711885825,
+      "2022": -0.03697693784042999
+     }
+    },
+    {
+     "levier": 1.5,
+     "cagr": 0.09246575282947012,
+     "vol": 0.10214526339886632,
+     "sharpe": 0.9170794261424716,
+     "max_dd": -0.1768064704182428,
+     "pire_annee_glissante": -0.12734874358460235,
+     "crises": {
+      "2008-2009": -0.1768064704182435,
+      "Covid 2020": -0.14327342999980386,
+      "2022": -0.055092248135117816
+     }
+    },
+    {
+     "levier": 2.0,
+     "cagr": 0.11710109359105103,
+     "vol": 0.13619868992086775,
+     "sharpe": 0.881442420192769,
+     "max_dd": -0.2323914170474154,
+     "pire_annee_glissante": -0.17389861591859312,
+     "crises": {
+      "2008-2009": -0.23239141704741584,
+      "Covid 2020": -0.18786863435492285,
+      "2022": -0.07293827647717388
+     }
+    },
+    {
+     "levier": 2.5,
+     "cagr": 0.14095824371524657,
+     "vol": 0.17025277968520658,
+     "sharpe": 0.8600581234068838,
+     "max_dd": -0.2851740362261009,
+     "pire_annee_glissante": -0.2189933694144267,
+     "crises": {
+      "2008-2009": -0.2851740362261007,
+      "Covid 2020": -0.2308062698135286,
+      "2022": -0.09051787765904085
+     }
+    },
+    {
+     "levier": 3.0,
+     "cagr": 0.1639617913020781,
+     "vol": 0.2043072010428418,
+     "sharpe": 0.8458011692625508,
+     "max_dd": -0.33521192388231213,
+     "pire_annee_glissante": -0.26260383117675745,
+     "crises": {
+      "2008-2009": -0.33521192388231225,
+      "Covid 2020": -0.27210987787390406,
+      "2022": -0.10783389218477035
+     }
+    }
+   ],
+   "premier_levier_a_15_pourcent": 3.0
+  },
+  {
+   "nom": "F1 — Tendance sur 52 marchés à terme",
+   "debut": "2008-04-22",
+   "fin": "2026-10-23",
+   "lignes": [
+    {
+     "levier": 1.0,
+     "cagr": 0.06448159725629088,
+     "vol": 0.0743141066210225,
+     "sharpe": 0.8781389505350631,
+     "max_dd": -0.12544576990085682,
+     "pire_annee_glissante": -0.11405648883302821,
+     "crises": {
+      "2008-2009": -0.07679518044221711,
+      "Covid 2020": -0.04879114255136341,
+      "2022": -0.05331320304401865
+     }
+    },
+    {
+     "levier": 1.5,
+     "cagr": 0.08804349067153128,
+     "vol": 0.11147435822053915,
+     "sharpe": 0.8128639094053209,
+     "max_dd": -0.19169598913022054,
+     "pire_annee_glissante": -0.17688228739261402,
+     "crises": {
+      "2008-2009": -0.11355959836122376,
+      "Covid 2020": -0.07274544888711088,
+      "2022": -0.08181686260601662
+     }
+    },
+    {
+     "levier": 2.0,
+     "cagr": 0.1105854491822782,
+     "vol": 0.1486361294316077,
+     "sharpe": 0.7802198165986202,
+     "max_dd": -0.25425685499993556,
+     "pire_annee_glissante": -0.2366844169400395,
+     "crises": {
+      "2008-2009": -0.149139169667991,
+      "Covid 2020": -0.09625960184907623,
+      "2022": -0.10956949854799014
+     }
+    },
+    {
+     "levier": 2.5,
+     "cagr": 0.1320211933608828,
+     "vol": 0.18579850843875564,
+     "sharpe": 0.7606316426114006,
+     "max_dd": -0.31320847939865054,
+     "pire_annee_glissante": -0.29347524030456085,
+     "crises": {
+      "2008-2009": -0.1864452960853571,
+      "Covid 2020": -0.1193389797707779,
+      "2022": -0.13658765032799758
+     }
+    },
+    {
+     "levier": 3.0,
+     "cagr": 0.1522669488736308,
+     "vol": 0.2229611913263186,
+     "sharpe": 0.7475722330889113,
+     "max_dd": -0.3686414709320799,
+     "pire_annee_glissante": -0.34728092002831046,
+     "crises": {
+      "2008-2009": -0.22612188665162936,
+      "Covid 2020": -0.14198892644842975,
+      "2022": -0.16288758391547098
+     }
+    }
+   ],
+   "premier_levier_a_15_pourcent": 3.0
+  },
+  {
+   "nom": "F2 — Deux couches tendance (ETF + contrats à terme)",
+   "debut": "2008-04-22",
+   "fin": "2026-10-23",
+   "lignes": [
+    {
+     "levier": 1.0,
+     "cagr": 0.07097570268106623,
+     "vol": 0.07212387985562917,
+     "sharpe": 0.9869453523492057,
+     "max_dd": -0.1077106297284879,
+     "pire_annee_glissante": -0.10272740595689922,
+     "crises": {
+      "2008-2009": -0.0727884537361726,
+      "Covid 2020": -0.06694708513100944,
+      "2022": -0.04040125681858864
+     }
+    },
+    {
+     "levier": 1.5,
+     "cagr": 0.09814469613205734,
+     "vol": 0.10819096609307884,
+     "sharpe": 0.9196683497968795,
+     "max_dd": -0.16671317740671948,
+     "pire_annee_glissante": -0.16071790607509062,
+     "crises": {
+      "2008-2009": -0.10803915828629296,
+      "Covid 2020": -0.0995324009748847,
+      "2022": -0.06288938063059901
+     }
+    },
+    {
+     "levier": 2.0,
+     "cagr": 0.1245297001562351,
+     "vol": 0.1442596179690386,
+     "sharpe": 0.8860226325431604,
+     "max_dd": -0.2230290417196581,
+     "pire_annee_glissante": -0.21622656821786101,
+     "crises": {
+      "2008-2009": -0.14615191925615556,
+      "Covid 2020": -0.1313285508264891,
+      "2022": -0.08490903247525394
+     }
+    },
+    {
+     "levier": 2.5,
+     "cagr": 0.15003941801220955,
+     "vol": 0.18032889602802693,
+     "sharpe": 0.8658333143190637,
+     "max_dd": -0.27667799062692733,
+     "pire_annee_glissante": -0.269252500396004,
+     "crises": {
+      "2008-2009": -0.18392496675096992,
+      "Covid 2020": -0.16234220348214456,
+      "2022": -0.10646863553319419
+     }
+    },
+    {
+     "levier": 3.0,
+     "cagr": 0.1745834538908515,
+     "vol": 0.21639848715389776,
+     "sharpe": 0.8523730797485307,
+     "max_dd": -0.3276890987112733,
+     "pire_annee_glissante": -0.31980511236736797,
+     "crises": {
+      "2008-2009": -0.22125635667366106,
+      "Covid 2020": -0.1925804197715173,
+      "2022": -0.12757648947670763
+     }
+    }
+   ],
+   "premier_levier_a_15_pourcent": 2.5
+  },
+  {
+   "nom": "F3 — Tendance + portage sur 52 marchés à terme",
+   "debut": "2008-04-22",
+   "fin": "2026-10-23",
+   "lignes": [
+    {
+     "levier": 1.0,
+     "cagr": 0.06597156121731063,
+     "vol": 0.07537698309404613,
+     "sharpe": 0.8853799022824806,
+     "max_dd": -0.11875302281428173,
+     "pire_annee_glissante": -0.10758186557069149,
+     "crises": {
+      "2008-2009": -0.11409867685202868,
+      "Covid 2020": -0.06361262499379838,
+      "2022": -0.06369073618084886
+     }
+    },
+    {
+     "levier": 1.5,
+     "cagr": 0.0902624647869037,
+     "vol": 0.11306779758115708,
+     "sharpe": 0.8210314174289369,
+     "max_dd": -0.18236885070114714,
+     "pire_annee_glissante": -0.16777763612374774,
+     "crises": {
+      "2008-2009": -0.17222603059414365,
+      "Covid 2020": -0.09464716652564475,
+      "2022": -0.10339635607278219
+     }
+    },
+    {
+     "levier": 2.0,
+     "cagr": 0.11351557889452901,
+     "vol": 0.15076011029196,
+     "sharpe": 0.7888503269915601,
+     "max_dd": -0.2435860088352207,
+     "pire_annee_glissante": -0.22532563286933438,
+     "crises": {
+      "2008-2009": -0.22843347814182446,
+      "Covid 2020": -0.12496989837535077,
+      "2022": -0.14210949758542657
+     }
+    },
+    {
+     "levier": 2.5,
+     "cagr": 0.13563917061806485,
+     "vol": 0.18845302225364124,
+     "sharpe": 0.7695398500607754,
+     "max_dd": -0.3038384963768777,
+     "pire_annee_glissante": -0.28021535226774763,
+     "crises": {
+      "2008-2009": -0.28258070652738165,
+      "Covid 2020": -0.1545871052181026,
+      "2022": -0.1798140041546996
+     }
+    },
+    {
+     "levier": 3.0,
+     "cagr": 0.1565440275128429,
+     "vol": 0.22614623382607082,
+     "sharpe": 0.7566655246960426,
+     "max_dd": -0.36043872310079983,
+     "pire_annee_glissante": -0.3324494889646159,
+     "crises": {
+      "2008-2009": -0.3345533578685914,
+      "Covid 2020": -0.18350533282705295,
+      "2022": -0.21649661033527268
+     }
+    }
+   ],
+   "premier_levier_a_15_pourcent": 3.0
+  }
+ ]
+}

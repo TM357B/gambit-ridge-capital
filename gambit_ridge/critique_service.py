@@ -31,7 +31,7 @@ def _universe_for_team(team: str) -> dict[str, np.ndarray] | None:
             from .backtest_service import _binance_registry
             prices, _ = _binance_registry()
             return prices
-        if team in ("Micro", "IA & Tech", "Commodities"):
+        if team in ("Micro", "IA & Tech", "Commodities", "Agricoles", "Taux"):
             from .backtest_cli import _load_prices
             prices, _ = _load_prices("synth")
             return prices
@@ -48,7 +48,7 @@ def run_all_critiques() -> dict:
             return {"status": "already_running", **_STATUS}
         _STATUS = {"running": True, "last_error": None, "done_teams": []}
     results: dict = {}
-    teams = ["Macro", "Forex", "Crypto", "Micro", "IA & Tech", "Commodities"]
+    teams = ["Macro", "Forex", "Crypto", "Micro", "IA & Tech", "Commodities", "Agricoles", "Taux"]
     for team in teams:
         prices = _universe_for_team(team)
         if not prices or len(next(iter(prices.values()), [])) < 100:

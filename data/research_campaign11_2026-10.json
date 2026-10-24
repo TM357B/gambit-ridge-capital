@@ -1,0 +1,876 @@
+{
+ "genere_le": "2026-10-24",
+ "protocole": "Campagne de recherche n° 11 (octobre 2026) — la production en contrats à terme à 2 / 2,5x, et limiter la pire baisse.\n\nPROTOCOLE FIGÉ ET COMMITÉ AVANT TOUT CALCUL (pré-enregistrement) :\n\nDemande de Tom (24/10) : creuser la production actuelle mise en contrats à terme à 2 / 2,5x — coûts réels chez\nInteractive Brokers, dépôt de garantie, comportement en crise — et limiter la pire baisse (par exemple réduire\nl'exposition quand le fonds baisse). Aucun argent réel : simulation sur l'historique avec la grille PUBLIQUE d'IBKR.\n\nGrille relevée le 24/10/2026 (interactivebrokers.com, IBKR Pro) : contrats « micro » 0,25 $ + frais de marché\n(≈ 1 $ par contrat au total), contrats standard 0,85 $ + frais ; emprunt en dollars = taux de référence + 1,5 %\njusqu'à 100 000 $ (+1 % au-delà) ; dépôts de garantie initiaux (bourse CME, 24/10) en % du notionnel : indices\nactions ≈ 8 %, Treasury 10 ans 1,9 %, 30 ans 3,8 %, or 5,6 %, argent 9 %, pétrole 15,5 %, euro 1,6 %, yen 3,9 %.\n\nMise en œuvre « contrats à terme quand ils existent » (figée) — poids de production × k :\n  SPY→MES, QQQ→MNQ, IWM→M2K, EWJ→MNK, IEF→ZN, TLT→ZB, GLD→MGC, SLV→SIL, USO→MCL, FXE→M6E, FXY→6J : rendement de\n  l'ETF − taux à 3 mois − 0,25 %/an (base), 2 bps par unité échangée, changement d'échéance 2 bps × |position|\n  (mensuel pétrole, trimestriel le reste).\n  EFA, EEM, VNQ, TIP, LQD, HYG, DBC, DBA, UUP : restent en ETF (5 bps), financés par le compte : trésorerie\n  positive rémunérée au taux − 0,5 %, négative payée au taux + 1,5 % ; ventes à découvert 0,5 %/an, produit non rémunéré.\n  Taux de référence = rendement du Trésor à 3 mois (FRED DGS3MO, connu la veille).\n  Mise en œuvre « tout en ETF » pour comparaison : même calcul sans aucun contrat à terme.\n\nPARTIE A — information (pas des essais) : rendement, vol, Sharpe, pire baisse, pire année glissante, baisses en\n2008-2009, 2020 et 2022, k = 1 ; 2 ; 2,5 ; 3 pour les deux mises en œuvre. Dépôt de garantie : contrats (marge\ninitiale ci-dessus) + ETF (Reg T : 25 % des achats, 30 % des ventes) en % de l'actif net, médiane et maximum, et\nmaximum si les bourses doublent les marges en crise ; « appel de marge » si l'exigence dépasse l'actif net.\nArrondi au contrat près pour un compte de 100 000 $, 250 000 $ et 1 000 000 $ : écart de poids moyen et écart de\nsuivi annuel par rapport aux poids exacts (notionnels de contrats = multiplicateur × cours du contrat continu Yahoo).\n\nPARTIE B — essais (base = mise en œuvre contrats à terme à k = 2,5 ; exposition décidée avec l'information de la\nveille ; changement d'exposition facturé 3 bps × |Δk| × exposition brute) :\n  D1 Réduction selon la baisse : exposition k tant que le fonds (levier compris) est à moins de 5 % de son plus\n     haut ; de −5 % à −20 %, baisse linéaire jusqu'à 1x ; 1x au-delà ; remontée symétrique.\n  D2 Volatilité du fonds visée : k × (vol cible / vol réalisée 63 j du fonds sans levier), bornée entre 1x et 3x ;\n     vol cible = médiane de la vol 63 j de la production sur le développement (2008-2019).\n  D3 Filtre de tendance sur le fonds : k si la production sans levier est au-dessus de sa moyenne 200 j, sinon 1x.\nPériodes : développement 2008-04 → 2019, validation 2020 → aujourd'hui, échantillon 2001-2007 (proxys campagne 5).\nRègle d'acceptation (risque, pas rendement) : pire baisse de développement améliorée d'au moins 5 points ;\nrendement annuel de développement >= base − 1 point ; Sharpe de développement >= base − 0,05 ; validation : pire\nbaisse pas pire que la base et rendement >= base − 1 point ; 2001-2007 : pire baisse pas pire que la base.\nLes mêmes règles sont aussi montrées à k = 2 (information).\n\nUn essai accepté n'entre au portefeuille qu'avec l'accord de Tom ; l'argent réel exige compte IBKR, données de\nmarché et avis juridique.\n\nUsage : python3 -m gambit_ridge.research.campaign11\nSortie : data/research_campaign11_2026-10.json\n",
+ "periode": [
+  "2008-04-22",
+  "2026-10-23"
+ ],
+ "vol_cible_d2": 0.057110303432200325,
+ "partie_a": {
+  "mises_en_oeuvre": {
+   "contrats_a_terme": [
+    {
+     "levier": 1.0,
+     "tout": {
+      "cagr": 0.06306851698589089,
+      "vol": 0.06805974369197908,
+      "sharpe": 0.9327751370926304,
+      "max_dd": -0.12236631206017615,
+      "pire_annee_glissante": -0.08577008914803363,
+      "pire_jour": -0.025565005022424734,
+      "crises": {
+       "2008-2009": -0.1223663120601759,
+       "Covid 2020": -0.09702890828027555,
+       "2022": -0.036903699479690855
+      }
+     },
+     "developpement": {
+      "cagr": 0.0577563478831995,
+      "vol": 0.06357190437983129,
+      "sharpe": 0.9151530683926244,
+      "max_dd": -0.12236631206017615,
+      "pire_annee_glissante": -0.08577008914803363,
+      "pire_jour": -0.02493318755520538,
+      "crises": {
+       "2008-2009": -0.1223663120601759
+      }
+     },
+     "validation": {
+      "cagr": 0.07226905844886633,
+      "vol": 0.07517154640965969,
+      "sharpe": 0.9659583592013739,
+      "max_dd": -0.10510152402029373,
+      "pire_annee_glissante": -0.06702830679842542,
+      "pire_jour": -0.025565005022424734,
+      "crises": {
+       "Covid 2020": -0.09702890828027555,
+       "2022": -0.036903699479690855
+      }
+     }
+    },
+    {
+     "levier": 2.0,
+     "tout": {
+      "cagr": 0.1132340908879017,
+      "vol": 0.136133796342464,
+      "sharpe": 0.8563136630335746,
+      "max_dd": -0.2365952938129886,
+      "pire_annee_glissante": -0.18168962844755743,
+      "pire_jour": -0.05128584453689444,
+      "crises": {
+       "2008-2009": -0.23659529381298783,
+       "Covid 2020": -0.1877235535500461,
+       "2022": -0.07256923646976965
+      }
+     },
+     "developpement": {
+      "cagr": 0.11277539898869793,
+      "vol": 0.12715119089539928,
+      "sharpe": 0.9042430468291182,
+      "max_dd": -0.2365952938129886,
+      "pire_annee_glissante": -0.18168962844755743,
+      "pire_jour": -0.04985057509217372,
+      "crises": {
+       "2008-2009": -0.23659529381298783
+      }
+     },
+     "validation": {
+      "cagr": 0.11402357982524536,
+      "vol": 0.15037440504665994,
+      "sharpe": 0.7934962265966655,
+      "max_dd": -0.21268627540500326,
+      "pire_annee_glissante": -0.17086537370137145,
+      "pire_jour": -0.05128584453689444,
+      "crises": {
+       "Covid 2020": -0.1877235535500461,
+       "2022": -0.07256923646976965
+      }
+     }
+    },
+    {
+     "levier": 2.5,
+     "tout": {
+      "cagr": 0.1353898576718291,
+      "vol": 0.17017290865942925,
+      "sharpe": 0.8316168386792095,
+      "max_dd": -0.2895812035521713,
+      "pire_annee_glissante": -0.22800767507251307,
+      "pire_jour": -0.06416512551144911,
+      "crises": {
+       "2008-2009": -0.289581203552172,
+       "Covid 2020": -0.23065842426945493,
+       "2022": -0.09009073312976712
+      }
+     },
+     "developpement": {
+      "cagr": 0.13805125821834419,
+      "vol": 0.15894093332097994,
+      "sharpe": 0.8934566970469586,
+      "max_dd": -0.2895812035521713,
+      "pire_annee_glissante": -0.22800767507251307,
+      "pire_jour": -0.062309888363940524,
+      "crises": {
+       "2008-2009": -0.289581203552172
+      }
+     },
+     "validation": {
+      "cagr": 0.13082624263513254,
+      "vol": 0.18797931360781747,
+      "sharpe": 0.748374237584372,
+      "max_dd": -0.26595520344860335,
+      "pire_annee_glissante": -0.21926177669933744,
+      "pire_jour": -0.06416512551144911,
+      "crises": {
+       "Covid 2020": -0.23065842426945493,
+       "2022": -0.09009073312976712
+      }
+     }
+    },
+    {
+     "levier": 3.0,
+     "tout": {
+      "cagr": 0.15548793161991825,
+      "vol": 0.20421054276959796,
+      "sharpe": 0.8103026329292254,
+      "max_dd": -0.33988348288199444,
+      "pire_annee_glissante": -0.27334941403395285,
+      "pire_jour": -0.07705172375718294,
+      "crises": {
+       "2008-2009": -0.3398834828819949,
+       "Covid 2020": -0.2721017453175174,
+       "2022": -0.10738218588649351
+      }
+     },
+     "developpement": {
+      "cagr": 0.16141254684341266,
+      "vol": 0.1907283502282109,
+      "sharpe": 0.880394269060264,
+      "max_dd": -0.33988348288199444,
+      "pire_annee_glissante": -0.27334941403395285,
+      "pire_jour": -0.07478434225954429,
+      "crises": {
+       "2008-2009": -0.3398834828819949
+      }
+     },
+     "validation": {
+      "cagr": 0.14536697211282346,
+      "vol": 0.22558358365124367,
+      "sharpe": 0.7148945754207904,
+      "max_dd": -0.31662228535470055,
+      "pire_annee_glissante": -0.2655336550646028,
+      "pire_jour": -0.07705172375718294,
+      "crises": {
+       "Covid 2020": -0.2721017453175174,
+       "2022": -0.10738218588649351
+      }
+     }
+    }
+   ],
+   "tout_en_etf": [
+    {
+     "levier": 1.0,
+     "tout": {
+      "cagr": 0.062469456422309166,
+      "vol": 0.06805893421992192,
+      "sharpe": 0.9245012044310271,
+      "max_dd": -0.12000073837234368,
+      "pire_annee_glissante": -0.08761657216681995,
+      "pire_jour": -0.025675488308752638,
+      "crises": {
+       "2008-2009": -0.12000073837234304,
+       "Covid 2020": -0.09707109493290067,
+       "2022": -0.03693875108326483
+      }
+     },
+     "developpement": {
+      "cagr": 0.05866839626852771,
+      "vol": 0.0635608236488257,
+      "sharpe": 0.9288641883831225,
+      "max_dd": -0.12000073837234368,
+      "pire_annee_glissante": -0.08761657216681995,
+      "pire_jour": -0.024930682488030514,
+      "crises": {
+       "2008-2009": -0.12000073837234304
+      }
+     },
+     "validation": {
+      "cagr": 0.06904003703171835,
+      "vol": 0.07518729105781015,
+      "sharpe": 0.9256489379003826,
+      "max_dd": -0.10758210180208456,
+      "pire_annee_glissante": -0.07281238540260271,
+      "pire_jour": -0.025675488308752638,
+      "crises": {
+       "Covid 2020": -0.09707109493290067,
+       "2022": -0.03693875108326483
+      }
+     }
+    },
+    {
+     "levier": 2.0,
+     "tout": {
+      "cagr": 0.09345494963357281,
+      "vol": 0.13612959415616135,
+      "sharpe": 0.7245986003544835,
+      "max_dd": -0.23927311440064036,
+      "pire_annee_glissante": -0.197283505675239,
+      "pire_jour": -0.05158829580968138,
+      "crises": {
+       "2008-2009": -0.23927311440063914,
+       "Covid 2020": -0.18922994909697322,
+       "2022": -0.07336976544385232
+      }
+     },
+     "developpement": {
+      "cagr": 0.09556447621301589,
+      "vol": 0.12712219701235958,
+      "sharpe": 0.7817569095994626,
+      "max_dd": -0.23927311440064036,
+      "pire_annee_glissante": -0.197283505675239,
+      "pire_jour": -0.04992603029465796,
+      "crises": {
+       "2008-2009": -0.23927311440063914
+      }
+     },
+     "validation": {
+      "cagr": 0.08983561948598062,
+      "vol": 0.15040635209053102,
+      "sharpe": 0.647362877263996,
+      "max_dd": -0.22571389093050484,
+      "pire_annee_glissante": -0.19006014313226172,
+      "pire_jour": -0.05158829580968138,
+      "crises": {
+       "Covid 2020": -0.18922994909697322,
+       "2022": -0.07336976544385232
+      }
+     }
+    },
+    {
+     "levier": 2.5,
+     "tout": {
+      "cagr": 0.10608861117849644,
+      "vol": 0.17016855079717053,
+      "sharpe": 0.677925235174718,
+      "max_dd": -0.29557804857700043,
+      "pire_annee_glissante": -0.24977384774301803,
+      "pire_jour": -0.06454907096924845,
+      "crises": {
+       "2008-2009": -0.2955780485770013,
+       "Covid 2020": -0.23280645985166837,
+       "2022": -0.09127156716460894
+      }
+     },
+     "developpement": {
+      "cagr": 0.11164906059564617,
+      "vol": 0.15890610958337573,
+      "sharpe": 0.7458402370262055,
+      "max_dd": -0.29557804857700043,
+      "pire_annee_glissante": -0.24977384774301803,
+      "pire_jour": -0.06242473423756258,
+      "crises": {
+       "2008-2009": -0.2955780485770013
+      }
+     },
+     "validation": {
+      "cagr": 0.09658846454831149,
+      "vol": 0.18801875068434734,
+      "sharpe": 0.5846801114085348,
+      "max_dd": -0.28157667032043643,
+      "pire_annee_glissante": -0.24567486552315732,
+      "pire_jour": -0.06454907096924845,
+      "crises": {
+       "Covid 2020": -0.23280645985166837,
+       "2022": -0.09127156716460894
+      }
+     }
+    },
+    {
+     "levier": 3.0,
+     "tout": {
+      "cagr": 0.11729772251989612,
+      "vol": 0.2042083418506427,
+      "sharpe": 0.6456543642679669,
+      "max_dd": -0.34869382023388357,
+      "pire_annee_glissante": -0.29993360760462606,
+      "pire_jour": -0.07751675700309736,
+      "crises": {
+       "2008-2009": -0.3486938202338852,
+       "Covid 2020": -0.2747256089899279,
+       "2022": -0.10891171374980069
+      }
+     },
+     "developpement": {
+      "cagr": 0.12657279523162246,
+      "vol": 0.19069063702777717,
+      "sharpe": 0.7207372526882158,
+      "max_dd": -0.34869382023388357,
+      "pire_annee_glissante": -0.29993360760462606,
+      "pire_jour": -0.0749241221331407,
+      "crises": {
+       "2008-2009": -0.3486938202338852
+      }
+     },
+     "validation": {
+      "cagr": 0.1015209546181608,
+      "vol": 0.22563197470532645,
+      "sharpe": 0.5417331000299008,
+      "max_dd": -0.3445855000130775,
+      "pire_annee_glissante": -0.2980746688822091,
+      "pire_jour": -0.07751675700309736,
+      "crises": {
+       "Covid 2020": -0.2747256089899279,
+       "2022": -0.10891171374980069
+      }
+     }
+    }
+   ]
+  },
+  "depot_garantie": {
+   "2.0": {
+    "median": 0.3517155886415112,
+    "max": 0.4815665512591025,
+    "max_marges_doublees_en_crise": 0.48239321585718375,
+    "appel_de_marge": false
+   },
+   "2.5": {
+    "median": 0.43964448580188903,
+    "max": 0.6019581890738781,
+    "max_marges_doublees_en_crise": 0.6029915198214795,
+    "appel_de_marge": false
+   },
+   "3.0": {
+    "median": 0.5275733829622666,
+    "max": 0.7223498268886538,
+    "max_marges_doublees_en_crise": 0.7235898237857754,
+    "appel_de_marge": false
+   }
+  },
+  "arrondi": [
+   {
+    "capital": 100000,
+    "ecart_poids_moyen": 0.32887907938743305,
+    "ecart_suivi_annuel": 0.026153430560452655
+   },
+   {
+    "capital": 250000,
+    "ecart_poids_moyen": 0.15872118237346042,
+    "ecart_suivi_annuel": 0.014744205794732639
+   },
+   {
+    "capital": 1000000,
+    "ecart_poids_moyen": 0.04267042461130924,
+    "ecart_suivi_annuel": 0.005012393031177567
+   }
+  ]
+ },
+ "resultats": {
+  "REF": {
+   "nom": "BASE — Base — production en contrats à terme",
+   "developpement": {
+    "cagr": 0.13805125821834419,
+    "vol": 0.15894093332097994,
+    "sharpe": 0.8934566970469586,
+    "max_dd": -0.2895812035521713,
+    "pire_annee_glissante": -0.22800767507251307,
+    "pire_jour": -0.062309888363940524,
+    "crises": {
+     "2008-2009": -0.289581203552172
+    }
+   },
+   "validation": {
+    "cagr": 0.13082624263513254,
+    "vol": 0.18797931360781747,
+    "sharpe": 0.748374237584372,
+    "max_dd": -0.26595520344860335,
+    "pire_annee_glissante": -0.21926177669933744,
+    "pire_jour": -0.06416512551144911,
+    "crises": {
+     "Covid 2020": -0.23065842426945493,
+     "2022": -0.09009073312976712
+    }
+   },
+   "echantillon_2001_2007": {
+    "cagr": 0.2020661097487364,
+    "vol": 0.16480617737823675,
+    "sharpe": 1.1995309789910358,
+    "max_dd": -0.2173760474088015,
+    "pire_annee_glissante": -0.0362939387787653,
+    "pire_jour": -0.04338018191861719,
+    "crises": {}
+   }
+  },
+  "D1": {
+   "nom": "D1 — Réduction selon la baisse (−5 % → −20 %)",
+   "developpement": {
+    "cagr": 0.10350964597158563,
+    "vol": 0.13222341607084057,
+    "sharpe": 0.8113740416515257,
+    "max_dd": -0.21097740592938508,
+    "pire_annee_glissante": -0.19699075421120404,
+    "pire_jour": -0.0612644113328137,
+    "crises": {
+     "2008-2009": -0.2109774059293853
+    }
+   },
+   "validation": {
+    "cagr": 0.08937299197443238,
+    "vol": 0.1611719180203159,
+    "sharpe": 0.6121468017977685,
+    "max_dd": -0.21245107168303767,
+    "pire_annee_glissante": -0.1764327591829956,
+    "pire_jour": -0.051713581031302455,
+    "crises": {
+     "Covid 2020": -0.19477608710518723,
+     "2022": -0.08616798361946254
+    }
+   },
+   "echantillon_2001_2007": {
+    "cagr": 0.1613261910825341,
+    "vol": 0.1415639561759737,
+    "sharpe": 1.1275764259036176,
+    "max_dd": -0.18410722918310488,
+    "pire_annee_glissante": -0.06854317693394485,
+    "pire_jour": -0.04338018191861719,
+    "crises": {}
+   },
+   "criteres": {
+    "baisse_dev_amelioree_5_points": true,
+    "rendement_dev": false,
+    "sharpe_dev": false,
+    "baisse_validation": true,
+    "rendement_validation": false,
+    "baisse_2001_2007": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "D2": {
+   "nom": "D2 — Volatilité du fonds visée",
+   "developpement": {
+    "cagr": 0.13671635141653682,
+    "vol": 0.14807983071811126,
+    "sharpe": 0.9398163921008886,
+    "max_dd": -0.2904663235986279,
+    "pire_annee_glissante": -0.23139198866489108,
+    "pire_jour": -0.06371003365860431,
+    "crises": {
+     "2008-2009": -0.2904663235986281
+    }
+   },
+   "validation": {
+    "cagr": 0.07606201378384925,
+    "vol": 0.15147533162813262,
+    "sharpe": 0.5600085376679814,
+    "max_dd": -0.2503755539269316,
+    "pire_annee_glissante": -0.24393269914018012,
+    "pire_jour": -0.05088697565498082,
+    "crises": {
+     "Covid 2020": -0.1904464555304639,
+     "2022": -0.09541674366813713
+    }
+   },
+   "echantillon_2001_2007": {
+    "cagr": 0.20440584670533313,
+    "vol": 0.1492399153428131,
+    "sharpe": 1.3212619901642697,
+    "max_dd": -0.1536256250506657,
+    "pire_annee_glissante": 0.026252170538962893,
+    "pire_jour": -0.049122993863236084,
+    "crises": {}
+   },
+   "criteres": {
+    "baisse_dev_amelioree_5_points": false,
+    "rendement_dev": true,
+    "sharpe_dev": true,
+    "baisse_validation": true,
+    "rendement_validation": false,
+    "baisse_2001_2007": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "D3": {
+   "nom": "D3 — Filtre de tendance 200 j sur le fonds",
+   "developpement": {
+    "cagr": 0.11691755003529791,
+    "vol": 0.14359485915475742,
+    "sharpe": 0.8422034111397098,
+    "max_dd": -0.2830217148609593,
+    "pire_annee_glissante": -0.2780531072379677,
+    "pire_jour": -0.062309888363940524,
+    "crises": {
+     "2008-2009": -0.14841977216900193
+    }
+   },
+   "validation": {
+    "cagr": 0.12969335827196282,
+    "vol": 0.168491431993452,
+    "sharpe": 0.8085350568404679,
+    "max_dd": -0.21898106513252594,
+    "pire_annee_glissante": -0.12982732813483777,
+    "pire_jour": -0.061500786937200354,
+    "crises": {
+     "Covid 2020": -0.21898106513252558,
+     "2022": -0.08846283803785226
+    }
+   },
+   "echantillon_2001_2007": {
+    "cagr": 0.16028064444208656,
+    "vol": 0.1561370807161592,
+    "sharpe": 1.0305062752159122,
+    "max_dd": -0.2150852378187051,
+    "pire_annee_glissante": -0.08930231119598875,
+    "pire_jour": -0.04338018191861719,
+    "crises": {}
+   },
+   "criteres": {
+    "baisse_dev_amelioree_5_points": false,
+    "rendement_dev": false,
+    "sharpe_dev": false,
+    "baisse_validation": true,
+    "rendement_validation": true,
+    "baisse_2001_2007": true
+   },
+   "verdict": "REJETÉ"
+  }
+ },
+ "duree_s": 25,
+ "resultats_par_levier": {
+  "2.5": {
+   "BASE": {
+    "nom": "BASE — Base — production en contrats à terme",
+    "developpement": {
+     "cagr": 0.13805125821834419,
+     "vol": 0.15894093332097994,
+     "sharpe": 0.8934566970469586,
+     "max_dd": -0.2895812035521713,
+     "pire_annee_glissante": -0.22800767507251307,
+     "pire_jour": -0.062309888363940524,
+     "crises": {
+      "2008-2009": -0.289581203552172
+     }
+    },
+    "validation": {
+     "cagr": 0.13082624263513254,
+     "vol": 0.18797931360781747,
+     "sharpe": 0.748374237584372,
+     "max_dd": -0.26595520344860335,
+     "pire_annee_glissante": -0.21926177669933744,
+     "pire_jour": -0.06416512551144911,
+     "crises": {
+      "Covid 2020": -0.23065842426945493,
+      "2022": -0.09009073312976712
+     }
+    },
+    "echantillon_2001_2007": {
+     "cagr": 0.2020661097487364,
+     "vol": 0.16480617737823675,
+     "sharpe": 1.1995309789910358,
+     "max_dd": -0.2173760474088015,
+     "pire_annee_glissante": -0.0362939387787653,
+     "pire_jour": -0.04338018191861719,
+     "crises": {}
+    }
+   },
+   "D1": {
+    "nom": "D1 — Réduction selon la baisse (−5 % → −20 %)",
+    "developpement": {
+     "cagr": 0.10350964597158563,
+     "vol": 0.13222341607084057,
+     "sharpe": 0.8113740416515257,
+     "max_dd": -0.21097740592938508,
+     "pire_annee_glissante": -0.19699075421120404,
+     "pire_jour": -0.0612644113328137,
+     "crises": {
+      "2008-2009": -0.2109774059293853
+     }
+    },
+    "validation": {
+     "cagr": 0.08937299197443238,
+     "vol": 0.1611719180203159,
+     "sharpe": 0.6121468017977685,
+     "max_dd": -0.21245107168303767,
+     "pire_annee_glissante": -0.1764327591829956,
+     "pire_jour": -0.051713581031302455,
+     "crises": {
+      "Covid 2020": -0.19477608710518723,
+      "2022": -0.08616798361946254
+     }
+    },
+    "echantillon_2001_2007": {
+     "cagr": 0.1613261910825341,
+     "vol": 0.1415639561759737,
+     "sharpe": 1.1275764259036176,
+     "max_dd": -0.18410722918310488,
+     "pire_annee_glissante": -0.06854317693394485,
+     "pire_jour": -0.04338018191861719,
+     "crises": {}
+    },
+    "criteres": {
+     "baisse_dev_amelioree_5_points": true,
+     "rendement_dev": false,
+     "sharpe_dev": false,
+     "baisse_validation": true,
+     "rendement_validation": false,
+     "baisse_2001_2007": true
+    },
+    "verdict": "REJETÉ"
+   },
+   "D2": {
+    "nom": "D2 — Volatilité du fonds visée",
+    "developpement": {
+     "cagr": 0.13671635141653682,
+     "vol": 0.14807983071811126,
+     "sharpe": 0.9398163921008886,
+     "max_dd": -0.2904663235986279,
+     "pire_annee_glissante": -0.23139198866489108,
+     "pire_jour": -0.06371003365860431,
+     "crises": {
+      "2008-2009": -0.2904663235986281
+     }
+    },
+    "validation": {
+     "cagr": 0.07606201378384925,
+     "vol": 0.15147533162813262,
+     "sharpe": 0.5600085376679814,
+     "max_dd": -0.2503755539269316,
+     "pire_annee_glissante": -0.24393269914018012,
+     "pire_jour": -0.05088697565498082,
+     "crises": {
+      "Covid 2020": -0.1904464555304639,
+      "2022": -0.09541674366813713
+     }
+    },
+    "echantillon_2001_2007": {
+     "cagr": 0.20440584670533313,
+     "vol": 0.1492399153428131,
+     "sharpe": 1.3212619901642697,
+     "max_dd": -0.1536256250506657,
+     "pire_annee_glissante": 0.026252170538962893,
+     "pire_jour": -0.049122993863236084,
+     "crises": {}
+    },
+    "criteres": {
+     "baisse_dev_amelioree_5_points": false,
+     "rendement_dev": true,
+     "sharpe_dev": true,
+     "baisse_validation": true,
+     "rendement_validation": false,
+     "baisse_2001_2007": true
+    },
+    "verdict": "REJETÉ"
+   },
+   "D3": {
+    "nom": "D3 — Filtre de tendance 200 j sur le fonds",
+    "developpement": {
+     "cagr": 0.11691755003529791,
+     "vol": 0.14359485915475742,
+     "sharpe": 0.8422034111397098,
+     "max_dd": -0.2830217148609593,
+     "pire_annee_glissante": -0.2780531072379677,
+     "pire_jour": -0.062309888363940524,
+     "crises": {
+      "2008-2009": -0.14841977216900193
+     }
+    },
+    "validation": {
+     "cagr": 0.12969335827196282,
+     "vol": 0.168491431993452,
+     "sharpe": 0.8085350568404679,
+     "max_dd": -0.21898106513252594,
+     "pire_annee_glissante": -0.12982732813483777,
+     "pire_jour": -0.061500786937200354,
+     "crises": {
+      "Covid 2020": -0.21898106513252558,
+      "2022": -0.08846283803785226
+     }
+    },
+    "echantillon_2001_2007": {
+     "cagr": 0.16028064444208656,
+     "vol": 0.1561370807161592,
+     "sharpe": 1.0305062752159122,
+     "max_dd": -0.2150852378187051,
+     "pire_annee_glissante": -0.08930231119598875,
+     "pire_jour": -0.04338018191861719,
+     "crises": {}
+    },
+    "criteres": {
+     "baisse_dev_amelioree_5_points": false,
+     "rendement_dev": false,
+     "sharpe_dev": false,
+     "baisse_validation": true,
+     "rendement_validation": true,
+     "baisse_2001_2007": true
+    },
+    "verdict": "REJETÉ"
+   }
+  },
+  "2.0": {
+   "BASE": {
+    "nom": "BASE — Base — production en contrats à terme",
+    "developpement": {
+     "cagr": 0.11277539898869793,
+     "vol": 0.12715119089539928,
+     "sharpe": 0.9042430468291182,
+     "max_dd": -0.2365952938129886,
+     "pire_annee_glissante": -0.18168962844755743,
+     "pire_jour": -0.04985057509217372,
+     "crises": {
+      "2008-2009": -0.23659529381298783
+     }
+    },
+    "validation": {
+     "cagr": 0.11402357982524536,
+     "vol": 0.15037440504665994,
+     "sharpe": 0.7934962265966655,
+     "max_dd": -0.21268627540500326,
+     "pire_annee_glissante": -0.17086537370137145,
+     "pire_jour": -0.05128584453689444,
+     "crises": {
+      "Covid 2020": -0.1877235535500461,
+      "2022": -0.07256923646976965
+     }
+    },
+    "echantillon_2001_2007": {
+     "cagr": 0.1688169207765342,
+     "vol": 0.13184777446203794,
+     "sharpe": 1.2494006548355676,
+     "max_dd": -0.1763107650952226,
+     "pire_annee_glissante": -0.021466849176817848,
+     "pire_jour": -0.03466377856430007,
+     "crises": {}
+    }
+   },
+   "D1": {
+    "nom": "D1 — Réduction selon la baisse (−5 % → −20 %)",
+    "developpement": {
+     "cagr": 0.0967924946715788,
+     "vol": 0.11476597456400699,
+     "sharpe": 0.8626816849414204,
+     "max_dd": -0.1991094029959312,
+     "pire_annee_glissante": -0.17183947287849943,
+     "pire_jour": -0.04985057509217372,
+     "crises": {
+      "2008-2009": -0.19910940299593094
+     }
+    },
+    "validation": {
+     "cagr": 0.0955807293888451,
+     "vol": 0.1382340334592142,
+     "sharpe": 0.7298074083391641,
+     "max_dd": -0.1855310695267255,
+     "pire_annee_glissante": -0.15396859250704065,
+     "pire_jour": -0.04209338193481388,
+     "crises": {
+      "Covid 2020": -0.17134945876862828,
+      "2022": -0.07153797578832477
+     }
+    },
+    "echantillon_2001_2007": {
+     "cagr": 0.1502512393921509,
+     "vol": 0.12110378211794898,
+     "sharpe": 1.2167236659242364,
+     "max_dd": -0.16134288811122482,
+     "pire_annee_glissante": -0.03889728060637532,
+     "pire_jour": -0.03466377856430007,
+     "crises": {}
+    },
+    "criteres": {
+     "baisse_dev_amelioree_5_points": false,
+     "rendement_dev": false,
+     "sharpe_dev": true,
+     "baisse_validation": true,
+     "rendement_validation": false,
+     "baisse_2001_2007": true
+    },
+    "verdict": "REJETÉ"
+   },
+   "D2": {
+    "nom": "D2 — Volatilité du fonds visée",
+    "developpement": {
+     "cagr": 0.11070995565205943,
+     "vol": 0.12225304298536084,
+     "sharpe": 0.920307803226048,
+     "max_dd": -0.2507674915600138,
+     "pire_annee_glissante": -0.1998444029141595,
+     "pire_jour": -0.05094515870361243,
+     "crises": {
+      "2008-2009": -0.2507674915600133
+     }
+    },
+    "validation": {
+     "cagr": 0.06768404828851904,
+     "vol": 0.12328487818891908,
+     "sharpe": 0.5930843747197087,
+     "max_dd": -0.21710140135693756,
+     "pire_annee_glissante": -0.21162163461191097,
+     "pire_jour": -0.040677949409646,
+     "crises": {
+      "Covid 2020": -0.1549438834882001,
+      "2022": -0.08575953134682346
+     }
+    },
+    "echantillon_2001_2007": {
+     "cagr": 0.16861834131960052,
+     "vol": 0.11990890451824687,
+     "sharpe": 1.3598226018066355,
+     "max_dd": -0.12391253420153213,
+     "pire_annee_glissante": 0.02693347427501913,
+     "pire_jour": -0.039249202292694144,
+     "crises": {}
+    },
+    "criteres": {
+     "baisse_dev_amelioree_5_points": false,
+     "rendement_dev": true,
+     "sharpe_dev": true,
+     "baisse_validation": false,
+     "rendement_validation": false,
+     "baisse_2001_2007": true
+    },
+    "verdict": "REJETÉ"
+   },
+   "D3": {
+    "nom": "D3 — Filtre de tendance 200 j sur le fonds",
+    "developpement": {
+     "cagr": 0.09862129547702736,
+     "vol": 0.11624109542820878,
+     "sharpe": 0.8675395303809073,
+     "max_dd": -0.22323196775268703,
+     "pire_annee_glissante": -0.21784902150966157,
+     "pire_jour": -0.04985057509217372,
+     "crises": {
+      "2008-2009": -0.1397313832346727
+     }
+    },
+    "validation": {
+     "cagr": 0.11281093093114092,
+     "vol": 0.13653879432727056,
+     "sharpe": 0.8514910808441037,
+     "max_dd": -0.17969514314054028,
+     "pire_annee_glissante": -0.10923391327876941,
+     "pire_jour": -0.049192601307282445,
+     "crises": {
+      "Covid 2020": -0.17969514314054047,
+      "2022": -0.07124570682825326
+     }
+    },
+    "echantillon_2001_2007": {
+     "cagr": 0.14119988228424085,
+     "vol": 0.1256537813853746,
+     "sharpe": 1.1142533139042443,
+     "max_dd": -0.17484712153954773,
+     "pire_annee_glissante": -0.05823309273043997,
+     "pire_jour": -0.03466377856430007,
+     "crises": {}
+    },
+    "criteres": {
+     "baisse_dev_amelioree_5_points": false,
+     "rendement_dev": false,
+     "sharpe_dev": true,
+     "baisse_validation": true,
+     "rendement_validation": true,
+     "baisse_2001_2007": true
+    },
+    "verdict": "REJETÉ"
+   }
+  }
+ }
+}

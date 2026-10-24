@@ -216,8 +216,8 @@ def part2(grid: list[str]) -> dict[str, dict]:
     from ..teams.micro import build_micro_team
 
     builders = {"A1": ("Équipe Macro", build_macro_team), "A2": ("Équipe Micro", build_micro_team),
-                "A3": ("Équipe IA & Tech", build_ia_tech_team), "A4": ("Équipe Matières premières", build_commodities_team),
-                "A5": ("Équipe Crypto 24/7", build_crypto_team), "A6": ("Équipe Devises", build_forex_team)}
+                "A3": ("Équipe IA & Tech", build_ia_tech_team), "A4": ("Équipe Matières premières", lambda: build_commodities_team(etendue=False)),
+                "A5": ("Équipe Crypto 24/7", build_crypto_team), "A6": ("Équipe Devises", lambda: build_forex_team(etendue=False))}
     out, team_curves = {}, {"brut": [], "corrigé": []}
     for key, (name, build) in builders.items():
         t0 = time.time()

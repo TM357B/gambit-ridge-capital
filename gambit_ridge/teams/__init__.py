@@ -5,6 +5,8 @@ from .forex import build_forex_team
 from .commodities import build_commodities_team
 from .ia_tech import build_ia_tech_team, IA_TICKERS
 from .macro import build_macro_team
+from .agricoles import build_agricoles_team
+from .taux import build_taux_team
 from .micro import build_micro_team
 
 __all__ = [
@@ -14,5 +16,7 @@ __all__ = [
     "build_ia_tech_team",
     "build_macro_team",
     "build_micro_team",
+    "build_agricoles_team",
+    "build_taux_team",
     "IA_TICKERS",
 ]

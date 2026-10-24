@@ -647,8 +647,12 @@ CATALOGUE = [
         ("Covariance EWMA rétrécie, risque égal, vol cible 10 %", "research/portfolio.py", "ch. 6", "production", "RISK"),
         ("Socle 60/40 + couche tendance, 95 % ETF / 5 % crypto", "research/production.py", "—", "production", "PORT"),
     ]),
-    ("Modèles évalués et rejetés (banc et 7 campagnes, 48 essais)", [
+    ("Modèles évalués et rejetés (banc et 11 campagnes, 62 essais)", [
+        ("Limiteurs de baisse à 2,5x en contrats à terme : réduction selon la baisse, vol du fonds visée, filtre de tendance", "research/campaign11.py", "—", "rejeté", "CAMP"),
+        ("Tendance et portage sur 52 marchés à terme (matières, taux, devises, indices), données gratuites corrigées", "research/campaign10.py", "—", "rejeté", "CAMP"),
         ("Volatilité stochastique (SVL, SVLJ, moyenne avec GARCH) pour le dimensionnement", "research/campaign6.py", "ch. 7 § 3-4", "rejeté", "CAMP"),
+        ("Budget de risque par classe d'actifs, univers élargi aux matières premières, devises et obligations hors US", "research/campaign9.py", "—", "rejeté", "CAMP"),
+        ("Socle en parité de risque « All Weather », effets de calendrier (tournant de mois, fériés, Sell in May)", "research/campaign8.py", "—", "rejeté", "CAMP"),
         ("Règles d'entrée / sortie : cassures de Donchian, stops suiveurs, zone neutre, long seul", "research/campaign7.py", "—", "rejeté", "CAMP"),
         ("Régression ridge transversale (classement ML)", "models/signals/linear.py", "ch. 3-4", "rejeté", "RES"),
         ("Réseau feedforward / autoencodeur", "models/signals/", "ch. 4, 8 § 6", "rejeté", "RES"),

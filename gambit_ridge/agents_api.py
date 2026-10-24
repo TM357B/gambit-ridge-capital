@@ -14,6 +14,8 @@ from .teams import (
     build_ia_tech_team,
     build_macro_team,
     build_micro_team,
+    build_agricoles_team,
+    build_taux_team,
 )
 
 TEAM_BUILDERS = {
@@ -23,6 +25,8 @@ TEAM_BUILDERS = {
     "Forex": build_forex_team,
     "Commodities": build_commodities_team,
     "IA & Tech": build_ia_tech_team,
+    "Agricoles": build_agricoles_team,
+    "Taux": build_taux_team,
 }
 
 

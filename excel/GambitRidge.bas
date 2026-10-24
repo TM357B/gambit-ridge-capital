@@ -49,6 +49,13 @@ Public Sub GRC_Configurer()
     Set mCache = Nothing
 End Sub
 
+Public Sub GRC_Installer()
+    ' copie le complement dans le dossier des complements d'Excel et l'active (charge a chaque demarrage)
+    Dim a As Object
+    Set a = Application.AddIns.Add(ThisWorkbook.FullName, True)
+    a.Installed = True
+End Sub
+
 Public Sub GRC_Actualiser()
     ' equivalent du bouton Refresh de Bloomberg : vide le cache et recalcule tout
     Set mCache = Nothing

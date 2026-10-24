@@ -37,6 +37,9 @@ jamais un chiffre inventé. Composition du S&P 500 : non disponible gratuitement
 - Construire le .xlam à partir de la source : Excel › Outils › Macro › Visual Basic Editor ›
   Fichier › Importer `GambitRidge.bas`, puis Enregistrer sous › Complément Excel (.xlam).
 
+Installation en une fois : ouvrir GambitRidge.xlam, activer les macros, lancer la macro **GRC_Installer**
+(Outils › Macro › Macros… dans la barre de menus du Mac, ou par script).
+
 Macros : **GRC_Actualiser** (vide le cache d'une minute et recalcule tout, comme Refresh),
 **GRC_Configurer** (adresse du terminal, par défaut http://127.0.0.1:8765, le tunnel du Mac).
 

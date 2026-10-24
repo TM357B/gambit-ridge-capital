@@ -118,10 +118,10 @@ function fnGP(d) {
   const cut = a => a.slice(i0);
   const x = cut(d.dates), cl = cut(d.close);
   const last = d.close[n - 1], prev = d.close[n - 2], chg = last / prev - 1, perf = last / cl[0] - 1;
-  const series = [{ name: d.symbol, x, y: cl, color: '#ff9900', width: 1.8 }];
+  const series = [{ name: d.symbol, x, y: cl, color: '#E3B65C', width: 1.8 }];
   const m50 = cut(d.sma50), m200 = cut(d.sma200);
-  if (m50.some(v => v !== null)) series.push({ name: 'Moy. 50 j', x, y: m50.map(v => v ?? NaN), color: '#2979ff', width: 1 });
-  if (m200.some(v => v !== null)) series.push({ name: 'Moy. 200 j', x, y: m200.map(v => v ?? NaN), color: '#e040fb', width: 1 });
+  if (m50.some(v => v !== null)) series.push({ name: 'Moy. 50 j', x, y: m50.map(v => v ?? NaN), color: '#8AB4FF', width: 1 });
+  if (m200.some(v => v !== null)) series.push({ name: 'Moy. 200 j', x, y: m200.map(v => v ?? NaN), color: '#C9A0F0', width: 1 });
   let h = fnHeader(`${esc(d.symbol)} <span class="muted">${esc(d.name)}</span>`, `GP · ${esc(lastDate)}`, `<span class="fn-last">${fmtPx(last)}</span> <span class="${chg>=0?'pos':'neg'}">${sgn(chg*100,2)}%</span>`);
   h += '<div class="fn-tools">' + ['1M','3M','6M','YTD','1A','5A','MAX'].map(r => `<span class="rng ${S.range===r?'on':''}" onclick="FN_STATE.range='${r}';renderFn()">${r}</span>`).join('');
   h += `<span class="rng ${S.log?'on':''}" onclick="FN_STATE.log=!FN_STATE.log;renderFn()">LOG</span><span class="muted small" style="margin-left:auto">Performance sur la période : <b class="${perf>=0?'pos':'neg'}">${sgn(perf*100,1)}%</b> · <a class="lnk" onclick="runCommand('${esc(d.symbol)} DES')">fiche DES ›</a></span></div>`;
@@ -144,7 +144,7 @@ async function fnDES(sym) {
   h += '</div><div class="grid g-main">';
   if (g && !g.error) {
     const n = g.dates.length, i0 = Math.max(0, n - 252);
-    h += '<div class="panel"><div class="panel-h">Cours sur 1 an <span class="rt"><a class="lnk" onclick="runCommand(\'' + esc(d.symbol) + ' GP\')">GP ›</a></span></div><div class="panel-b">' + lineChart('chDES', [{ name: d.symbol, x: g.dates.slice(i0), y: g.close.slice(i0), color: '#ff9900', area: true }], { height: 220, yfmt: v => fmtPx(v) }) + '</div></div>';
+    h += '<div class="panel"><div class="panel-h">Cours sur 1 an <span class="rt"><a class="lnk" onclick="runCommand(\'' + esc(d.symbol) + ' GP\')">GP ›</a></span></div><div class="panel-b">' + lineChart('chDES', [{ name: d.symbol, x: g.dates.slice(i0), y: g.close.slice(i0), color: '#E3B65C', area: true }], { height: 220, yfmt: v => fmtPx(v) }) + '</div></div>';
   }
   h += '<div class="panel"><div class="panel-h">Performances</div><div class="panel-b" style="padding:4px"><table>';
   for (const [k, v] of Object.entries(d.returns)) h += `<tr><td>${esc(k)}</td>${v === null ? '<td class="num muted">—</td>' : pctCell(v, 1)}</tr>`;
@@ -160,7 +160,7 @@ async function fnDES(sym) {
 
 function heat(v, scale) {
   const a = Math.min(1, Math.abs(v) / scale);
-  return v >= 0 ? `rgba(0,200,83,${0.12 + 0.6 * a})` : `rgba(255,23,68,${0.12 + 0.6 * a})`;
+  return v >= 0 ? `rgba(108,203,143,${0.12 + 0.6 * a})` : `rgba(240,138,115,${0.12 + 0.6 * a})`;
 }
 
 function fnFXC(d) {
@@ -201,7 +201,7 @@ function sparkline(vals) {
   if (v.length < 2) return '';
   const lo = Math.min(...v), hi = Math.max(...v), W = 110, H = 22;
   const pts = v.map((y, i) => `${(i / (v.length - 1) * W).toFixed(1)},${(H - 2 - (y - lo) / ((hi - lo) || 1) * (H - 4)).toFixed(1)}`).join(' ');
-  return `<svg width="${W}" height="${H}" style="vertical-align:middle"><polyline points="${pts}" fill="none" stroke="#ff9900" stroke-width="1.2"/></svg>`;
+  return `<svg width="${W}" height="${H}" style="vertical-align:middle"><polyline points="${pts}" fill="none" stroke="#E3B65C" stroke-width="1.2"/></svg>`;
 }
 
 function fnECST(d) {
@@ -223,7 +223,7 @@ function ecstChart(id) {
   const d = FN_CACHE['ECST:'] && FN_CACHE['ECST:'].d; if (!d) return;
   const r = d.sections.flatMap(s => s.rows).find(x => x.id === id); if (!r) return;
   const el = document.getElementById('ecstChart');
-  el.innerHTML = `<div class="panel" style="margin-top:10px"><div class="panel-h">${esc(r.label)} <span class="rt">${esc(r.id)} · 24 dernières observations</span></div><div class="panel-b">` + lineChart('chECST', [{ name: r.label, x: r.history_dates, y: r.history, color: '#ff9900', area: true }], { height: 220, yfmt: v => (Math.abs(v) >= 1000 ? Math.round(v).toLocaleString('fr-FR') : v.toFixed(2)) }) + '</div></div>';
+  el.innerHTML = `<div class="panel" style="margin-top:10px"><div class="panel-h">${esc(r.label)} <span class="rt">${esc(r.id)} · 24 dernières observations</span></div><div class="panel-b">` + lineChart('chECST', [{ name: r.label, x: r.history_dates, y: r.history, color: '#E3B65C', area: true }], { height: 220, yfmt: v => (Math.abs(v) >= 1000 ? Math.round(v).toLocaleString('fr-FR') : v.toFixed(2)) }) + '</div></div>';
   el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -250,7 +250,7 @@ function fnWEI(d) {
 
 function fnGC(d) {
   if (d.error) return `<div class="loader neg">${esc(d.error)}</div>`;
-  const cols = ['#ff9900', '#2979ff', '#888'];
+  const cols = ['#E3B65C', '#8AB4FF', '#A39F96'];
   let h = fnHeader('GC', 'Courbe des taux du Trésor américain', `<span class="muted small">${esc(d.source)}</span>`);
   h += '<div class="kpis">' + Object.entries(d.spreads).map(([k, v]) => kpi('Pente ' + k, (v >= 0 ? '+' : '') + v + ' pb', v < 0 ? 'neg' : '')).join('') + '</div>';
   h += '<div class="panel"><div class="panel-b">' + lineChart('chGC', d.curves.map((c, i) => ({ name: c.label, x: d.maturities, y: c.yields, color: cols[i], width: i ? 1.3 : 2.2 })), { height: 300, yfmt: v => v.toFixed(2) + ' %' }) + '</div></div>';
@@ -286,11 +286,11 @@ function ovdvHeatmap(d) {
     if (v === null) return;  // pas de cotation : case vide
     svg += `<rect x="${(L + j * cw).toFixed(1)}" y="${(T + i * ch).toFixed(1)}" width="${(cw + 0.6).toFixed(1)}" height="${(ch + 0.6).toFixed(1)}" fill="${volColor(v, lo, hi)}"><title>${Math.round(K[j] * 100)} % du spot · ${Math.round(J[i])} j : ${(v * 100).toFixed(1)} %</title></rect>`;
   }));
-  K.forEach((k, j) => { const p = Math.round(k * 100); if (p % (narrow ? 10 : 5) === 0) svg += `<text x="${L + (j + 0.5) * cw}" y="${H - 8}" fill="#666" font-size="10" text-anchor="middle">${p}%</text>`; });
-  for (let q = 0; q <= 5; q++) { const i = Math.round((J.length - 1) * q / 5); svg += `<text x="${L - 6}" y="${T + (i + 0.5) * ch + 3}" fill="#666" font-size="10" text-anchor="end">${Math.round(J[i])} j</text>`; }
+  K.forEach((k, j) => { const p = Math.round(k * 100); if (p % (narrow ? 10 : 5) === 0) svg += `<text x="${L + (j + 0.5) * cw}" y="${H - 8}" fill="#8A867E" font-size="10" text-anchor="middle">${p}%</text>`; });
+  for (let q = 0; q <= 5; q++) { const i = Math.round((J.length - 1) * q / 5); svg += `<text x="${L - 6}" y="${T + (i + 0.5) * ch + 3}" fill="#8A867E" font-size="10" text-anchor="end">${Math.round(J[i])} j</text>`; }
   const gx = W - R + 14, gh = H - T - B;
   for (let s = 0; s < 40; s++) svg += `<rect x="${gx}" y="${T + gh * s / 40}" width="12" height="${gh / 40 + 0.6}" fill="${volColor(hi - (hi - lo) * s / 39, lo, hi)}"/>`;
-  svg += `<text x="${gx + 16}" y="${T + 9}" fill="#999" font-size="10">${(hi * 100).toFixed(0)}%</text><text x="${gx + 16}" y="${T + gh}" fill="#999" font-size="10">${(lo * 100).toFixed(0)}%</text></svg>`;
+  svg += `<text x="${gx + 16}" y="${T + 9}" fill="#A39F96" font-size="10">${(hi * 100).toFixed(0)}%</text><text x="${gx + 16}" y="${T + gh}" fill="#A39F96" font-size="10">${(lo * 100).toFixed(0)}%</text></svg>`;
   return svg;
 }
 
@@ -317,7 +317,7 @@ function fnOVDV(d) {
   }
   const xk = K.map(m => Math.round(m * 100) + ' %');
   const smiles = choix.map((e, i) => ({ name: `${e.expiry} (${Math.round(e.days)} j)`, x: xk, y: e.smile.map(v => v === null ? NaN : v * 100), color: SERIES_COLORS[i] }));
-  const terme = [{ name: 'Vol ATM', x: d.grid.days.map(j => Math.round(j) + ' j'), y: d.grid.vols.map(r => r[iAtm] === null ? NaN : r[iAtm] * 100), color: '#ff9900', width: 2 }];
+  const terme = [{ name: 'Vol ATM', x: d.grid.days.map(j => Math.round(j) + ' j'), y: d.grid.vols.map(r => r[iAtm] === null ? NaN : r[iAtm] * 100), color: '#E3B65C', width: 2 }];
   h += '<div class="grid g-main">';
   h += '<div class="panel"><div class="panel-h">Smile par maturité <span class="rt">strike / spot · puts à gauche, calls à droite</span></div><div class="panel-b">' + lineChart('chOVDVs', smiles, { height: 280, yfmt: v => v.toFixed(1) + ' %' }) + '</div></div>';
   h += '<div class="panel"><div class="panel-h">Structure par terme ATM <span class="rt">interpolée en variance totale</span></div><div class="panel-b">' + lineChart('chOVDVt', terme, { height: 280, yfmt: v => v.toFixed(1) + ' %' }) + '</div></div>';

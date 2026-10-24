@@ -1,0 +1,369 @@
+{
+ "genere_le": "2026-10-24",
+ "protocole": "Campagne de recherche n° 8 (octobre 2026) — diversification : socle et sources de rendement non liées à la tendance.\n\nPROTOCOLE FIGÉ ET COMMITÉ AVANT TOUT CALCUL (pré-enregistrement) :\n\nQuestion : sept campagnes ont montré que les réglages de la couche tendance ne s'améliorent plus.\nLa moitié du fonds est un socle 60/40 (SPY / IEF) qui dépend de deux actifs ; et tout le reste\ndu rendement vient de la tendance. Un socle plus diversifié ou une source de rendement liée au\ncalendrier (décorrélée de la tendance) améliorent-ils le fonds ?\n\nRéférence : la stratégie ETF de production (« 60/40 + couche tendance », 20 ETF, socle 50 %,\nvol GARCH, covariance EWMA, vol cible 10 %, filtre 25 % / 0,5 %, rebalancement tous les 5 jours,\n5 bps). Paramètres tirés de la littérature, AUCUNE grille, aucun réglage a posteriori.\n\nEssais (5) :\n  Socle (remplace le 60/40 ; la couche tendance ne change pas) :\n  C1 Socle en parité de risque (« All Weather » simplifié, Qian 2005 ; Asness, Frazzini &\n     Pedersen 2012) : SPY, TLT, IEF, TIP, GLD, DBC pondérés par l'inverse de leur volatilité\n     réalisée sur 252 séances, puis ramenés à la même volatilité que le socle 60/40 (constante\n     de la campagne 1 : médiane de la vol 21 j du 60/40 sur 2008-2019), exposition brute du\n     socle plafonnée à 2.\n  C2 Même socle en parité de risque, SANS levier (poids qui somment à 1).\n  Calendrier (poche autonome ramenée à 10 % de vol ex ante, ajoutée en surcouche 0,5x comme\n  en campagne 2 : fonds = production + 0,5 x poche ; rebalancement quotidien, 5 bps) :\n  S1 Tournant de mois (Lakonishok & Smidt 1988 ; McConnell & Xu 2008) : SPY détenu sur le\n     dernier jour de bourse du mois et les 3 premiers du mois suivant, à plat sinon.\n  S2 Veilles de jours fériés (Ariel 1990) : SPY détenu sur la séance qui précède un jour\n     ouvré sans cotation (calendrier de bourse connu à l'avance), à plat sinon.\n  S3 « Sell in May » (Bouman & Jacobsen 2002) : la part actions du socle est divisée par\n     deux du 1er mai au 31 octobre.\n\nPistes écartées AVANT calcul, faute de données suffisantes : portage crypto par les taux de\nfinancement des contrats perpétuels (historique Binance à partir de fin 2019 : aucun\néchantillon de développement) ; ETF « qualité / faible volatilité » (2011-2013 : développement\ntrop court, et la faible volatilité a déjà été rejetée en campagne 2).\n\nPériodes et règle d'acceptation : identiques à la campagne 7 (développement -> 2019-12-31 après\n260 séances de rodage, validation 2020 -> aujourd'hui ; Sharpe dév. >= réf. + 0,05 ; DSR >= 0,90 ;\nSharpe validation >= réf. − 0,05 ; pire baisse validation pas plus de 3 points au-delà de la\nréf. ; Sharpe 2001-2007, échantillon reconstitué de la campagne 5, >= réf. − 0,05). La\nvalidation ne choisit rien.\n\nTests multiples : DSR calculé sur tous les Sharpe de développement des campagnes 1, 2, 4, 6 et 7\nplus les 5 essais de cette campagne. Un essai accepté n'entre au portefeuille qu'avec\nl'accord de Tom.\n\nUsage : python3 -m gambit_ridge.research.campaign8\nSortie : data/research_campaign8_2026-10.json\n",
+ "regles": {
+  "dev_gain": 0.05,
+  "dsr": 0.9,
+  "val_tol": 0.05,
+  "dd_tol": 0.03
+ },
+ "parametres": {
+  "actifs_parite": [
+   "SPY",
+   "TLT",
+   "IEF",
+   "TIP",
+   "GLD",
+   "DBC"
+  ],
+  "fenetre_vol": 252,
+  "levier_max_socle": 2.0,
+  "vol_cible_socle": 0.0721517050942833,
+  "surcouche": 0.5,
+  "socle_reference": {
+   "SPY": 0.6,
+   "IEF": 0.4
+  }
+ },
+ "essais_comptes_dans_le_dsr": 49,
+ "duree_s": 69,
+ "resultats": {
+  "REF": {
+   "nom": "REF — Référence — production actuelle",
+   "description": "Socle 60/40 + couche tendance.",
+   "developpement": {
+    "sharpe": 0.992311552207382,
+    "cagr": 0.06297860717792325,
+    "vol": 0.06359447726977598,
+    "max_dd": -0.11865428134876849,
+    "sortino": 1.331946425547288,
+    "calmar": 0.5307739970444556,
+    "cvar95": -0.009480334469580987,
+    "n_days": 2945,
+    "turnover_annuel": 8.76082379394138,
+    "gross_moyen": 1.31014479180221,
+    "couts_annuels": 0.00438041189697069
+   },
+   "validation": {
+    "sharpe": 1.0099223172545486,
+    "cagr": 0.07590995266266831,
+    "vol": 0.07526333053628652,
+    "max_dd": -0.10316333042800471,
+    "sortino": 1.3289605866105747,
+    "calmar": 0.7358230133491483,
+    "cvar95": -0.011336360302046742,
+    "n_days": 1712,
+    "turnover_annuel": 9.204129961980243,
+    "gross_moyen": 1.2789305072987536,
+    "couts_annuels": 0.004602064980990121
+   },
+   "echantillon_2001_2007": {
+    "sharpe": 1.5658589727018217,
+    "cagr": 0.10640695816387269,
+    "vol": 0.06597874666801344,
+    "max_dd": -0.08932950193676367,
+    "sortino": 2.408927985341694,
+    "calmar": 1.1911737539877716,
+    "cvar95": -0.008703766096742224,
+    "n_days": 1270,
+    "turnover_annuel": 6.9453920734944425,
+    "gross_moyen": 1.385766143451556,
+    "couts_annuels": 0.003472696036747221
+   },
+   "dsr_developpement": 0.9735679188170696
+  },
+  "C1": {
+   "nom": "C1 — Socle en parité de risque, même vol que le 60/40",
+   "description": "SPY TLT IEF TIP GLD DBC, inverse de la vol 252 j, levier ≤ 2.",
+   "developpement": {
+    "sharpe": 0.760987002236509,
+    "cagr": 0.05070168413961529,
+    "vol": 0.06804169727469297,
+    "max_dd": -0.10030995840114844,
+    "sortino": 1.0519443026841868,
+    "calmar": 0.5054501561734753,
+    "cvar95": -0.010138123444448718,
+    "n_days": 2945,
+    "turnover_annuel": 8.637757092510569,
+    "gross_moyen": 1.4310792814872557,
+    "couts_annuels": 0.004318878546255284
+   },
+   "validation": {
+    "sharpe": 0.8028119829751338,
+    "cagr": 0.0529139404608423,
+    "vol": 0.06703423155592424,
+    "max_dd": -0.12001431011836848,
+    "sortino": 1.0376385216244923,
+    "calmar": 0.4408969264469712,
+    "cvar95": -0.010116543726189422,
+    "n_days": 1712,
+    "turnover_annuel": 9.024729398173772,
+    "gross_moyen": 1.2695800714117043,
+    "couts_annuels": 0.004512364699086886
+   },
+   "socle_brut_moyen": 1.3836183277468326,
+   "echantillon_2001_2007": {
+    "sharpe": 1.7065469422112738,
+    "cagr": 0.14438917034499665,
+    "vol": 0.08097302033583019,
+    "max_dd": -0.09936807484331106,
+    "sortino": 2.5463688358584995,
+    "calmar": 1.4530740438785523,
+    "cvar95": -0.010974260427116201,
+    "n_days": 1270,
+    "turnover_annuel": 6.658146431648302,
+    "gross_moyen": 1.6316531278327269,
+    "couts_annuels": 0.0033290732158241503
+   },
+   "dsr_developpement": 0.8776929444028617,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": false,
+    "validation_non_contredite": false,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "C2": {
+   "nom": "C2 — Socle en parité de risque, sans levier",
+   "description": "Mêmes six actifs, poids qui somment à 1.",
+   "developpement": {
+    "sharpe": 0.7208591370236398,
+    "cagr": 0.0432529754008093,
+    "vol": 0.061357493895524445,
+    "max_dd": -0.08518503192957066,
+    "sortino": 0.988876495423404,
+    "calmar": 0.5077532334151148,
+    "cvar95": -0.009125356677032098,
+    "n_days": 2945,
+    "turnover_annuel": 8.64498749549033,
+    "gross_moyen": 1.2131042979427342,
+    "couts_annuels": 0.004322493747745165
+   },
+   "validation": {
+    "sharpe": 0.8552084975722001,
+    "cagr": 0.052183085902366866,
+    "vol": 0.061713461400847755,
+    "max_dd": -0.11692482777139784,
+    "sortino": 1.1169966611374464,
+    "calmar": 0.4462960253778701,
+    "cvar95": -0.009178720030283872,
+    "n_days": 1712,
+    "turnover_annuel": 9.088093241254919,
+    "gross_moyen": 1.175829233394471,
+    "couts_annuels": 0.0045440466206274595
+   },
+   "socle_brut_moyen": 1.0,
+   "echantillon_2001_2007": {
+    "sharpe": 1.6361304068866294,
+    "cagr": 0.1186235126891717,
+    "vol": 0.07002822815335293,
+    "max_dd": -0.09321619039630327,
+    "sortino": 2.385170784535383,
+    "calmar": 1.2725634054003996,
+    "cvar95": -0.009664487374138366,
+    "n_days": 1270,
+    "turnover_annuel": 6.776203764040475,
+    "gross_moyen": 1.3753694641761043,
+    "couts_annuels": 0.003388101882020237
+   },
+   "dsr_developpement": 0.8482035969384012,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": false,
+    "validation_non_contredite": false,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "S3": {
+   "nom": "S3 — « Sell in May » : actions du socle /2 de mai à octobre",
+   "description": "Bouman & Jacobsen (2002).",
+   "developpement": {
+    "sharpe": 1.0017558337918953,
+    "cagr": 0.0595965651386412,
+    "vol": 0.059565397269883205,
+    "max_dd": -0.09495044805456856,
+    "sortino": 1.351097848779764,
+    "calmar": 0.6276596515309829,
+    "cvar95": -0.008853285908839756,
+    "n_days": 2945,
+    "turnover_annuel": 9.08780693298552,
+    "gross_moyen": 1.2491719211264813,
+    "couts_annuels": 0.0045439034664927595
+   },
+   "validation": {
+    "sharpe": 0.8204284040834581,
+    "cagr": 0.0576407433217363,
+    "vol": 0.0714226392963746,
+    "max_dd": -0.11055405694645798,
+    "sortino": 1.047039139522307,
+    "calmar": 0.521380625133025,
+    "cvar95": -0.01081072626252624,
+    "n_days": 1712,
+    "turnover_annuel": 9.487259493156525,
+    "gross_moyen": 1.208578454983948,
+    "couts_annuels": 0.004743629746578263
+   },
+   "socle_brut_moyen": 0.8435902941808032,
+   "echantillon_2001_2007": {
+    "sharpe": 1.6275442913755496,
+    "cagr": 0.10506947414389578,
+    "vol": 0.06260142287992579,
+    "max_dd": -0.08833074995376602,
+    "sortino": 2.4200413719033143,
+    "calmar": 1.1895005329275605,
+    "cvar95": -0.00847151874542268,
+    "n_days": 1270,
+    "turnover_annuel": 7.236584876302084,
+    "gross_moyen": 1.336422405593233,
+    "couts_annuels": 0.0036182924381510423
+   },
+   "dsr_developpement": 0.9752462687928503,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "S1": {
+   "nom": "S1 — Tournant de mois (poche SPY, surcouche 0,5x)",
+   "description": "Dernier jour + 3 premiers jours du mois.",
+   "developpement": {
+    "sharpe": 0.854423793701657,
+    "cagr": 0.06196004443803482,
+    "vol": 0.07353831727541874,
+    "max_dd": -0.14105091098367525,
+    "sortino": 1.0803751336663638,
+    "calmar": 0.4392743301403127,
+    "cvar95": -0.011061094665056831,
+    "n_days": 2945
+   },
+   "validation": {
+    "sharpe": 0.9817484108306705,
+    "cagr": 0.0843860180204592,
+    "vol": 0.08633135072402782,
+    "max_dd": -0.1123613461393494,
+    "sortino": 1.2633611909289584,
+    "calmar": 0.7510235585448088,
+    "cvar95": -0.013273531090224387,
+    "n_days": 1712
+   },
+   "poche_seule": {
+    "developpement": {
+     "sharpe": -0.012110174439222252,
+     "cagr": -0.0015631244863387739,
+     "vol": 0.04502766229461367,
+     "max_dd": -0.12965338738895796,
+     "sortino": -0.00705825999677426,
+     "calmar": -0.012056179308678045,
+     "cvar95": -0.007530098625605437,
+     "n_days": 2945
+    },
+    "validation": {
+     "sharpe": 0.3762328189033193,
+     "cagr": 0.016544548129241443,
+     "vol": 0.04649009208803461,
+     "max_dd": -0.0822510852251368,
+     "sortino": 0.23880658892208742,
+     "calmar": 0.2011468673508183,
+     "cvar95": -0.007475414640432501,
+     "n_days": 1712
+    }
+   },
+   "part_des_jours": 0.19097010372178158,
+   "correlation_poche_production": 0.32239953764546087,
+   "echantillon_2001_2007": {
+    "sharpe": 1.4575089155196894,
+    "cagr": 0.11243665950079507,
+    "vol": 0.0750520068435819,
+    "max_dd": -0.09067398668712688,
+    "sortino": 2.2090188060006963,
+    "calmar": 1.240010102222161,
+    "cvar95": -0.010166662339206009,
+    "n_days": 1270
+   },
+   "dsr_developpement": 0.9274282406775792,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "S2": {
+   "nom": "S2 — Veilles de jours fériés (poche SPY, surcouche 0,5x)",
+   "description": "Séance précédant un jour ouvré sans cotation.",
+   "developpement": {
+    "sharpe": 0.9593335539539345,
+    "cagr": 0.06182073800782906,
+    "vol": 0.06471954829117682,
+    "max_dd": -0.12054173332793643,
+    "sortino": 1.2879720220639657,
+    "calmar": 0.5128575498383152,
+    "cvar95": -0.00962255417602884,
+    "n_days": 2945
+   },
+   "validation": {
+    "sharpe": 1.0363724129682623,
+    "cagr": 0.07882190854859372,
+    "vol": 0.07600520271559276,
+    "max_dd": -0.09909927420280652,
+    "sortino": 1.3771249618154109,
+    "calmar": 0.7953833081288244,
+    "cvar95": -0.01135751828330986,
+    "n_days": 1712
+   },
+   "poche_seule": {
+    "developpement": {
+     "sharpe": -0.12847737981115182,
+     "cagr": -0.002159327195434768,
+     "vol": 0.01584559368219859,
+     "max_dd": -0.06886847569754377,
+     "sortino": -0.04284392440752704,
+     "calmar": -0.03135436313296799,
+     "cvar95": -0.0015427295634844653,
+     "n_days": 2945
+    },
+    "validation": {
+     "sharpe": 0.5013584219386297,
+     "cagr": 0.0054735995915085045,
+     "vol": 0.011008404511601436,
+     "max_dd": -0.012645880401619592,
+     "sortino": 0.2539832911126791,
+     "calmar": 0.43283657742069787,
+     "cvar95": -0.0009279366271241822,
+     "n_days": 1712
+    }
+   },
+   "part_des_jours": 0.036607687614399025,
+   "correlation_poche_production": 0.08420814576935207,
+   "echantillon_2001_2007": {
+    "sharpe": 1.547201312304016,
+    "cagr": 0.10625524675448617,
+    "vol": 0.06671741720814242,
+    "max_dd": -0.09085312915748513,
+    "sortino": 2.3842883524890066,
+    "calmar": 1.1695276512744317,
+    "cvar95": -0.00883100714623387,
+    "n_days": 1270
+   },
+   "dsr_developpement": 0.9661066963227902,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": true
+   },
+   "verdict": "REJETÉ"
+  }
+ }
+}

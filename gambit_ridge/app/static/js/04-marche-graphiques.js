@@ -2,7 +2,7 @@
 /* ============ DONNÉES DE MARCHÉ RÉELLES ============ */
 let MARKET = null, RESEARCH = null, RS_SEL = null;
 const CLASS_ORDER = ['Actions','Obligations','Matières premières','Devises','Crypto'];
-const SERIES_COLORS = ['#ff9900','#00c853','#2979ff','#e040fb','#00e5ff','#ffea00','#ff1744','#8d6e63','#9e9e9e'];
+const SERIES_COLORS = ['#E3B65C','#6CCB8F','#8AB4FF','#C9A0F0','#7FD4E3','#F2D479','#F08A73','#B49A86','#A39F96'];
 
 async function fetchMarket() {
   try { MARKET = (await (await fetch('/api/market')).json()).assets || []; } catch(e) { MARKET = []; }
@@ -38,25 +38,25 @@ function lineChart(id, series, opts={}) {
   let svg = `<svg class="chart" id="${id}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:${H}px">`;
   for (let k = 0; k <= 4; k++) {
     const tv = lo + (hi - lo) * k / 4, v = log ? Math.exp(tv) : tv, y = Y(v);
-    svg += `<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#1c1c1c"/><text x="${L-6}" y="${y+3}" fill="#666" font-size="10" text-anchor="end">${fmt(v)}</text>`;
+    svg += `<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#2C2C33"/><text x="${L-6}" y="${y+3}" fill="#8A867E" font-size="10" text-anchor="end">${fmt(v)}</text>`;
   }
   const xs = series[0].x || [];
   if (xs.length) for (let k = 0; k <= 5; k++) {
     if (narrow && k % 2) continue;  // moins d'étiquettes de date sur mobile
     const i = Math.round((xs.length - 1) * k / 5);
-    svg += `<text x="${X(i)}" y="${H-8}" fill="#666" font-size="10" text-anchor="middle">${esc(String(xs[i]).slice(0, 7))}</text>`;
+    svg += `<text x="${X(i)}" y="${H-8}" fill="#8A867E" font-size="10" text-anchor="middle">${esc(String(xs[i]).slice(0, 7))}</text>`;
   }
-  if (opts.zero !== undefined) svg += `<line x1="${L}" x2="${W-R}" y1="${Y(opts.zero)}" y2="${Y(opts.zero)}" stroke="#444" stroke-dasharray="4,4"/>`;
+  if (opts.zero !== undefined) svg += `<line x1="${L}" x2="${W-R}" y1="${Y(opts.zero)}" y2="${Y(opts.zero)}" stroke="#3A3A42" stroke-dasharray="4,4"/>`;
   if (opts.marker > 0) {
     const mx = X(opts.marker);
-    svg += `<rect x="${mx}" y="${T}" width="${W-R-mx}" height="${H-T-B}" fill="#ff9900" opacity="0.04"/><line x1="${mx}" x2="${mx}" y1="${T}" y2="${H-B}" stroke="#b36b00" stroke-dasharray="3,3"/><text x="${mx+6}" y="${T+12}" fill="#b36b00" font-size="10">${esc(opts.markerLabel || '')}</text>`;
+    svg += `<rect x="${mx}" y="${T}" width="${W-R-mx}" height="${H-T-B}" fill="#E3B65C" opacity="0.04"/><line x1="${mx}" x2="${mx}" y1="${T}" y2="${H-B}" stroke="#B89A5E" stroke-dasharray="3,3"/><text x="${mx+6}" y="${T+12}" fill="#B89A5E" font-size="10">${esc(opts.markerLabel || '')}</text>`;
   }
   series.forEach((s, si) => {
     const pts = s.y.map((v, i) => isFinite(v) && (!log || v > 0) ? `${X(i).toFixed(1)},${Y(v).toFixed(1)}` : null).filter(Boolean).join(' ');
     if (s.area) svg += `<polygon points="${X(0)},${Y(opts.zero ?? lo)} ${pts} ${X(s.y.length-1)},${Y(opts.zero ?? lo)}" fill="${s.color}" opacity="0.12"/>`;
     svg += `<polyline points="${pts}" fill="none" stroke="${s.color || SERIES_COLORS[si]}" stroke-width="${s.width || 1.5}"/>`;
   });
-  svg += `<line class="xh" x1="0" x2="0" y1="${T}" y2="${H-B}" stroke="#555" visibility="hidden"/></svg>`;
+  svg += `<line class="xh" x1="0" x2="0" y1="${T}" y2="${H-B}" stroke="#6E6A63" visibility="hidden"/></svg>`;
   svg += `<div class="chart-tip" id="${id}-tip"></div>`;
   CHARTS[id] = { series, X, n, L, R, W, fmt };
   const legend = series.length > 1 ? '<div class="legend2">' + series.map((s, si) => `<span style="color:${s.color || SERIES_COLORS[si]}">■</span> ${esc(s.name)}`).join(' &nbsp; ') + '</div>' : '';
@@ -90,7 +90,7 @@ async function backtestPreview(id) {
   if (!ret || !ref) return '';
   const split = ret.courbe.dates.findIndex(dt => dt > RESEARCH.protocole.dev_fin);
   let h = `<div class="sub-h">En attendant l’historique réel : backtest de la stratégie retenue (poche ETF, coûts inclus)</div>`;
-  h += lineChart(id, [{ name: RESEARCH.etf_retenue, x: ret.courbe.dates, y: ret.courbe.equity, color: '#ff9900', width: 2 }, { name: '60/40', x: ref.courbe.dates, y: ref.courbe.equity, color: '#2979ff' }], { log: true, height: 180, zero: 1, yfmt: v => v.toFixed(2) + '×', marker: split, markerLabel: 'VALIDATION →' });
+  h += lineChart(id, [{ name: RESEARCH.etf_retenue, x: ret.courbe.dates, y: ret.courbe.equity, color: '#E3B65C', width: 2 }, { name: '60/40', x: ref.courbe.dates, y: ref.courbe.equity, color: '#8AB4FF' }], { log: true, height: 180, zero: 1, yfmt: v => v.toFixed(2) + '×', marker: split, markerLabel: 'VALIDATION →' });
   const er = ret.cagr_risque_egal && ret.cagr_risque_egal.val;
   if (er !== undefined) h += `<div class="legend2">La stratégie vise moins de risque que le 60/40 (vol ${fmtPct(ret.validation.vol,1)} contre ${fmtPct(ref.validation.vol,1)}). Au même niveau de risque, son rendement annuel en validation aurait été de ${fmtPct(er,1)} contre ${fmtPct(ref.validation.cagr,1)} pour le 60/40.</div>`;
   return h;

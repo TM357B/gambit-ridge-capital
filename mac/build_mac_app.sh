@@ -23,7 +23,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <dict>
   <key>CFBundleName</key><string>Gambit Ridge Capital</string>
   <key>CFBundleIdentifier</key><string>com.gambitridgecapital.app</string>
-  <key>CFBundleVersion</key><string>26</string>
+  <key>CFBundleVersion</key><string>27</string>
   <key>CFBundleExecutable</key><string>Gambit Ridge Capital</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>NSHighResolutionCapable</key><true/>
@@ -39,6 +39,8 @@ if [ -f "$SRC_DIR/mac/icon.icns" ]; then
   plutil -replace CFBundleIconFile -string "icon" "$APP/Contents/Info.plist"
 fi
 
+# fichiers AppleDouble (._*) copiés depuis le disque exFAT : ils casseraient la signature
+find "$APP" -name '._*' -delete
 # signature ad hoc : macOS rattache les autorisations micro/dictée à l'identifiant de l'app
 codesign --force --deep --sign - "$APP" >/dev/null 2>&1 || true
 echo "✓ Bundle .app : $APP"
@@ -47,4 +49,5 @@ DEST="$HOME/Applications"
 mkdir -p "$DEST"
 rm -rf "$DEST/Gambit Ridge Capital.app"
 cp -R "$APP" "$DEST/"
+find "$DEST/Gambit Ridge Capital.app" -name '._*' -delete
 echo "✓ Installée dans ~/Applications — glisse-la dans ton dock."

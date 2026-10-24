@@ -26,6 +26,11 @@ _START_PRICES = {
     "AMD": 160.0, "AVGO": 900.0, "MU": 110.0, "EQIX": 780.0, "DLR": 180.0,
     "PLTR": 40.0, "ANET": 350.0, "CRWV": 60.0, "GOOGL": 170.0, "AMZN": 185.0,
     "ORCL": 160.0, "META": 520.0, "AI.PA": 140.0, "MSTR": 150.0,
+    # ajouts du 24/10/2026 : matières premières, agricoles, taux, devises
+    "PPLT": 90.0, "PALL": 90.0, "UGA": 65.0, "DBB": 20.0,
+    "CORN": 19.0, "WEAT": 5.0, "SOYB": 22.0, "CANE": 11.0, "DBA": 26.0,
+    "SHY": 82.0, "IEF": 95.0, "TLT": 90.0, "TIP": 108.0, "LQD": 108.0, "HYG": 79.0, "BWX": 23.0, "EMB": 90.0,
+    "NZDUSD": 0.59, "EURGBP": 0.85, "EURJPY": 163.0, "USDMXN": 18.5, "USDSEK": 10.5,
 }
 
 
@@ -44,7 +49,8 @@ def simulate_market_data(
     for ticker in tickers:
         start = _START_PRICES.get(ticker, 100.0)
         is_crypto = ticker in {"BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "AVAX", "DOGE"}
-        is_fx = ticker in {"EURUSD", "USDJPY", "GBPUSD", "AUDUSD", "USDCHF", "USDCAD", "USDCNH", "BRL"}
+        is_fx = ticker in {"EURUSD", "USDJPY", "GBPUSD", "AUDUSD", "USDCHF", "USDCAD", "USDCNH", "BRL",
+                         "NZDUSD", "EURGBP", "EURJPY", "USDMXN", "USDSEK"}
 
         if is_crypto:
             drift, vol = 0.0008, 0.035

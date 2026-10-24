@@ -38,6 +38,8 @@ TEAM_STRATEGIES: dict[str, list[str]] = {
     "Forex": ["momentum", "risk-managed"],
     "IA & Tech": ["momentum", "multifactor"],
     "Commodities": ["momentum", "risk-managed"],
+    "Agricoles": ["momentum", "risk-managed"],
+    "Taux": ["risk-managed", "momentum"],
     "RH": [],
 }
 

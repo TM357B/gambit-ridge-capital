@@ -24,10 +24,10 @@ async function renderCampaigns() {
   h += `<div class="verdict"><div class="v-t">CAMPAGNE N° ${sel.n} · ${esc(sel.date || '')}</div><div class="v-n">${esc(sel.titre)}</div><div class="v-d">${esc(sel.question)}</div>`;
   h += `<div class="v-k">${kpi('Essais', sel.n_essais)}${kpi('Acceptés', sel.n_acceptes, sel.n_acceptes ? 'pos' : '')}${kpi('Enseignement', '<span style="font-size:12px;font-weight:400;line-height:1.35;display:block">' + esc(sel.lecon) + '</span>')}</div></div>`;
   if (sel.courbes && sel.courbes.length) {
-    const cols = ['#ff9900', '#2979ff', '#00e5ff', '#e040fb', '#ffea00', '#00c853', '#9e9e9e'];
+    const cols = ['#E3B65C', '#8AB4FF', '#7FD4E3', '#C9A0F0', '#F2D479', '#6CCB8F', '#A39F96'];
     const base = sel.courbes[0].dates;
     h += `<div class="panel" style="margin-top:10px"><div class="panel-h">Courbes de capital <span class="rt">${esc(sel.debut || base[0])} → ${esc(sel.fin || base[base.length-1])} · base 1</span></div><div class="panel-b">`;
-    h += lineChart('chCamp', sel.courbes.map((s, i) => ({ name: s.nom, x: s.dates, y: s.equity, color: s.ref ? '#ff9900' : cols[(i % (cols.length - 1)) + 1], width: s.ref ? 2.2 : 1.2 })), { log: true, height: 280, zero: 1, yfmt: v => v.toFixed(2) + '×' });
+    h += lineChart('chCamp', sel.courbes.map((s, i) => ({ name: s.nom, x: s.dates, y: s.equity, color: s.ref ? '#E3B65C' : cols[(i % (cols.length - 1)) + 1], width: s.ref ? 2.2 : 1.2 })), { log: true, height: 280, zero: 1, yfmt: v => v.toFixed(2) + '×' });
     h += '</div></div>';
   }
   const one = sel.periode_unique;
@@ -89,7 +89,7 @@ async function projectionPanel() {
      + kpi('Bonne année (1 sur 20)', pc(p.rendement['95']), 'pos')
      + kpi('Probabilité de perdre', fmtPct(p.prob_perte, 0), p.prob_perte > 0.25 ? 'neg' : '')
      + kpi('Baisse à prévoir en route', '−' + fmtPct(p.baisse_max['50'], 1) + ` <span class="muted small">jusqu’à −${fmtPct(p.baisse_max['95'], 1)}</span>`, 'amber') + '</div>';
-  h += lineChart('chProj', [S('95', 'Très favorable (95 %)', '#1b5e20', 1), S('75', 'Favorable (75 %)', '#2e7d32', 1.2), S('50', 'Médiane', '#ff9900', 2.4), S('25', 'Défavorable (25 %)', '#b71c1c', 1.2), S('5', 'Très défavorable (5 %)', '#7f0000', 1)], { height: 230, zero: 100, yfmt: v => v.toFixed(0) });
+  h += lineChart('chProj', [S('95', 'Très favorable (95 %)', '#2F5E43', 1), S('75', 'Favorable (75 %)', '#4E9E6C', 1.2), S('50', 'Médiane', '#E3B65C', 2.4), S('25', 'Défavorable (25 %)', '#B4543F', 1.2), S('5', 'Très défavorable (5 %)', '#6E2E22', 1)], { height: 230, zero: 100, yfmt: v => v.toFixed(0) });
   const P = p.prudent;
   h += '<table style="margin-top:8px"><tr><th>Scénario</th><th class="num">Médiane</th><th class="num">1 an sur 20, pire</th><th class="num">1 an sur 20, meilleur</th><th class="num">Probabilité de perdre</th><th class="num">Perte &gt; 5 %</th><th class="num">Baisse &gt; 10 % en route</th></tr>';
   const row = (n, q, cls) => `<tr><td class="${cls}">${n}</td><td class="num">${pc(q.rendement['50'])}</td><td class="num neg">${pc(q.rendement['5'])}</td><td class="num pos">${pc(q.rendement['95'])}</td><td class="num">${fmtPct(q.prob_perte, 0)}</td><td class="num">${fmtPct(q.prob_perte_5, 0)}</td><td class="num">${fmtPct(q.prob_baisse_10, 0)}</td></tr>`;
@@ -108,8 +108,8 @@ function liveTrackingBlock(s) {
   const perYear = all.length ? tot / last.alpaca_equity / all.length * 252 : 0;
   let h = '<div class="sub-h">Compte réel simulé contre portefeuille de référence</div>';
   h += lineChart('chTrack', [
-    { name: 'Paper de référence (revalorisé au même instant que le compte)', x: D.map(d => d.date), y: D.map(d => d.paper_equity / p0 * 100), color: '#ff9900', width: 2 },
-    { name: 'Compte Alpaca (ordres réellement exécutés)', x: D.map(d => d.date), y: D.map(d => d.alpaca_equity / a0 * 100), color: '#2979ff', width: 2 }], { height: 150, yfmt: v => v.toFixed(2) });
+    { name: 'Paper de référence (revalorisé au même instant que le compte)', x: D.map(d => d.date), y: D.map(d => d.paper_equity / p0 * 100), color: '#E3B65C', width: 2 },
+    { name: 'Compte Alpaca (ordres réellement exécutés)', x: D.map(d => d.date), y: D.map(d => d.alpaca_equity / a0 * 100), color: '#8AB4FF', width: 2 }], { height: 150, yfmt: v => v.toFixed(2) });
   h += `<div class="legend2">Écart cumulé depuis le ${esc(D[0].date)} : <b class="${gap >= 0 ? 'pos' : 'neg'}">${sgn(gap * 100, 2)} point</b> · ${n} ordres, ${Math.round(tot).toLocaleString('fr-FR')} $ échangés · rythme sur ${all.length} jours : <b class="${perYear > 25 ? 'neg' : 'pos'}">${perYear.toFixed(0)} rotations/an</b> (attendu ≈ 15). Du 5 au 9 octobre, le moteur recalculait ses signaux en séance et multipliait les allers-retours crypto : corrigé le 10 octobre.</div>`;
   h += '<div style="overflow-x:auto"><table style="margin-top:6px"><tr><th>Jour</th><th class="num">Compte Alpaca</th><th class="num">Paper (base 100)</th><th class="num">Ordres</th><th class="num">Refusés</th><th class="num">Montant échangé</th><th class="num">Rotation</th></tr>';
   for (const d of all.slice(-10).reverse()) {
@@ -123,7 +123,7 @@ async function systemBlock() {
   let y;
   try { y = await (await fetch('/api/system')).json(); } catch(e) { return ''; }
   if (y.error) return '';
-  const chip = (label, ok, title) => `<span title="${esc(title || '')}" style="display:inline-block;margin:2px 6px 2px 0;padding:1px 8px;border:1px solid ${ok ? '#1b5e20' : 'var(--red)'};color:${ok ? 'var(--green)' : 'var(--red)'};font-size:10px">${ok ? '●' : '▲'} ${esc(label)}</span>`;
+  const chip = (label, ok, title) => `<span title="${esc(title || '')}" style="display:inline-block;margin:2px 6px 2px 0;padding:1px 8px;border:1px solid ${ok ? '#2F5E43' : 'var(--red)'};color:${ok ? 'var(--green)' : 'var(--red)'};font-size:10px">${ok ? '●' : '▲'} ${esc(label)}</span>`;
   const names = { 'gambit-server': 'Terminal', 'gambit-live': 'Moteur live', 'gambit-daily.timer': 'Passage quotidien', 'tailscaled': 'Réseau privé' };
   let h = '<div class="sub-h">Serveur et surveillance</div><div>';
   for (const [k, v] of Object.entries(y.services || {})) if (v !== 'indisponible') h += chip(names[k] || k, v === 'active', v);

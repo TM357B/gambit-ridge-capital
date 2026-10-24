@@ -292,13 +292,13 @@ function renderBacktest() {
   } else if (BT.error) {
     html += `<div class="loader neg">ERREUR : ${esc(BT.error)}</div>`;
   } else {
-    const colors = ['#ff9900','#00c853','#2979ff','#ff1744','#ffea00','#00e5ff','#e040fb'];
+    const colors = ['#E3B65C','#6CCB8F','#8AB4FF','#F08A73','#F2D479','#7FD4E3','#C9A0F0'];
     const names = Object.keys(BT.strategies);
     const allCurves = names.flatMap(n=>BT.strategies[n].equity_curve);
     const min = Math.min(...allCurves), max = Math.max(...allCurves), range = Math.max(max-min,1e-9);
     html += `<div class="panel"><div class="panel-h">Courbes d'equity <span class="rt">${BT.n_periods} périodes · ${BT.n_assets} actifs</span></div><div class="panel-b">`;
     html += `<svg viewBox="0 0 800 240" style="width:100%;height:240px" preserveAspectRatio="none">`;
-    html += `<line x1="5" y1="${235-((100-min)/range)*225}" x2="795" y2="${235-((100-min)/range)*225}" stroke="#333" stroke-dasharray="3"/>`;
+    html += `<line x1="5" y1="${235-((100-min)/range)*225}" x2="795" y2="${235-((100-min)/range)*225}" stroke="#33333B" stroke-dasharray="3"/>`;
     names.forEach((n,i)=>{
       const eq = BT.strategies[n].equity_curve;
       const pts = eq.map((e,j)=>`${(j/(eq.length-1))*790+5},${235-((e-min)/range)*225}`).join(' ');

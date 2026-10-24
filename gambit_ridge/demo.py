@@ -14,7 +14,7 @@ from .council import Council
 from .core.agent import MarketData
 from .core.risk import RiskLimits
 from .data.simulation import all_configured_tickers, simulate_market_data
-from .teams import IA_TICKERS, build_commodities_team, build_crypto_team, build_forex_team, build_ia_tech_team, build_macro_team, build_micro_team
+from .teams import IA_TICKERS, build_agricoles_team, build_commodities_team, build_crypto_team, build_forex_team, build_ia_tech_team, build_macro_team, build_micro_team, build_taux_team
 
 
 def _real_data() -> tuple[dict[str, MarketData], dict[str, list[float]]]:
@@ -52,6 +52,8 @@ def build_fund(factors: dict[str, list[float]] | None = None) -> Council:
         build_forex_team(),
         build_commodities_team(),
         build_ia_tech_team(),
+        build_agricoles_team(),
+        build_taux_team(),
     ]
     return Council(
         managers,

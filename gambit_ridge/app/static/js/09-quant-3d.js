@@ -44,7 +44,7 @@ function s3dDraw(id) {
   if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
   const ctx = cv.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = '#060606'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#16161A'; ctx.fillRect(0, 0, W, H);
   const o = s.opts, Z = s.Z, m = Z.length, n = Z[0].length, map = o.cmap === 'viridis' ? CMAP_VIRIDIS : CMAP_JET;
   const vals = Z.flat().filter(v => v !== null && isFinite(v)).sort((a, b) => a - b);
   if (!vals.length) return;
@@ -74,23 +74,23 @@ function s3dDraw(id) {
   const zt = niceTicks(lo, hi, 4);
   for (const t of zt) {
     const z = Zn(t);
-    line(P(bx, -by, z), P(bx, by, z), '#262626'); line(P(-bx, by, z), P(bx, by, z), '#262626');
-    text(P(bx, -by, z), (o.zfmt || (v => v.toFixed(1)))(t), '#888', P(bx, -by, z)[0] < cx ? 'right' : 'left', P(bx, -by, z)[0] < cx ? -6 : 6, 3);
+    line(P(bx, -by, z), P(bx, by, z), '#2C2C33'); line(P(-bx, by, z), P(bx, by, z), '#2C2C33');
+    text(P(bx, -by, z), (o.zfmt || (v => v.toFixed(1)))(t), '#A39F96', P(bx, -by, z)[0] < cx ? 'right' : 'left', P(bx, -by, z)[0] < cx ? -6 : 6, 3);
   }
-  line(P(bx, by, 0), P(bx, by, H3), '#333'); line(P(bx, -by, 0), P(bx, -by, H3), '#333'); line(P(-bx, by, 0), P(-bx, by, H3), '#333');
+  line(P(bx, by, 0), P(bx, by, H3), '#33333B'); line(P(bx, -by, 0), P(bx, -by, H3), '#33333B'); line(P(-bx, by, 0), P(-bx, by, H3), '#33333B');
   const xt = [...new Set(Array.from({ length: narrow ? 4 : 6 }, (_, k) => Math.round((n - 1) * k / ((narrow ? 4 : 6) - 1))))];
   const yt = [...new Set(Array.from({ length: narrow ? 4 : 6 }, (_, k) => Math.round((m - 1) * k / ((narrow ? 4 : 6) - 1))))];
   for (const j of xt) {
-    line(P(X(j), -1, 0), P(X(j), 1, 0), '#1e1e1e');
-    const p = P(X(j), fy * 1.12, 0); text(p, String((o.xfmt || (v => v))(s.xs[j])), '#999', 'center', 0, 4);
+    line(P(X(j), -1, 0), P(X(j), 1, 0), '#2C2C33');
+    const p = P(X(j), fy * 1.12, 0); text(p, String((o.xfmt || (v => v))(s.xs[j])), '#A39F96', 'center', 0, 4);
   }
   for (const i of yt) {
-    line(P(-1, Y(i), 0), P(1, Y(i), 0), '#1e1e1e');
-    const p = P(fx * 1.12, Y(i), 0); text(p, String((o.yfmt || (v => v))(s.ys[i])), '#999', p[0] < cx ? 'right' : 'left', 0, 4);
+    line(P(-1, Y(i), 0), P(1, Y(i), 0), '#2C2C33');
+    const p = P(fx * 1.12, Y(i), 0); text(p, String((o.yfmt || (v => v))(s.ys[i])), '#A39F96', p[0] < cx ? 'right' : 'left', 0, 4);
   }
-  if (o.xtitle) text(P(0, fy * 1.38, 0), o.xtitle, '#ff9900');
-  if (o.ytitle) { const p = P(fx * 1.42, 0, 0); text(p, o.ytitle, '#ff9900', p[0] < cx ? 'right' : 'left'); }
-  if (o.ztitle) text(P(bx, by, H3 * 1.1), o.ztitle, '#ff9900');
+  if (o.xtitle) text(P(0, fy * 1.38, 0), o.xtitle, '#E3B65C');
+  if (o.ytitle) { const p = P(fx * 1.42, 0, 0); text(p, o.ytitle, '#E3B65C', p[0] < cx ? 'right' : 'left'); }
+  if (o.ztitle) text(P(bx, by, H3 * 1.1), o.ztitle, '#E3B65C');
 
   // facettes, de la plus éloignée à la plus proche (algorithme du peintre)
   const pts = [];
@@ -117,7 +117,7 @@ function s3dDraw(id) {
   if (!narrow) {
     const gx = W - 46, gy = 18, gh = H - 60;
     for (let k = 0; k < 60; k++) { const [r, g, b] = cmapRGB(1 - k / 59, map); ctx.fillStyle = `rgb(${r},${g},${b})`; ctx.fillRect(gx, gy + gh * k / 60, 12, gh / 60 + 1); }
-    for (const t of zt) { const y = gy + gh * (1 - (t - lo) / span); text([gx + 16, y + 3], (o.zfmt || (v => v.toFixed(1)))(t), '#999', 'left'); }
+    for (const t of zt) { const y = gy + gh * (1 - (t - lo) / span); text([gx + 16, y + 3], (o.zfmt || (v => v.toFixed(1)))(t), '#A39F96', 'left'); }
   }
   s.pts = pts; s.lo = lo; s.hi = hi;
 }
@@ -206,13 +206,13 @@ function mcFanSvg(e, spot) {
   const pl = arr => arr.map((v, k) => `${X(k).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
   const band = (a, b) => pl(a) + ' ' + b.map((v, k) => `${X(k).toFixed(1)},${Y(v).toFixed(1)}`).reverse().join(' ');
   let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:${H}px">`;
-  for (const t of niceTicks(lo, hi, 5)) s += `<line x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}" stroke="#1c1c1c"/><text x="${L - 6}" y="${Y(t) + 3}" fill="#666" font-size="10" text-anchor="end">${fmtPx(t)}</text>`;
-  for (let k = 0; k <= 5; k++) { const i = Math.round((N - 1) * k / 5); s += `<text x="${X(i)}" y="${H - 8}" fill="#666" font-size="10" text-anchor="middle">j${e.jours[i]}</text>`; }
-  for (const p of e.trajectoires) s += `<polyline points="${pl(p)}" fill="none" stroke="#5a5a5a" stroke-width="0.7" opacity="0.55"/>`;
-  s += `<polygon points="${band(e.q05, e.q95)}" fill="#ff9900" opacity="0.13"/><polygon points="${band(e.q25, e.q75)}" fill="#ff9900" opacity="0.22"/>`;
-  s += `<line x1="${L}" x2="${W - R}" y1="${Y(spot)}" y2="${Y(spot)}" stroke="#2979ff" stroke-dasharray="4,4"/>`;
-  s += `<polyline points="${pl(e.q50)}" fill="none" stroke="#ff9900" stroke-width="2"/></svg>`;
-  return s + '<div class="legend2"><span style="color:#ff9900">■</span> médiane · bandes 25–75 % et 5–95 % &nbsp; <span style="color:#5a5a5a">■</span> 25 trajectoires tirées &nbsp; <span style="color:#2979ff">■</span> spot</div>';
+  for (const t of niceTicks(lo, hi, 5)) s += `<line x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}" stroke="#2C2C33"/><text x="${L - 6}" y="${Y(t) + 3}" fill="#8A867E" font-size="10" text-anchor="end">${fmtPx(t)}</text>`;
+  for (let k = 0; k <= 5; k++) { const i = Math.round((N - 1) * k / 5); s += `<text x="${X(i)}" y="${H - 8}" fill="#8A867E" font-size="10" text-anchor="middle">j${e.jours[i]}</text>`; }
+  for (const p of e.trajectoires) s += `<polyline points="${pl(p)}" fill="none" stroke="#4A4A52" stroke-width="0.7" opacity="0.55"/>`;
+  s += `<polygon points="${band(e.q05, e.q95)}" fill="#E3B65C" opacity="0.13"/><polygon points="${band(e.q25, e.q75)}" fill="#E3B65C" opacity="0.22"/>`;
+  s += `<line x1="${L}" x2="${W - R}" y1="${Y(spot)}" y2="${Y(spot)}" stroke="#8AB4FF" stroke-dasharray="4,4"/>`;
+  s += `<polyline points="${pl(e.q50)}" fill="none" stroke="#E3B65C" stroke-width="2"/></svg>`;
+  return s + '<div class="legend2"><span style="color:#E3B65C">■</span> médiane · bandes 25–75 % et 5–95 % &nbsp; <span style="color:#4A4A52">■</span> 25 trajectoires tirées &nbsp; <span style="color:#8AB4FF">■</span> spot</div>';
 }
 
 function mcHistSvg(hg, var95) {
@@ -220,10 +220,10 @@ function mcHistSvg(hg, var95) {
   const b = hg.bords, c = hg.comptes, mx = Math.max(...c), lo = b[0], hi = b[b.length - 1];
   const X = v => L + (v - lo) / (hi - lo) * (W - L - R), Y = v => T + (1 - v / mx) * (H - T - B);
   let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:${H}px">`;
-  c.forEach((k, i) => { const col = b[i + 1] <= -var95 ? '#ff1744' : b[i] >= 0 ? '#00c853' : '#ff9900'; s += `<rect x="${X(b[i]) + 0.5}" y="${Y(k)}" width="${Math.max(0.5, X(b[i + 1]) - X(b[i]) - 1)}" height="${H - B - Y(k)}" fill="${col}" opacity="0.85"/>`; });
-  for (const t of niceTicks(lo, hi, 6)) s += `<text x="${X(t)}" y="${H - 8}" fill="#666" font-size="10" text-anchor="middle">${(t * 100).toFixed(0)}%</text>`;
-  s += `<line x1="${X(-var95)}" x2="${X(-var95)}" y1="${T}" y2="${H - B}" stroke="#ff1744" stroke-dasharray="4,3"/><text x="${X(-var95) + 4}" y="${T + 10}" fill="#ff1744" font-size="10">VaR 95 %</text>`;
-  s += `<line x1="${X(0)}" x2="${X(0)}" y1="${T}" y2="${H - B}" stroke="#444"/></svg>`;
+  c.forEach((k, i) => { const col = b[i + 1] <= -var95 ? '#F08A73' : b[i] >= 0 ? '#6CCB8F' : '#E3B65C'; s += `<rect x="${X(b[i]) + 0.5}" y="${Y(k)}" width="${Math.max(0.5, X(b[i + 1]) - X(b[i]) - 1)}" height="${H - B - Y(k)}" fill="${col}" opacity="0.85"/>`; });
+  for (const t of niceTicks(lo, hi, 6)) s += `<text x="${X(t)}" y="${H - 8}" fill="#8A867E" font-size="10" text-anchor="middle">${(t * 100).toFixed(0)}%</text>`;
+  s += `<line x1="${X(-var95)}" x2="${X(-var95)}" y1="${T}" y2="${H - B}" stroke="#F08A73" stroke-dasharray="4,3"/><text x="${X(-var95) + 4}" y="${T + 10}" fill="#F08A73" font-size="10">VaR 95 %</text>`;
+  s += `<line x1="${X(0)}" x2="${X(0)}" y1="${T}" y2="${H - B}" stroke="#3A3A42"/></svg>`;
   return s;
 }
 
@@ -256,8 +256,8 @@ function fnMC(d, sym) {
     h += `<tr><td>+ variable de contrôle (S<sub>T</sub>)</td><td class="num amber"><b>${x.prix_cv.toFixed(4)}</b></td><td class="num muted">${x.se_cv.toFixed(4)}</td><td class="num muted">${(x.prix_cv - 1.96 * x.se_cv).toFixed(3)} – ${(x.prix_cv + 1.96 * x.se_cv).toFixed(3)}</td></tr>`;
     if (x.bs !== null) h += `<tr><td>Black-Scholes exact</td><td class="num"><b>${x.bs.toFixed(4)}</b></td><td class="num muted" colspan="2">écart MC : ${ecart >= 0 ? '+' : ''}${ecart.toFixed(2)} erreur(s) std ${Math.abs(ecart) < 2 ? '<span class="pos">✓ cohérent</span>' : '<span class="neg">à vérifier</span>'}</td></tr>`;
     h += `</table><div class="muted small" style="margin:6px">Variance divisée par <b>${x.gain_variance ? x.gain_variance.toFixed(1) : '—'}</b> grâce à la variable de contrôle (même précision avec ${x.gain_variance ? Math.round(x.gain_variance) : '—'} fois moins de trajectoires). Barrières surveillées chaque séance.</div></div></div>`;
-    const cv = x.convergence, series = [{ name: 'Estimation', x: cv.n, y: cv.prix, color: '#ff9900', width: 2 }, { name: 'IC 95 % bas', x: cv.n, y: cv.bas, color: '#555' }, { name: 'IC 95 % haut', x: cv.n, y: cv.haut, color: '#555' }];
-    if (x.bs !== null) series.push({ name: 'Black-Scholes', x: cv.n, y: cv.n.map(() => x.bs), color: '#2979ff' });
+    const cv = x.convergence, series = [{ name: 'Estimation', x: cv.n, y: cv.prix, color: '#E3B65C', width: 2 }, { name: 'IC 95 % bas', x: cv.n, y: cv.bas, color: '#6E6A63' }, { name: 'IC 95 % haut', x: cv.n, y: cv.haut, color: '#6E6A63' }];
+    if (x.bs !== null) series.push({ name: 'Black-Scholes', x: cv.n, y: cv.n.map(() => x.bs), color: '#8AB4FF' });
     h += '<div class="panel"><div class="panel-h">Convergence <span class="rt">l’intervalle se resserre en 1/√N</span></div><div class="panel-b">' + lineChart('chMCconv', series, { height: 240, yfmt: v => v.toFixed(2) }) + '</div></div></div>';
   }
   h += `<div class="muted small" style="margin:8px 2px">Modèles calibrés sur l’historique réel de ${esc(d.symbol)} (Yahoo, ajusté des dividendes). Le bootstrap rejoue des blocs de 5 séances réelles, recentrés : krachs et regroupements de volatilité conservés. Projection ≠ prévision : elle montre la dispersion compatible avec les hypothèses choisies. Le pricing est toujours fait en risque-neutre, quel que soit le drift de la projection.</div>`;
@@ -294,7 +294,7 @@ function fnOVML(d, sym) {
   h += `</table><div style="margin:8px"><a class="lnk" onclick="ovmlVersMC()">Vérifier ce prix par Monte-Carlo ›</a></div></div></div></div>`;
   const pr = d.profil;
   h += '<div class="panel" style="margin-top:10px"><div class="panel-h">Profil de P&amp;L par action <span class="rt">aujourd’hui et à l’échéance, prime déduite</span></div><div class="panel-b">'
-    + lineChart('chOVML', [{ name: 'Aujourd’hui', x: pr.spot.map(v => fmtPx(v)), y: pr.aujourdhui, color: '#ff9900', width: 2 }, { name: 'À l’échéance', x: pr.spot.map(v => fmtPx(v)), y: pr.echeance, color: '#2979ff' }], { height: 260, zero: 0, yfmt: v => v.toFixed(2) })
+    + lineChart('chOVML', [{ name: 'Aujourd’hui', x: pr.spot.map(v => fmtPx(v)), y: pr.aujourdhui, color: '#E3B65C', width: 2 }, { name: 'À l’échéance', x: pr.spot.map(v => fmtPx(v)), y: pr.echeance, color: '#8AB4FF' }], { height: 260, zero: 0, yfmt: v => v.toFixed(2) })
     + '</div></div>';
   FN_STATE.ovmlDernier = d;
   return h;
@@ -328,7 +328,7 @@ function fnGC3D(d) {
   h += '<div class="panel"><div class="panel-b">' + surface3d('s3dGC3D', M, d.dates, d.yields, { xtitle: 'Maturité', ytitle: 'Date', ztitle: 'Taux %', cmap: 'jet', yfmt: s => String(s).slice(0, 7), zfmt: v => v.toFixed(1), az: -0.75, el: 0.45, height: 500,
     tip: (i, j, v) => `${esc(d.dates[i])} · ${esc(M[j])} : <b>${v.toFixed(2)} %</b>` }) + '</div></div>';
   h += gc3dACP(d);
-  h += '<div class="panel" style="margin-top:10px"><div class="panel-h">Courbe : début vs fin de période</div><div class="panel-b">' + lineChart('chGC3D', [{ name: `Aujourd’hui (${d.dates[d.dates.length - 1]})`, x: M, y: last, color: '#ff9900', width: 2 }, { name: `Début (${d.dates[0]})`, x: M, y: first, color: '#2979ff' }], { height: 220, yfmt: v => v.toFixed(2) + ' %' }) + '</div></div>';
+  h += '<div class="panel" style="margin-top:10px"><div class="panel-h">Courbe : début vs fin de période</div><div class="panel-b">' + lineChart('chGC3D', [{ name: `Aujourd’hui (${d.dates[d.dates.length - 1]})`, x: M, y: last, color: '#E3B65C', width: 2 }, { name: `Début (${d.dates[0]})`, x: M, y: first, color: '#8AB4FF' }], { height: 220, yfmt: v => v.toFixed(2) + ' %' }) + '</div></div>';
   return h;
 }
 
@@ -338,11 +338,11 @@ function budgBars(d) {
   const v = d.balance, N = v.length, lo = Math.min(0, ...v) * 1.08, hi = Math.max(0.1, ...v) * 1.08, rec = new Set(d.recession_years);
   const X = i => L + i / N * (W - L - R), Y = x => T + (1 - (x - lo) / (hi - lo)) * (H - T - B), bw = (W - L - R) / N;
   let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:${H}px">`;
-  d.years.forEach((y, i) => { if (rec.has(y)) s += `<rect x="${X(i)}" y="${T}" width="${bw}" height="${H - T - B}" fill="#ff1744" opacity="0.08"/>`; });
-  for (const t of niceTicks(lo, hi, 4)) s += `<line x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}" stroke="#1c1c1c"/><text x="${L - 6}" y="${Y(t) + 3}" fill="#666" font-size="10" text-anchor="end">${t.toFixed(1)}</text>`;
-  v.forEach((x, i) => { s += `<rect x="${X(i) + 0.5}" y="${Math.min(Y(x), Y(0))}" width="${Math.max(0.6, bw - 1)}" height="${Math.abs(Y(x) - Y(0))}" fill="${x >= 0 ? '#00c853' : '#ff1744'}"><title>${d.years[i]} : ${x.toFixed(3)} T$</title></rect>`; });
-  for (let k = 0; k < N; k += Math.ceil(N / 10)) s += `<text x="${X(k) + bw / 2}" y="${H - 8}" fill="#666" font-size="10" text-anchor="middle">${d.years[k]}</text>`;
-  return s + `<line x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}" stroke="#555"/></svg>`;
+  d.years.forEach((y, i) => { if (rec.has(y)) s += `<rect x="${X(i)}" y="${T}" width="${bw}" height="${H - T - B}" fill="#F08A73" opacity="0.08"/>`; });
+  for (const t of niceTicks(lo, hi, 4)) s += `<line x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}" stroke="#2C2C33"/><text x="${L - 6}" y="${Y(t) + 3}" fill="#8A867E" font-size="10" text-anchor="end">${t.toFixed(1)}</text>`;
+  v.forEach((x, i) => { s += `<rect x="${X(i) + 0.5}" y="${Math.min(Y(x), Y(0))}" width="${Math.max(0.6, bw - 1)}" height="${Math.abs(Y(x) - Y(0))}" fill="${x >= 0 ? '#6CCB8F' : '#F08A73'}"><title>${d.years[i]} : ${x.toFixed(3)} T$</title></rect>`; });
+  for (let k = 0; k < N; k += Math.ceil(N / 10)) s += `<text x="${X(k) + bw / 2}" y="${H - 8}" fill="#8A867E" font-size="10" text-anchor="middle">${d.years[k]}</text>`;
+  return s + `<line x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}" stroke="#6E6A63"/></svg>`;
 }
 function fnBUDG(d) {
   if (d.error) return `<div class="loader neg">${esc(d.error)}</div>`;
@@ -352,7 +352,7 @@ function fnBUDG(d) {
     + kpi(`Solde ${d.years[n]}`, T(d.balance[n]), d.balance[n] < 0 ? 'neg' : 'pos') + kpi('Solde / PIB', d.balance_gdp[n] === null ? '—' : d.balance_gdp[n].toFixed(1) + ' %', 'neg')
     + kpi('Dépenses, var. sur 10 ans', sgn((d.outlays[n] / d.outlays[n - 10] - 1) * 100, 0) + '%') + '</div>';
   h += '<div class="panel"><div class="panel-h">Dépenses et recettes fédérales <span class="rt">milliers de milliards de dollars</span></div><div class="panel-b">'
-    + lineChart('chBUDG', [{ name: 'Dépenses', x: d.years, y: d.outlays, color: '#ff9900', width: 2 }, { name: 'Recettes fiscales', x: d.years, y: d.receipts, color: '#e8e8e8', width: 1.6 }], { height: 300, yfmt: v => v.toFixed(1) + ' T' })
+    + lineChart('chBUDG', [{ name: 'Dépenses', x: d.years, y: d.outlays, color: '#E3B65C', width: 2 }, { name: 'Recettes fiscales', x: d.years, y: d.receipts, color: '#EEEBE4', width: 1.6 }], { height: 300, yfmt: v => v.toFixed(1) + ' T' })
     + '</div></div>';
   h += '<div class="panel" style="margin-top:10px"><div class="panel-h">Excédent / déficit <span class="rt">fond rouge : année de récession (NBER)</span></div><div class="panel-b">' + budgBars(d) + '</div></div>';
   return h;
@@ -390,9 +390,9 @@ function fnILBE(d) {
     + kpi('10 ans réel (TIPS)', `${k.tips10.now.toFixed(2)} % ${ch(k.tips10, 'y1')}`) + kpi(`Inflation réalisée (${esc(k.cpi.date.slice(0, 7))})`, `${k.cpi.now.toFixed(2)} %`) + '</div>';
   h += '<div class="muted small" style="margin:-4px 0 8px">Variations sur 1 mois (sur 1 an pour le taux réel). Point mort = rendement nominal − rendement TIPS : l’inflation moyenne que le marché anticipe. Nominal = réel + point mort.</div>';
   h += '<div class="panel"><div class="panel-h">Points morts d’inflation · 10 ans <span class="rt">ligne pointillée : cible de 2 % de la Fed</span></div><div class="panel-b">'
-    + lineChart('chILBE', [{ name: '5 ans', x: d.dates, y: d.be5, color: '#ff9900', width: 1.8 }, { name: '10 ans', x: d.dates, y: d.be10, color: '#2979ff', width: 1.6 }, { name: '5 ans dans 5 ans', x: d.dates, y: d.fwd5y5y, color: '#00c853', width: 1.3 }], { height: 280, zero: 2, yfmt: v => v.toFixed(2) + ' %' })
+    + lineChart('chILBE', [{ name: '5 ans', x: d.dates, y: d.be5, color: '#E3B65C', width: 1.8 }, { name: '10 ans', x: d.dates, y: d.be10, color: '#8AB4FF', width: 1.6 }, { name: '5 ans dans 5 ans', x: d.dates, y: d.fwd5y5y, color: '#6CCB8F', width: 1.3 }], { height: 280, zero: 2, yfmt: v => v.toFixed(2) + ' %' })
     + '</div></div>';
   h += '<div class="panel" style="margin-top:10px"><div class="panel-h">Inflation réalisée (CPI, sur un an)</div><div class="panel-b">'
-    + lineChart('chILBEcpi', [{ name: 'CPI', x: d.cpi_dates, y: d.cpi_yoy, color: '#e040fb', width: 1.8, area: true }], { height: 200, zero: 2, yfmt: v => v.toFixed(1) + ' %' }) + '</div></div>';
+    + lineChart('chILBEcpi', [{ name: 'CPI', x: d.cpi_dates, y: d.cpi_yoy, color: '#C9A0F0', width: 1.8, area: true }], { height: 200, zero: 2, yfmt: v => v.toFixed(1) + ' %' }) + '</div></div>';
   return h;
 }
