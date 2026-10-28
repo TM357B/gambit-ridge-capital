@@ -13,7 +13,21 @@ const FN_LIST = [
   ['PORT', 'Portefeuille papier', 'PORT'], ['RES', 'Recherche / backtests', 'RES'],
 ];
 const TICKER_ALIAS = { BTC: 'BTC-USD', ETH: 'ETH-USD', XRP: 'XRP-USD', LTC: 'LTC-USD', ADA: 'ADA-USD', BNB: 'BNB-USD', DOGE: 'DOGE-USD', SOL: 'SOL-USD',
-  SPX: '^GSPC', NDX: '^NDX', VIX: '^VIX', DAX: '^GDAXI', CAC: '^FCHI', NKY: '^N225', GOLD: 'GC=F', OIL: 'CL=F' };
+  SPX: '^GSPC', NDX: '^NDX', VIX: '^VIX', DAX: '^GDAXI', CAC: '^FCHI', NKY: '^N225', GOLD: 'GC=F', OIL: 'CL=F',
+  // codes d'indices Bloomberg -> Yahoo
+  INDU: '^DJI', CCMP: '^IXIC', RTY: '^RUT', SX5E: '^STOXX50E', SXXP: '^STOXX', UKX: '^FTSE', HSI: '^HSI', SMI: '^SSMI', IBEX: '^IBEX', AS51: '^AXJO', SPTSX: '^GSPTSE', KOSPI: '^KS11',
+  // contrats génériques de premier rang (CL1 <CMDTY>, ES1 <INDEX>…) -> continu Yahoo
+  CL1: 'CL=F', CO1: 'BZ=F', NG1: 'NG=F', GC1: 'GC=F', SI1: 'SI=F', HG1: 'HG=F', PL1: 'PL=F', HO1: 'HO=F', XB1: 'RB=F',
+  C1: 'ZC=F', W1: 'ZW=F', S1: 'ZS=F', KC1: 'KC=F', SB1: 'SB=F', CC1: 'CC=F', CT1: 'CT=F', LC1: 'LE=F',
+  ES1: 'ES=F', NQ1: 'NQ=F', DM1: 'YM=F', TY1: 'ZN=F', US1: 'ZB=F', FV1: 'ZF=F', TU1: 'ZT=F', XBT: 'BTC-USD', XBTUSD: 'BTC-USD' };
+// touches jaunes (familles d'instruments) : forme saisie -> forme canonique
+const GRC_SECTEURS = { GOVT: 'GOVT', CORP: 'CORP', MTGE: 'MTGE', 'M-MKT': 'M-MKT', MMKT: 'M-MKT', MUNI: 'MUNI', PFD: 'PFD', EQUITY: 'EQUITY', EQTY: 'EQUITY',
+  CMDTY: 'CMDTY', COMDTY: 'CMDTY', INDEX: 'INDEX', CRNCY: 'CRNCY', CURNCY: 'CRNCY', ALPHA: 'ALPHA', CLIENT: 'ALPHA' };
+// codes de place Bloomberg (« IBM US », « AIR FP ») -> suffixe Yahoo
+const GRC_MARCHES = { US: '', UN: '', UW: '', UQ: '', UP: '', UA: '', UR: '', FP: '.PA', LN: '.L', GY: '.DE', GR: '.DE', IM: '.MI', SM: '.MC', NA: '.AS',
+  SW: '.SW', SE: '.SW', VX: '.SW', BB: '.BR', JT: '.T', JP: '.T', HK: '.HK', CN: '.TO', CT: '.TO', AU: '.AX', AT: '.AX', SS: '.ST', DC: '.CO', NO: '.OL',
+  FH: '.HE', ID: '.IR', PL: '.LS', KS: '.KS', IN: '.NS', IB: '.BO', SJ: '.JO', BZ: '.SA', MM: '.MX' };
+const GRC_FNS_INTEGREES = ['GP', 'DES', 'FXC', 'WCRS', 'ECST', 'WEI', 'GC', 'GC3D', 'OVDV', 'OVML', 'MC', 'ILBE', 'BUDG', 'MAC', 'QLBS', 'GPG', 'GPVS', 'SVOL', 'BETA', 'REGM', 'TSA', 'MODL', 'FA', 'EQS', 'GEW', 'BQL', 'ROB', 'HELP', 'MENU'];
 let FN_STATE = { name: 'GP', sym: 'SPY', range: '1A', log: false, wcrsH: '1 mois' };
 const FN_CACHE = {};
 
@@ -28,22 +42,91 @@ function normTicker(t) {
   return t;
 }
 
+/* Syntaxe Bloomberg : TICKER [PLACE] <SECTEUR> FONCTION <GO>
+   « SPY US EQUITY GP », « EURUSD CURNCY GP », « EUR <CRNCY> GP », « CL1 COMDTY GP », « AIR FP EQUITY DES ».
+   Renvoie { fonction, secteur, ticker (symbole Yahoo), brut (ticker tel que saisi), reste (jetons sans secteur ni fonction) }. */
+function grcEstFonction(c) { return GRC_FNS_INTEGREES.includes(c) || !!grcFonction(c); }
+function grcAnalyserCommande(raw) {
+  const toks = String(raw || '').toUpperCase().replace(/<GO>/g, ' ').replace(/[<>]/g, ' ').split(/\s+/).filter(Boolean);
+  const r = { fonction: null, secteur: null, ticker: null, brut: '', reste: [] };
+  let t = toks.slice();
+  if (t.length && grcEstFonction(t[t.length - 1]) && !(t.length === 1 && GRC_SECTEURS[t[0]])) {
+    const c = t.pop(); const f = grcFonction(c);
+    r.fonction = GRC_FNS_INTEGREES.includes(c) ? c : (f ? f.code : c);
+  }
+  t = t.filter(x => { if (GRC_SECTEURS[x]) { r.secteur = GRC_SECTEURS[x]; return false; } return true; });
+  r.reste = t.slice();
+  if (!t.length) return r;
+  let suffixe = '';
+  if (t.length >= 2 && GRC_MARCHES[t[t.length - 1]] !== undefined) suffixe = GRC_MARCHES[t.pop()];
+  r.brut = t.join(' ');
+  let s = t.join('');
+  if (r.secteur === 'CRNCY' && /^[A-Z]{3}$/.test(s) && !TICKER_ALIAS[s]) {  // « EUR Curncy » = EURUSD ; « JPY Curncy » = USDJPY
+    s = ['EUR', 'GBP', 'AUD', 'NZD'].includes(s) ? s + 'USD=X' : (['BTC', 'ETH', 'SOL', 'XRP'].includes(s) ? s + '-USD' : s + '=X');
+    r.ticker = s; return r;
+  }
+  r.ticker = suffixe ? s + suffixe : normTicker(s);
+  return r;
+}
+
 function runCommand(raw) {
-  const toks = (raw || '').trim().toUpperCase().replace(/<GO>/g, '').split(/\s+/).filter(Boolean);
+  const brut = (raw || '').trim().toUpperCase().replace(/<GO>/g, ' ').trim();
+  const toks = brut.replace(/[<>]/g, ' ').split(/\s+/).filter(Boolean);
   if (!toks.length) return;
+  const msg = m => { if (typeof grcMessage === 'function') grcMessage(m); };
+  // menu numéroté façon Bloomberg : sur un écran à lignes numérotées, « n <GO> » ouvre la ligne n ;
+  // sinon 1) à 13) changent d'écran ; 96) actualiser, 97) imprimer, 99) aide
+  if (toks.length === 1 && /^\d+\)?$/.test(toks[0])) {
+    const k = parseInt(toks[0], 10);
+    if (GRC_MENU && GRC_MENU.length && k < 96) {
+      if (k >= 1 && k <= GRC_MENU.length) return runCommand(GRC_MENU[k - 1]);
+      return msg(`Pas de ligne ${k}) dans ce menu (1 à ${GRC_MENU.length})`);
+    }
+    if (k >= 1 && k <= ONGLETS.length) return switchTab(ONGLETS[k - 1]);
+    if (k === 96) { if (currentTab === 'fn') { for (const c in FN_CACHE) delete FN_CACHE[c]; } return switchTab(currentTab); }
+    if (k === 97) return window.print();
+    if (k === 99) { FN_STATE.name = 'HELP'; FN_STATE.aide = null; FN_STATE.aideFiltre = ''; return switchTab('fn'); }
+    return msg(`Aucune action ${k})`);
+  }
+  // navigation : retour, menu, clavier, impression
+  if (toks.length === 1 && ['BACK', 'RETOUR', 'PREC'].includes(toks[0])) return typeof grcRetour === 'function' && grcRetour();
+  if (toks.length === 1 && toks[0] === 'MENU') return typeof toucheMenu === 'function' && toucheMenu();
+  if (toks.length === 1 && ['KEYS', 'CLAVIER', 'RACCOURCIS', 'KEYB'].includes(toks[0])) return typeof grcClavier === 'function' && grcClavier(true);
+  if (toks.length === 1 && ['PRINT', 'IMPRIMER'].includes(toks[0])) return window.print();
+  // HELP : HELP seul = liste ; HELP HELP = aide de l'aide ; HELP <code> = aide de la fonction ; HELP/HL <mots> = recherche
+  if (toks[0] === 'HELP' || toks[0] === 'HL' || (toks.length === 1 && ['FUNC', 'FUNCS', 'FUNCTIONS', 'FONCTIONS', 'AIDE'].includes(toks[0]))) {
+    const rest = toks.slice(1);
+    FN_STATE.name = 'HELP'; FN_STATE.aide = null; FN_STATE.aideFiltre = '';
+    if (rest.length === 1 && rest[0] === 'HELP') FN_STATE.aide = 'assistance';
+    else if (rest.length === 1 && toks[0] === 'HELP' && grcFonction(rest[0])) FN_STATE.aide = grcFonction(rest[0]).code;
+    else if (rest.length) FN_STATE.aideFiltre = rest.join(' ');
+    return switchTab('fn');
+  }
+  const p = grcAnalyserCommande(brut);
+  // touche jaune seule + <GO> : menu de marché ; ticker + touche jaune + <GO> : menu de l'instrument
+  if (p.secteur && !p.fonction && !p.ticker) { FN_STATE.name = 'MENU'; FN_STATE.menu = { type: 'secteur', secteur: p.secteur }; return switchTab('fn'); }
+  if (p.secteur && !p.fonction && p.ticker && p.secteur !== 'ALPHA') { FN_STATE.sym = p.ticker; FN_STATE.name = 'MENU'; FN_STATE.menu = { type: 'titre', sym: p.ticker }; return switchTab('fn'); }
   const nav = { NOTE: 'notes', NOTES: 'notes', RISK: 'risk', RISQUE: 'risk', NH: 'news', N: 'news', NEWS: 'news', PORT: 'paper', PT: 'paper', RES: 'research', BT: 'backtest', STRAT: 'strategies', VOIX: 'voice', VOICE: 'voice', AGENTS: 'agents', RH: 'hr', HR: 'hr', MAIN: 'terminal', TERM: 'terminal', RENDUS: 'reports' };
-  const fns = ['GP', 'DES', 'FXC', 'WCRS', 'ECST', 'WEI', 'GC', 'GC3D', 'OVDV', 'OVML', 'MC', 'ILBE', 'BUDG', 'MAC', 'QLBS', 'GPG', 'GPVS', 'SVOL', 'BETA', 'REGM', 'TSA', 'MODL', 'FA', 'EQS', 'GEW', 'BQL', 'ROB', 'HELP'];
-  const last = toks[toks.length - 1];
-  // CAMP : campagnes de recherche · LIVE : panneau En direct · PROJ : projection à un an (onglet Risque)
-  if (toks.length === 1 && ['CAMP', 'CAMPAGNES'].includes(last)) { RS_SEL = { uni: 'camp' }; return switchTab('research'); }
-  if (toks.length === 1 && last === 'LIVE') return switchTab('paper');
-  if (toks.length === 1 && ['PROJ', 'PROJECTION'].includes(last)) { switchTab('risk'); return setTimeout(() => { const e = document.getElementById('chProj'); if (e) e.closest('.panel').scrollIntoView({ behavior: 'smooth' }); }, 2500); }
-  if (toks.length === 1 && ['GRQL', 'XLS', 'EXCEL'].includes(last)) { FN_STATE.name = 'BQL'; if (last !== 'GRQL' && FN_STATE.bql) FN_STATE.bql.vue = 'excel'; return switchTab('fn'); }
-  if (toks.length === 1 && nav[last]) return switchTab(nav[last]);
-  if (toks.length === 1 && fns.includes(last)) { FN_STATE.name = last; return switchTab('fn'); }
-  if (toks.length >= 2 && fns.includes(last)) { FN_STATE.name = last; FN_STATE.sym = normTicker(toks.slice(0, -1).join('')); return switchTab('fn'); }
+  const cl = p.reste, last = cl[cl.length - 1];
+  if (!p.fonction && cl.length === 1) {
+    // CAMP : campagnes de recherche · LIVE : panneau En direct · PROJ : projection à un an (onglet Risque)
+    if (['CAMP', 'CAMPAGNES'].includes(last)) { RS_SEL = { uni: 'camp' }; return switchTab('research'); }
+    if (last === 'LIVE') return switchTab('paper');
+    if (['PROJ', 'PROJECTION'].includes(last)) { switchTab('risk'); return setTimeout(() => { const e = document.getElementById('chProj'); if (e) e.closest('.panel').scrollIntoView({ behavior: 'smooth' }); }, 2500); }
+    if (['GRQL', 'XLS', 'EXCEL'].includes(last)) { FN_STATE.name = 'BQL'; if (last !== 'GRQL' && FN_STATE.bql) FN_STATE.bql.vue = 'excel'; return switchTab('fn'); }
+    if (nav[last]) return switchTab(nav[last]);
+  }
+  if (p.fonction) {
+    const f = grcFonction(p.fonction);
+    if (f && f.lancer && !GRC_FNS_INTEGREES.includes(p.fonction)) return f.lancer(p.ticker || FN_STATE.sym, p);
+    if (f && f.onglet && !GRC_FNS_INTEGREES.includes(p.fonction)) return switchTab(f.onglet);
+    if (p.fonction === 'MENU') return typeof toucheMenu === 'function' && toucheMenu();
+    FN_STATE.name = p.fonction;
+    if (p.ticker) FN_STATE.sym = p.ticker;  // le titre chargé reste actif pour les fonctions suivantes
+    return switchTab('fn');
+  }
   // ticker seul -> DES
-  FN_STATE.name = 'DES'; FN_STATE.sym = normTicker(toks.join('')); switchTab('fn');
+  FN_STATE.name = 'DES'; FN_STATE.sym = p.ticker || normTicker(toks.join('')); switchTab('fn');
 }
 
 async function fnFetch(name, sym) {
@@ -58,9 +141,12 @@ async function fnFetch(name, sym) {
 async function renderFn() {
   const c = document.getElementById('content');
   const S = FN_STATE;
-  const avecSym = ['GP', 'DES', 'OVDV', 'OVML', 'MC', 'GPVS', 'SVOL', 'BETA', 'REGM', 'TSA', 'FA'];
-  let html = '<div class="fn-bar">' + FN_LIST.map(([k, l, ex]) => `<div class="fn-chip ${S.name===k?'active':''}" onclick="runCommand('${(avecSym.includes(k) ? (S.sym||'SPY') + ' ' : '') + k}')" title="${esc(l)} — ex. ${esc(ex)}"><b>${k}</b> <span>${esc(l)}</span></div>`).join('') + '</div>';
-  c.innerHTML = html + '<div class="loader">Chargement ' + esc(S.name) + (avecSym.includes(S.name) ? ' ' + esc(S.sym) : '') + ({ OVDV: ' — toutes les échéances d’options, une dizaine de secondes', OVML: ' — lecture de la surface de vol', MC: ' — simulation en cours', QLBS: ' — programmation dynamique sur les trajectoires', GPVS: ' — apprentissage du processus gaussien', SVOL: ' — calibrage du filtre particulaire, une vingtaine de secondes', REGM: ' — EM et Baum-Welch', FA: ' — comptes SEC EDGAR', EQS: ' — premier chargement de l’univers : une vingtaine de secondes', GEW: ' — FMI, BRI et OCDE' }[S.name] || '') + '…</div>';
+  const avecSym = { includes: grcAvecTitre };
+  // barre des fonctions : celles de FN_LIST + celles ajoutées au registre par d'autres fichiers (avec un écran « rendu »)
+  const extras = grcListeFonctions().filter(f => f.rendu && f.barre !== false && !FN_LIST.some(x => x[0] === f.code)).map(f => [f.code, f.titre || f.code, f.exemple || f.code]);
+  let html = '<div class="fn-bar">' + FN_LIST.concat(extras).map(([k, l, ex]) => `<div class="fn-chip ${S.name===k?'active':''}" onclick="runCommand('${(avecSym.includes(k) ? (S.sym||'SPY') + ' ' : '') + k}')" title="${esc(l)} — ex. ${esc(ex)}"><b>${k}</b> <span>${esc(l)}</span></div>`).join('') + '</div>';
+  const fReg = grcFonction(S.name);
+  c.innerHTML = html + '<div class="loader">Chargement ' + esc(S.name) + (avecSym.includes(S.name) ? ' ' + esc(S.sym) : '') + (fReg && fReg.chargement && !GRC_FNS_INTEGREES.includes(S.name) ? ' — ' + esc(fReg.chargement) : '') + ({ OVDV: ' — toutes les échéances d’options, une dizaine de secondes', OVML: ' — lecture de la surface de vol', MC: ' — simulation en cours', QLBS: ' — programmation dynamique sur les trajectoires', GPVS: ' — apprentissage du processus gaussien', SVOL: ' — calibrage du filtre particulaire, une vingtaine de secondes', REGM: ' — EM et Baum-Welch', FA: ' — comptes SEC EDGAR', EQS: ' — premier chargement de l’univers : une vingtaine de secondes', GEW: ' — FMI, BRI et OCDE' }[S.name] || '') + '…</div>';
   let body = '';
   try {
     if (S.name === 'HELP') body = fnHelp();
@@ -91,6 +177,8 @@ async function renderFn() {
     else if (S.name === 'GEW') body = fnGEW(await fnFetch('GEW'));
     else if (S.name === 'BQL') body = await fnBQL();
     else if (S.name === 'ROB') body = fnROB(await fnFetch('ROB'));
+    else if (fReg && fReg.rendu) body = await fReg.rendu(S.sym, S);
+    else body = `<div class="loader neg">Fonction inconnue : ${esc(S.name)} — tapez HELP &lt;GO&gt;</div>`;
   } catch(e) { body = `<div class="loader neg">Erreur : ${esc(e.message)}</div>`; }
   if (currentTab === 'fn') { c.innerHTML = html + body; if (typeof s3dMount === 'function') s3dMount(); }
 }
@@ -99,14 +187,7 @@ function fnHeader(title, sub, right) {
   return `<div class="fn-head"><span class="fn-title">${title}</span><span class="fn-sub">${sub || ''}</span><span class="fn-right">${right || ''}</span></div>`;
 }
 
-function fnHelp() {
-  let h = fnHeader('HELP', 'Barre de commande : tape une fonction puis Entrée (raccourci : touche / )');
-  h += '<div class="panel"><div class="panel-b"><table><tr><th>Commande</th><th>Fonction</th><th>Exemple</th></tr>';
-  for (const [k, l, ex] of FN_LIST) h += `<tr><td class="amber">${k}</td><td>${esc(l)}</td><td class="muted">${esc(ex)}</td></tr>`;
-  h += '<tr><td class="amber">TICKER</td><td>Un ticker seul ouvre sa fiche (DES)</td><td class="muted">NVDA · BTC · EURUSD · ^GSPC</td></tr>';
-  h += '</table><div class="muted small" style="margin-top:8px">Tickers Yahoo : actions US (AAPL), ETF (TLT), indices (^GSPC, ^FCHI), devises (EURUSD, USDJPY), cryptos (BTC), futures (GC=F). Non disponibles car nécessitant des consensus d’économistes payants : ECSU, ECFC, FXFC.</div></div></div>';
-  return h;
-}
+// fnHelp() : écran HELP, défini dans 15-navigation.js (aide contextuelle, recherche, aide de l'aide)
 
 function fnGP(d) {
   if (d.error) return `<div class="loader neg">${esc(d.error)}</div>`;
@@ -118,10 +199,10 @@ function fnGP(d) {
   const cut = a => a.slice(i0);
   const x = cut(d.dates), cl = cut(d.close);
   const last = d.close[n - 1], prev = d.close[n - 2], chg = last / prev - 1, perf = last / cl[0] - 1;
-  const series = [{ name: d.symbol, x, y: cl, color: '#E3B65C', width: 1.8 }];
+  const series = [{ name: d.symbol, x, y: cl, color: '#ff9900', width: 1.8 }];
   const m50 = cut(d.sma50), m200 = cut(d.sma200);
-  if (m50.some(v => v !== null)) series.push({ name: 'Moy. 50 j', x, y: m50.map(v => v ?? NaN), color: '#8AB4FF', width: 1 });
-  if (m200.some(v => v !== null)) series.push({ name: 'Moy. 200 j', x, y: m200.map(v => v ?? NaN), color: '#C9A0F0', width: 1 });
+  if (m50.some(v => v !== null)) series.push({ name: 'Moy. 50 j', x, y: m50.map(v => v ?? NaN), color: '#2979ff', width: 1 });
+  if (m200.some(v => v !== null)) series.push({ name: 'Moy. 200 j', x, y: m200.map(v => v ?? NaN), color: '#e040fb', width: 1 });
   let h = fnHeader(`${esc(d.symbol)} <span class="muted">${esc(d.name)}</span>`, `GP · ${esc(lastDate)}`, `<span class="fn-last">${fmtPx(last)}</span> <span class="${chg>=0?'pos':'neg'}">${sgn(chg*100,2)}%</span>`);
   h += '<div class="fn-tools">' + ['1M','3M','6M','YTD','1A','5A','MAX'].map(r => `<span class="rng ${S.range===r?'on':''}" onclick="FN_STATE.range='${r}';renderFn()">${r}</span>`).join('');
   h += `<span class="rng ${S.log?'on':''}" onclick="FN_STATE.log=!FN_STATE.log;renderFn()">LOG</span><span class="muted small" style="margin-left:auto">Performance sur la période : <b class="${perf>=0?'pos':'neg'}">${sgn(perf*100,1)}%</b> · <a class="lnk" onclick="runCommand('${esc(d.symbol)} DES')">fiche DES ›</a></span></div>`;
@@ -144,7 +225,7 @@ async function fnDES(sym) {
   h += '</div><div class="grid g-main">';
   if (g && !g.error) {
     const n = g.dates.length, i0 = Math.max(0, n - 252);
-    h += '<div class="panel"><div class="panel-h">Cours sur 1 an <span class="rt"><a class="lnk" onclick="runCommand(\'' + esc(d.symbol) + ' GP\')">GP ›</a></span></div><div class="panel-b">' + lineChart('chDES', [{ name: d.symbol, x: g.dates.slice(i0), y: g.close.slice(i0), color: '#E3B65C', area: true }], { height: 220, yfmt: v => fmtPx(v) }) + '</div></div>';
+    h += '<div class="panel"><div class="panel-h">Cours sur 1 an <span class="rt"><a class="lnk" onclick="runCommand(\'' + esc(d.symbol) + ' GP\')">GP ›</a></span></div><div class="panel-b">' + lineChart('chDES', [{ name: d.symbol, x: g.dates.slice(i0), y: g.close.slice(i0), color: '#ff9900', area: true }], { height: 220, yfmt: v => fmtPx(v) }) + '</div></div>';
   }
   h += '<div class="panel"><div class="panel-h">Performances</div><div class="panel-b" style="padding:4px"><table>';
   for (const [k, v] of Object.entries(d.returns)) h += `<tr><td>${esc(k)}</td>${v === null ? '<td class="num muted">—</td>' : pctCell(v, 1)}</tr>`;
@@ -160,7 +241,7 @@ async function fnDES(sym) {
 
 function heat(v, scale) {
   const a = Math.min(1, Math.abs(v) / scale);
-  return v >= 0 ? `rgba(108,203,143,${0.12 + 0.6 * a})` : `rgba(240,138,115,${0.12 + 0.6 * a})`;
+  return v >= 0 ? `rgba(0,200,83,${0.12 + 0.6 * a})` : `rgba(255,23,68,${0.12 + 0.6 * a})`;
 }
 
 function fnFXC(d) {
@@ -201,7 +282,7 @@ function sparkline(vals) {
   if (v.length < 2) return '';
   const lo = Math.min(...v), hi = Math.max(...v), W = 110, H = 22;
   const pts = v.map((y, i) => `${(i / (v.length - 1) * W).toFixed(1)},${(H - 2 - (y - lo) / ((hi - lo) || 1) * (H - 4)).toFixed(1)}`).join(' ');
-  return `<svg width="${W}" height="${H}" style="vertical-align:middle"><polyline points="${pts}" fill="none" stroke="#E3B65C" stroke-width="1.2"/></svg>`;
+  return `<svg width="${W}" height="${H}" style="vertical-align:middle"><polyline points="${pts}" fill="none" stroke="#ff9900" stroke-width="1.2"/></svg>`;
 }
 
 function fnECST(d) {
@@ -223,18 +304,11 @@ function ecstChart(id) {
   const d = FN_CACHE['ECST:'] && FN_CACHE['ECST:'].d; if (!d) return;
   const r = d.sections.flatMap(s => s.rows).find(x => x.id === id); if (!r) return;
   const el = document.getElementById('ecstChart');
-  el.innerHTML = `<div class="panel" style="margin-top:10px"><div class="panel-h">${esc(r.label)} <span class="rt">${esc(r.id)} · 24 dernières observations</span></div><div class="panel-b">` + lineChart('chECST', [{ name: r.label, x: r.history_dates, y: r.history, color: '#E3B65C', area: true }], { height: 220, yfmt: v => (Math.abs(v) >= 1000 ? Math.round(v).toLocaleString('fr-FR') : v.toFixed(2)) }) + '</div></div>';
+  el.innerHTML = `<div class="panel" style="margin-top:10px"><div class="panel-h">${esc(r.label)} <span class="rt">${esc(r.id)} · 24 dernières observations</span></div><div class="panel-b">` + lineChart('chECST', [{ name: r.label, x: r.history_dates, y: r.history, color: '#ff9900', area: true }], { height: 220, yfmt: v => (Math.abs(v) >= 1000 ? Math.round(v).toLocaleString('fr-FR') : v.toFixed(2)) }) + '</div></div>';
   el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// barre de commande : « / » pour y aller, Entrée pour exécuter
-document.addEventListener('keydown', e => {
-  const cmd = document.getElementById('cmdInput');
-  if (!cmd) return;
-  if (e.key === '/' && !['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)) { e.preventDefault(); cmd.focus(); cmd.select(); }
-});
-
-
+// raccourcis clavier (/, Ctrl+K, F1-F12, Échap, Page préc./suiv.…) : 15-navigation.js
 
 function fnWEI(d) {
   if (d.error) return `<div class="loader neg">${esc(d.error)}</div>`;
@@ -250,7 +324,7 @@ function fnWEI(d) {
 
 function fnGC(d) {
   if (d.error) return `<div class="loader neg">${esc(d.error)}</div>`;
-  const cols = ['#E3B65C', '#8AB4FF', '#A39F96'];
+  const cols = ['#ff9900', '#2979ff', '#888'];
   let h = fnHeader('GC', 'Courbe des taux du Trésor américain', `<span class="muted small">${esc(d.source)}</span>`);
   h += '<div class="kpis">' + Object.entries(d.spreads).map(([k, v]) => kpi('Pente ' + k, (v >= 0 ? '+' : '') + v + ' pb', v < 0 ? 'neg' : '')).join('') + '</div>';
   h += '<div class="panel"><div class="panel-b">' + lineChart('chGC', d.curves.map((c, i) => ({ name: c.label, x: d.maturities, y: c.yields, color: cols[i], width: i ? 1.3 : 2.2 })), { height: 300, yfmt: v => v.toFixed(2) + ' %' }) + '</div></div>';
@@ -286,11 +360,11 @@ function ovdvHeatmap(d) {
     if (v === null) return;  // pas de cotation : case vide
     svg += `<rect x="${(L + j * cw).toFixed(1)}" y="${(T + i * ch).toFixed(1)}" width="${(cw + 0.6).toFixed(1)}" height="${(ch + 0.6).toFixed(1)}" fill="${volColor(v, lo, hi)}"><title>${Math.round(K[j] * 100)} % du spot · ${Math.round(J[i])} j : ${(v * 100).toFixed(1)} %</title></rect>`;
   }));
-  K.forEach((k, j) => { const p = Math.round(k * 100); if (p % (narrow ? 10 : 5) === 0) svg += `<text x="${L + (j + 0.5) * cw}" y="${H - 8}" fill="#8A867E" font-size="10" text-anchor="middle">${p}%</text>`; });
-  for (let q = 0; q <= 5; q++) { const i = Math.round((J.length - 1) * q / 5); svg += `<text x="${L - 6}" y="${T + (i + 0.5) * ch + 3}" fill="#8A867E" font-size="10" text-anchor="end">${Math.round(J[i])} j</text>`; }
+  K.forEach((k, j) => { const p = Math.round(k * 100); if (p % (narrow ? 10 : 5) === 0) svg += `<text x="${L + (j + 0.5) * cw}" y="${H - 8}" fill="#666" font-size="10" text-anchor="middle">${p}%</text>`; });
+  for (let q = 0; q <= 5; q++) { const i = Math.round((J.length - 1) * q / 5); svg += `<text x="${L - 6}" y="${T + (i + 0.5) * ch + 3}" fill="#666" font-size="10" text-anchor="end">${Math.round(J[i])} j</text>`; }
   const gx = W - R + 14, gh = H - T - B;
   for (let s = 0; s < 40; s++) svg += `<rect x="${gx}" y="${T + gh * s / 40}" width="12" height="${gh / 40 + 0.6}" fill="${volColor(hi - (hi - lo) * s / 39, lo, hi)}"/>`;
-  svg += `<text x="${gx + 16}" y="${T + 9}" fill="#A39F96" font-size="10">${(hi * 100).toFixed(0)}%</text><text x="${gx + 16}" y="${T + gh}" fill="#A39F96" font-size="10">${(lo * 100).toFixed(0)}%</text></svg>`;
+  svg += `<text x="${gx + 16}" y="${T + 9}" fill="#999" font-size="10">${(hi * 100).toFixed(0)}%</text><text x="${gx + 16}" y="${T + gh}" fill="#999" font-size="10">${(lo * 100).toFixed(0)}%</text></svg>`;
   return svg;
 }
 
@@ -317,7 +391,7 @@ function fnOVDV(d) {
   }
   const xk = K.map(m => Math.round(m * 100) + ' %');
   const smiles = choix.map((e, i) => ({ name: `${e.expiry} (${Math.round(e.days)} j)`, x: xk, y: e.smile.map(v => v === null ? NaN : v * 100), color: SERIES_COLORS[i] }));
-  const terme = [{ name: 'Vol ATM', x: d.grid.days.map(j => Math.round(j) + ' j'), y: d.grid.vols.map(r => r[iAtm] === null ? NaN : r[iAtm] * 100), color: '#E3B65C', width: 2 }];
+  const terme = [{ name: 'Vol ATM', x: d.grid.days.map(j => Math.round(j) + ' j'), y: d.grid.vols.map(r => r[iAtm] === null ? NaN : r[iAtm] * 100), color: '#ff9900', width: 2 }];
   h += '<div class="grid g-main">';
   h += '<div class="panel"><div class="panel-h">Smile par maturité <span class="rt">strike / spot · puts à gauche, calls à droite</span></div><div class="panel-b">' + lineChart('chOVDVs', smiles, { height: 280, yfmt: v => v.toFixed(1) + ' %' }) + '</div></div>';
   h += '<div class="panel"><div class="panel-h">Structure par terme ATM <span class="rt">interpolée en variance totale</span></div><div class="panel-b">' + lineChart('chOVDVt', terme, { height: 280, yfmt: v => v.toFixed(1) + ' %' }) + '</div></div>';

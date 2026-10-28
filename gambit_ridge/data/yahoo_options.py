@@ -64,7 +64,7 @@ def _download(symbol: str) -> dict:
                 for c in cotes:
                     out["quotes"].append({
                         "echeance": echeance, "type": type_option, "strike": float(c["strike"]),
-                        "bid": float(c.get("bid") or 0.0), "ask": float(c.get("ask") or 0.0),
+                        "bid": float(c.get("bid") or 0.0), "ask": float(c.get("ask") or 0.0), "last": float(c.get("lastPrice") or 0.0),
                         "volume": int(c.get("volume") or 0), "open_interest": int(c.get("openInterest") or 0),
                     })
     return out

@@ -661,6 +661,10 @@ CATALOGUE = [
         ("Portage de change G10 (carry)", "research/carry.py", "—", "rejeté", "RES"),
         ("Variantes de campagnes (filtre de courbe, vol gérée, rebalancement…)", "research/campaign*.py", "—", "rejeté", "CAMP"),
     ]),
+    ("Thermomètre de bulle", [
+        ("CAPE de Shiller, indicateur de Buffett, largeur (RSP/SPY, secteurs), VIX et SKEW en percentiles historiques", "equity/bulle.py", "—", "analyse", "BULL"),
+        ("Titres IA (semi-conducteurs, big tech, second rang) et capex des hyperscalers (SEC EDGAR)", "equity/bulle.py", "—", "analyse", "BULL"),
+    ]),
     ("Contrôles de robustesse", [
         ("Référence aléatoire : 2 000 stratégies au timing tiré au hasard (test de permutation)", "research/robustesse.py", "—", "analyse", "ROB"),
         ("Probabilité de surapprentissage (PBO, CSCV) sur 108 variantes", "research/robustesse.py", "—", "analyse", "ROB"),
@@ -748,3 +752,29 @@ def rob() -> dict:
             r = np.concatenate([[eq[0] / 1_000_000 - 1], eq[1:] / eq[:-1] - 1])
             rep["reel"] = {"debut": h[0]["date"], "fin": h[-1]["date"], **stats_rendements(r, [x["date"] for x in h])}
     return rep
+
+
+# --------------------------------------------------------------------- HEDGE : couverture du fonds
+
+def hedge(params: dict | None = None) -> dict:
+    """Couverture du portefeuille réel : bêtas, variance minimale, CVaR, contrats MES/ES/ZN, puts, collar, chocs."""
+    from .hedge.portefeuille import analyse
+
+    p = _p(params)
+    if "c" in p:
+        try:
+            p["c"] = float(p["c"])
+        except (TypeError, ValueError):
+            raise ValueError("capital invalide (paramètre c)")
+        if not 1_000 <= p["c"] <= 1e10:
+            raise ValueError("capital hors bornes (1 000 à 10 milliards)")
+    return analyse(p)
+
+
+# --------------------------------------------------------------------- BULL : thermomètre de bulle
+
+def bull(params: dict | None = None) -> dict:
+    """Thermomètre de bulle : CAPE, Buffett, largeur, complaisance, titres IA, capex des hyperscalers."""
+    from .equity.bulle import bulle
+
+    return bulle(rafraichir=_p(params).get("r") == "1")

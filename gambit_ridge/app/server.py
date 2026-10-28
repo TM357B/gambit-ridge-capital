@@ -13,7 +13,8 @@ Endpoints :
   GET /api/research → rapport du banc d'évaluation des stratégies
   GET /api/grql?q=…[&format=csv], /api/bdp?s=&f=, /api/bdh?s=&f=&debut=&fin= → langage de requête et API Excel
   GET /api/xl?fn=bdp|bdh|bds|bql&s=&f=&d=&e=&o=Per=W|Dts=H&u=&x= → complément Excel (TSV, syntaxe Bloomberg)
-  GET /api/fn/{gp,des,fxc,wcrs,ecst,wei,gc,ovdv,ovml,mc,gc3d,budg,mac,ilbe,qlbs,gpg,gpvs,svol,beta,regm,tsa,modl,fa,eqs,gew}[?s=TICKER&…] → fonctions de marché façon Bloomberg
+  GET /api/fn/{gp,des,fxc,wcrs,ecst,wei,gc,ovdv,ovml,mc,gc3d,budg,mac,ilbe,qlbs,gpg,gpvs,svol,beta,regm,tsa,modl,fa,eqs,gew,rob,hedge,bull}[?s=TICKER&…] → fonctions de marché façon Bloomberg
+  GET /api/pro/{hp,dvd,rg,omon,cn,flds,docs}[?s=TICKER&…] → HP, DVD, RG, OMON, CN, FLDS, DOCS (terminal_pro.py)
   GET /api/risk, /api/attribution, /api/ops → risque, attribution, état d'exploitation
   GET /report[/AAAA-MM] → rapport mensuel imprimable
   GET /api/health, /api/tca, /api/notes[/AAAA-Www] ; POST /api/notes/generate
@@ -401,12 +402,28 @@ class Handler(BaseHTTPRequestHandler):
                         "qlbs": lambda: mf.qlbs(qs), "gpg": lambda: mf.gpg(qs), "gpvs": lambda: mf.gpvs(sym or "SPY"),
                         "svol": lambda: mf.svol(sym or "SPY", qs), "beta": lambda: mf.beta(sym or "AAPL", qs),
                         "regm": lambda: mf.regm(sym or "SPY", qs), "tsa": lambda: mf.tsa(sym or "SPY", qs), "modl": mf.modl,
-                        "fa": lambda: mf.fa(sym or "AAPL"), "eqs": lambda: mf.eqs(qs), "gew": mf.gew, "rob": mf.rob}
+                        "fa": lambda: mf.fa(sym or "AAPL"), "eqs": lambda: mf.eqs(qs), "gew": mf.gew, "rob": mf.rob,
+                        "hedge": lambda: mf.hedge(qs), "bull": lambda: mf.bull(qs)}
             if name not in handlers:
                 self._send_json({"error": f"fonction inconnue : {name}"}, 404)
                 return
             try:
                 self._send_json(handlers[name]())
+            except ValueError as exc:
+                self._send_json({"error": str(exc)}, 400)
+            except Exception as exc:  # noqa: BLE001
+                self._send_json({"error": f"données indisponibles ({exc})"}, 502)
+        elif self.path.startswith("/api/pro/"):  # HP, DVD, RG, OMON, CN, FLDS, DOCS (terminal_pro.py)
+            from urllib.parse import parse_qs, urlparse
+
+            from .. import terminal_pro
+
+            u = urlparse(self.path)
+            qs = parse_qs(u.query)
+            try:
+                self._send_json(terminal_pro.repondre(u.path[len("/api/pro/"):], (qs.get("s") or [""])[0], qs))
+            except KeyError as exc:
+                self._send_json({"error": f"fonction inconnue : {exc}"}, 404)
             except ValueError as exc:
                 self._send_json({"error": str(exc)}, 400)
             except Exception as exc:  # noqa: BLE001

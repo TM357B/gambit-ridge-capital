@@ -38,7 +38,7 @@ FLUX = {
     "resultat_operationnel": ["OperatingIncomeLoss"],
     "resultat_net": ["NetIncomeLoss", "ProfitLoss"],
     "flux_operationnel": ["NetCashProvidedByUsedInOperatingActivities"],
-    "investissements": ["PaymentsToAcquirePropertyPlantAndEquipment"],
+    "investissements": ["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets"],  # Amazon : seconde balise
     "dividendes": ["PaymentsOfDividends", "PaymentsOfDividendsCommonStock"],
     "rachats": ["PaymentsForRepurchaseOfCommonStock"],
     "r_et_d": ["ResearchAndDevelopmentExpense"],

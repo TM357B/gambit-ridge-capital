@@ -24,7 +24,7 @@ function globeTexture() {
   if (globeTex) return globeTex;
   const c = document.createElement('canvas'); c.width = GLOBE_TEX_W; c.height = GLOBE_TEX_H;
   const g = c.getContext('2d');
-  g.fillStyle = '#16161A'; g.fillRect(0, 0, GLOBE_TEX_W, GLOBE_TEX_H);
+  g.fillStyle = '#000'; g.fillRect(0, 0, GLOBE_TEX_W, GLOBE_TEX_H);
   g.fillStyle = '#fff';
   for (const ring of CONTINENTS) {
     if (ring.length < 3) continue;
@@ -226,13 +226,13 @@ function drawGlobe() {
   const bg = ctx.createRadialGradient(w/2, h/2, R * 0.9, w/2, h/2, R * 1.25);
   bg.addColorStop(0, 'rgba(90,160,255,0.35)'); bg.addColorStop(0.35, 'rgba(60,120,220,0.10)'); bg.addColorStop(1, 'rgba(5,7,10,0)');
   ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = '#16161A'; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = '#05070a'; ctx.fillRect(0, 0, w, h);
   ctx.globalCompositeOperation = 'source-over';
   // graticule
   ctx.lineWidth = 0.6; ctx.strokeStyle = 'rgba(200,230,255,0.13)';
   for (let lat = -60; lat <= 60; lat += 30) { const pts = []; for (let lon = -180; lon <= 180; lon += 3) pts.push([lat, lon]); globeLine(ctx, pts); }
   for (let lon = -180; lon < 180; lon += 30) { const pts = []; for (let lat = -88; lat <= 88; lat += 3) pts.push([lat, lon]); globeLine(ctx, pts); }
-  ctx.strokeStyle = 'rgba(227,182,92,0.35)'; ctx.lineWidth = 0.9;
+  ctx.strokeStyle = 'rgba(255,153,0,0.35)'; ctx.lineWidth = 0.9;
   { const pts = []; for (let lon = -180; lon <= 180; lon += 2) pts.push([0, lon]); globeLine(ctx, pts); }
   // contour net du disque
   ctx.beginPath(); ctx.arc(w/2, h/2, R, 0, Math.PI*2); ctx.strokeStyle = 'rgba(140,200,255,0.35)'; ctx.lineWidth = 1; ctx.stroke();
@@ -254,13 +254,13 @@ function drawGlobe() {
       ctx.globalAlpha = fade;
       ctx.beginPath(); ctx.arc(pr.sx, ty, size, 0, Math.PI*2); ctx.fillStyle = p.color; ctx.fill();
       ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.stroke();
-      if (p.direction === 'short') { ctx.strokeStyle = '#16161A'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(pr.sx - size*0.6, ty); ctx.lineTo(pr.sx + size*0.6, ty); ctx.stroke(); }
+      if (p.direction === 'short') { ctx.strokeStyle = '#05070a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(pr.sx - size*0.6, ty); ctx.lineTo(pr.sx + size*0.6, ty); ctx.stroke(); }
       if (isSel) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(pr.sx, ty, size + 3, 0, Math.PI*2); ctx.stroke(); }
       if (isHov || isSel) {
         ctx.font = 'bold 11px ' + getComputedStyle(document.body).fontFamily;
         const label = p.ticker, tw = ctx.measureText(label).width;
         ctx.fillStyle = 'rgba(5,7,10,0.85)'; ctx.fillRect(pr.sx + 9, ty - 8, tw + 8, 16);
-        ctx.fillStyle = '#F0D49A'; ctx.fillText(label, pr.sx + 13, ty + 4);
+        ctx.fillStyle = '#ffcc80'; ctx.fillText(label, pr.sx + 13, ty + 4);
       }
       ctx.globalAlpha = 1;
     }
@@ -283,7 +283,7 @@ async function renderReports() {
   let html = '';
   html += '<div class="panel-h">Globe des découvertes <span class="rt">' + (GLOBE ? GLOBE.pins.length : 0) + ' épingles · ' + (GLOBE ? GLOBE.legend.length : 0) + ' agents</span></div>';
   html += '<div class="panel-b" style="display:flex;gap:12px;padding:8px">';
-  html += '<canvas id="globeCanvas" style="flex:1 1 560px;width:100%;max-width:780px;height:480px;background:#16161A;border:1px solid #1e3a5f;border-radius:6px;cursor:grab;display:block"></canvas>';
+  html += '<canvas id="globeCanvas" style="flex:1 1 560px;width:100%;max-width:780px;height:480px;background:#05070a;border:1px solid #1e3a5f;border-radius:6px;cursor:grab;display:block"></canvas>';
   html += '<div style="flex:1;min-width:220px"><div class="hdr-row" style="margin-bottom:6px">LÉGENDE (1 couleur = 1 agent)</div><div id="globeInfo" class="panel" style="margin-bottom:8px;padding:8px;font-size:12px"><span class="muted">Cliquez sur une épingle…</span></div><div style="max-height:320px;overflow-y:auto;font-size:11px">';
   if (GLOBE) for (const l of GLOBE.legend) html += '<div><span style="color:' + l.color + '">●</span> ' + esc(l.agent) + ' <span class="muted">— ' + esc(l.team) + ' (' + l.n_pins + ')</span></div>';
   html += '</div><div class="muted" style="font-size:10px;margin-top:8px">Glissez pour faire tourner la planète (rotation automatique au repos). Survolez ou cliquez une épingle pour le détail. ● = long, ● barré = short.</div></div>';

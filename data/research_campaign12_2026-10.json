@@ -1,0 +1,545 @@
+{
+ "genere_le": "2026-10-27",
+ "protocole": "Campagne de recherche n° 12 (octobre 2026) — un vrai hedge : couvrir le fonds avec les maths.\n\nPROTOCOLE FIGÉ ET COMMITÉ AVANT TOUT CALCUL (pré-enregistrement) :\n\nQuestion : le fonds n'a aucune couverture explicite. Sa protection vient de la couche tendance\n(qui peut vendre) et des obligations du socle 60/40. Or le socle reste long actions en toute\ncirconstance (30 % SPY), et en 2022 les obligations ont baissé avec les actions. Une couverture\ncalculée — au sens des docs lus par l'araignée (scripts/araignee) — fait-elle mieux ?\n  - ratio à variance minimale u* = Cov/Var (Dixon-Halperin-Bilokon, ch. 10, éq. 10.10) ;\n  - couverture du bêta par contrat sur indice, contrats ≈ β × valeur / notionnel (Belghaieb,\n    « Sales & Trading », p. 15) ; ici le contrat est représenté par une position vendeuse de SPY\n    (le micro E-mini MES suit le S&P 500 ; base et financement négligés, coût 5 bps comme l'ETF) ;\n  - protection par options (puts, collar) valorisées en Black-Scholes à la vol du VIX + skew ;\n  - couverture minimisant la CVaR (Rockafellar-Uryasev).\n\nRéférence : la stratégie ETF de production (identique aux campagnes 7 à 9 : « 60/40 + couche\ntendance », 20 ETF, rebalancement tous les 5 jours, 5 bps). Rien ne change dans la stratégie :\non AJOUTE une couche de couverture sur SPY.\n\nBêta du portefeuille β_t = Σ_j w_j,t β_j,t, avec w les poids cibles de production en t et β_j,t\nle bêta EWMA (demi-vie 63 j) de chaque ETF contre SPY, causal. Couverture h_t (fraction de\nl'actif vendue en SPY) : poids SPY ramené de w_SPY,t à w_SPY,t − h_t.\n\nEssais (6), paramètres fixés par construction ou tirés de la littérature, AUCUNE grille :\n  H1 Couverture partielle permanente : h = 0,5 β_t (on garde la moitié de la prime actions).\n  H2 Couverture conditionnelle à la tendance : h = β_t si SPY < sa moyenne 200 j, sinon 0.\n  H3 Couverture des corrélations en crise : h = β_t si la corrélation EWMA 63 j SPY-IEF > 0\n     (les obligations ne couvrent plus les actions, cas de 2022), sinon 0.\n  H4 Puts protecteurs : achat tous les 21 jours de puts SPY 5 % hors de la monnaie à 21 jours,\n     notionnel max(β_t, 0) × actif, vol = VIX + 3 pts, frais 5 % de la prime, règlement en\n     espèces à l'échéance.\n  H5 Collar : H4 + vente de calls 5 % hors de la monnaie au même notionnel, vol = VIX − 2 pts.\n  H6 Couverture à CVaR minimale : h_t = argmin CVaR 95 % de (r_ref − h r_SPY) sur les 252\n     derniers jours, h ∈ [0, max(β_t, 0)] par pas de 0,05, réestimé tous les 5 jours.\n\nPériodes et règle d'acceptation : identiques à la campagne 7 (5 critères) : développement\n-> 2019-12-31 après 260 séances de rodage ; Sharpe dév. >= réf. + 0,05 ; DSR >= 0,90 ; Sharpe\nvalidation >= réf. − 0,05 ; pire baisse validation pas plus de 3 points au-delà de la réf. ;\nSharpe 2001-2007 (proxys de la campagne 5) >= réf. − 0,05. Rapportés sans être des critères :\nCVaR 95 % quotidienne, rendement et pire baisse dans les trois crises (2008-09-01 -> 2009-03-09,\n2020-02-19 -> 2020-03-23, 2022-01-03 -> 2022-10-12), coût annuel de la couverture.\n\nTests multiples : DSR calculé sur tous les Sharpe de développement des campagnes 1, 2, 4, 6 et\n7 plus les 6 essais de cette campagne. Un essai accepté n'entre au portefeuille qu'avec\nl'accord de Tom.\n\nUsage : python3 -m gambit_ridge.research.campaign12\nSortie : data/research_campaign12_2026-10.json\n",
+ "regles": {
+  "dev_gain": 0.05,
+  "dsr": 0.9,
+  "val_tol": 0.05,
+  "dd_tol": 0.03
+ },
+ "parametres": {
+  "demi_vie_beta": 63,
+  "sma": 200,
+  "part_h1": 0.5,
+  "put_otm": 0.05,
+  "call_otm": 0.05,
+  "echeance": 21,
+  "skew_put": 0.03,
+  "skew_call": -0.02,
+  "frais_prime": 0.05,
+  "cvar": {
+   "fenetre": 252,
+   "alpha": 0.95,
+   "pas": 0.05
+  }
+ },
+ "essais_comptes_dans_le_dsr": 50,
+ "duree_s": 25,
+ "resultats": {
+  "REF": {
+   "nom": "REF — Référence — production actuelle, sans couverture",
+   "description": "",
+   "developpement": {
+    "sharpe": 0.9923097804837815,
+    "cagr": 0.06297862292703149,
+    "vol": 0.06359461453525708,
+    "max_dd": -0.11865519398296413,
+    "sortino": 1.3319415936839092,
+    "calmar": 0.5307700473362643,
+    "cvar95": -0.009480363117425067,
+    "n_days": 2945,
+    "turnover_annuel": 8.76081893345847,
+    "gross_moyen": 1.3101449289329115,
+    "couts_annuels": 0.004380409466729235
+   },
+   "validation": {
+    "sharpe": 1.0095813063879286,
+    "cagr": 0.07588176868886709,
+    "vol": 0.07526275467193881,
+    "max_dd": -0.10316298176036882,
+    "sortino": 1.3285022356706035,
+    "calmar": 0.7355523017464574,
+    "cvar95": -0.011336350658261288,
+    "n_days": 1712,
+    "turnover_annuel": 9.20413095043394,
+    "gross_moyen": 1.2789303366550808,
+    "couts_annuels": 0.004602065475216971
+   },
+   "cvar95_jour": {
+    "developpement": 0.009500007398530515,
+    "validation": 0.011385609323937071
+   },
+   "crises": {
+    "2008": {
+     "rendement": -0.08355331213713169,
+     "pire_baisse": -0.09099048477854743
+    },
+    "covid": {
+     "rendement": -0.09481656791041404,
+     "pire_baisse": -0.0968378253806692
+    },
+    "2022": {
+     "rendement": 0.027780515504801206,
+     "pire_baisse": -0.03688645529848689
+    }
+   },
+   "couverture_moyenne": 0.38840205958576834,
+   "echantillon_2001_2007": {
+    "sharpe": 1.5658590611436443,
+    "cagr": 0.10640696560042451,
+    "vol": 0.06597874726068073,
+    "max_dd": -0.0893294862196339,
+    "sortino": 2.4089280078183837,
+    "calmar": 1.191174046818117,
+    "cvar95": -0.008703767309645389,
+    "n_days": 1270,
+    "turnover_annuel": 6.945391676258367,
+    "gross_moyen": 1.3857661266004087,
+    "couts_annuels": 0.0034726958381291833
+   },
+   "dsr_developpement": 0.9760635274026046
+  },
+  "H1": {
+   "nom": "H1 — Couverture permanente 0,5 β (variance minimale)",
+   "description": "Moitié du bêta vendue en contrat S&P 500.",
+   "developpement": {
+    "sharpe": 0.9445747876382632,
+    "cagr": 0.04328146987697101,
+    "vol": 0.0459801913748458,
+    "max_dd": -0.08377593393635673,
+    "sortino": 1.3152560574798755,
+    "calmar": 0.5166336899311833,
+    "cvar95": -0.006764757829831811,
+    "n_days": 2945,
+    "turnover_annuel": 9.538416799672142,
+    "gross_moyen": 1.128193346005021,
+    "couts_annuels": 0.004769208399836071
+   },
+   "validation": {
+    "sharpe": 0.8170542718087828,
+    "cagr": 0.039789846802721796,
+    "vol": 0.04924327922209645,
+    "max_dd": -0.08897758663723215,
+    "sortino": 1.0595624733178994,
+    "calmar": 0.4471895485876436,
+    "cvar95": -0.0074595720890998606,
+    "n_days": 1712,
+    "turnover_annuel": 9.838485742580223,
+    "gross_moyen": 1.064395380413491,
+    "couts_annuels": 0.004919242871290111
+   },
+   "cvar95_jour": {
+    "developpement": 0.006778145923431251,
+    "validation": 0.00749262136776404
+   },
+   "crises": {
+    "2008": {
+     "rendement": -0.0536993096974383,
+     "pire_baisse": -0.06276051074735634
+    },
+    "covid": {
+     "rendement": -0.06092967515522685,
+     "pire_baisse": -0.06727856488459838
+    },
+    "2022": {
+     "rendement": 0.06197943689930652,
+     "pire_baisse": -0.019278562257493137
+    }
+   },
+   "couverture_moyenne": 0.19417168963587272,
+   "cout_annuel_vs_ref": {
+    "developpement": -0.01969715305006048,
+    "validation": -0.036091921886145295
+   },
+   "echantillon_2001_2007": {
+    "sharpe": 1.6922697467415933,
+    "cagr": 0.08986682826534054,
+    "vol": 0.051648435791159006,
+    "max_dd": -0.0808460658663383,
+    "sortino": 2.5807120154077237,
+    "calmar": 1.1115794850663003,
+    "cvar95": -0.006968528927122586,
+    "n_days": 1270,
+    "turnover_annuel": 7.352649658266328,
+    "gross_moyen": 1.1904588029487109,
+    "couts_annuels": 0.0036763248291331644
+   },
+   "dsr_developpement": 0.966032406887307,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "H2": {
+   "nom": "H2 — Couverture du bêta si SPY < moyenne 200 j",
+   "description": "Bêta entièrement couvert en tendance baissière.",
+   "developpement": {
+    "sharpe": 1.0159331752177763,
+    "cagr": 0.060591215770321005,
+    "vol": 0.05966433273516782,
+    "max_dd": -0.08575853599106062,
+    "sortino": 1.338198513184899,
+    "calmar": 0.706532767497768,
+    "cvar95": -0.009085781262142196,
+    "n_days": 2945,
+    "turnover_annuel": 9.4237306822905,
+    "gross_moyen": 1.2809541044016686,
+    "couts_annuels": 0.004711865341145251
+   },
+   "validation": {
+    "sharpe": 0.8596709631544995,
+    "cagr": 0.05816314214609064,
+    "vol": 0.06850255519928229,
+    "max_dd": -0.09330101066221283,
+    "sortino": 1.1275429311758107,
+    "calmar": 0.6233924127217078,
+    "cvar95": -0.010497030717289697,
+    "n_days": 1712,
+    "turnover_annuel": 9.981717237569866,
+    "gross_moyen": 1.2444249900605804,
+    "couts_annuels": 0.004990858618784933
+   },
+   "cvar95_jour": {
+    "developpement": 0.009105663188451185,
+    "validation": 0.010538518033879958
+   },
+   "crises": {
+    "2008": {
+     "rendement": -0.02341687692954031,
+     "pire_baisse": -0.052808135902276954
+    },
+    "covid": {
+     "rendement": -0.07186492942484679,
+     "pire_baisse": -0.08327519350102663
+    },
+    "2022": {
+     "rendement": 0.029759836805804074,
+     "pire_baisse": -0.041984925252229965
+    }
+   },
+   "couverture_moyenne": 0.03420008119965713,
+   "cout_annuel_vs_ref": {
+    "developpement": -0.002387407156710486,
+    "validation": -0.01771862654277645
+   },
+   "echantillon_2001_2007": {
+    "sharpe": 1.5961624937331567,
+    "cagr": 0.10402376547970738,
+    "vol": 0.06326495795096738,
+    "max_dd": -0.0888552874081129,
+    "sortino": 2.363461873209224,
+    "calmar": 1.1707099094950373,
+    "cvar95": -0.008578639415299063,
+    "n_days": 1270,
+    "turnover_annuel": 8.294956255194009,
+    "gross_moyen": 1.3401550746820674,
+    "couts_annuels": 0.004147478127597005
+   },
+   "dsr_developpement": 0.9795565372558671,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "H3": {
+   "nom": "H3 — Couverture du bêta si corrélation SPY-IEF > 0",
+   "description": "Quand les obligations ne couvrent plus.",
+   "developpement": {
+    "sharpe": 0.9923097804837815,
+    "cagr": 0.06297862292703149,
+    "vol": 0.06359461453525708,
+    "max_dd": -0.11865519398296413,
+    "sortino": 1.3319415936839092,
+    "calmar": 0.5307700473362643,
+    "cvar95": -0.009480363117425067,
+    "n_days": 2945,
+    "turnover_annuel": 8.76081893345847,
+    "gross_moyen": 1.3101449289329115,
+    "couts_annuels": 0.004380409466729235
+   },
+   "validation": {
+    "sharpe": 0.6809192180166729,
+    "cagr": 0.042960432160117135,
+    "vol": 0.06486967100045901,
+    "max_dd": -0.13322909943198574,
+    "sortino": 0.8395700197852358,
+    "calmar": 0.32245532202256383,
+    "cvar95": -0.010174294851093956,
+    "n_days": 1712,
+    "turnover_annuel": 10.979226721488791,
+    "gross_moyen": 1.2228289427044492,
+    "couts_annuels": 0.005489613360744396
+   },
+   "cvar95_jour": {
+    "developpement": 0.009500007398530515,
+    "validation": 0.010222689879765165
+   },
+   "crises": {
+    "2008": {
+     "rendement": -0.08355331213713169,
+     "pire_baisse": -0.09099048477854743
+    },
+    "covid": {
+     "rendement": -0.09481656791041404,
+     "pire_baisse": -0.0968378253806692
+    },
+    "2022": {
+     "rendement": 0.05275058125058485,
+     "pire_baisse": -0.03688645529848689
+    }
+   },
+   "couverture_moyenne": 0.07379513300953618,
+   "cout_annuel_vs_ref": {
+    "developpement": 0.0,
+    "validation": -0.032921336528749956
+   },
+   "echantillon_2001_2007": {
+    "sharpe": 1.525924091954191,
+    "cagr": 0.09662058257182315,
+    "vol": 0.061701977143856036,
+    "max_dd": -0.0893294862196339,
+    "sortino": 2.3073128996533803,
+    "calmar": 1.0816202651637634,
+    "cvar95": -0.00834720380940591,
+    "n_days": 1270,
+    "turnover_annuel": 8.55435649466681,
+    "gross_moyen": 1.3653311645629085,
+    "couts_annuels": 0.004277178247333404
+   },
+   "dsr_developpement": 0.9760635274026046,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": false,
+    "echantillon_2001_2007": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "H4": {
+   "nom": "H4 — Puts SPY 5 % hors de la monnaie, 1 mois",
+   "description": "Notionnel β, vol VIX + 3 pts, frais 5 %.",
+   "developpement": {
+    "sharpe": 0.8413801837981391,
+    "cagr": 0.045642815172458384,
+    "vol": 0.05483799040032591,
+    "max_dd": -0.10095705374924728,
+    "sortino": 1.1967853053642308,
+    "calmar": 0.45210129928933956,
+    "cvar95": -0.007991393945267327,
+    "n_days": 2945,
+    "turnover_annuel": 8.76081893345847,
+    "gross_moyen": 1.3101449289329115,
+    "couts_annuels": 0.004380409466729235
+   },
+   "validation": {
+    "sharpe": 0.7879281090889652,
+    "cagr": 0.04639613962605793,
+    "vol": 0.05983636657547982,
+    "max_dd": -0.09850484422215841,
+    "sortino": 1.1199204455909249,
+    "calmar": 0.4710036343128518,
+    "cvar95": -0.008661852863515467,
+    "n_days": 1712,
+    "turnover_annuel": 9.20413095043394,
+    "gross_moyen": 1.2789303366550808,
+    "couts_annuels": 0.004602065475216971
+   },
+   "cvar95_jour": {
+    "developpement": 0.00800573939344684,
+    "validation": 0.008691933853253613
+   },
+   "crises": {
+    "2008": {
+     "rendement": -0.06822250112050354,
+     "pire_baisse": -0.07576959876631839
+    },
+    "covid": {
+     "rendement": -0.03561056803161733,
+     "pire_baisse": -0.05119070273919546
+    },
+    "2022": {
+     "rendement": 0.03276937362559229,
+     "pire_baisse": -0.028185514553636493
+    }
+   },
+   "couverture_moyenne": 0.38840205958576834,
+   "cout_annuel": -0.02133001755847726,
+   "cout_annuel_vs_ref": {
+    "developpement": -0.017335807754573107,
+    "validation": -0.02948562906280916
+   },
+   "echantillon_2001_2007": {
+    "sharpe": 1.4032851194811775,
+    "cagr": 0.08716513455386399,
+    "vol": 0.06088533277534509,
+    "max_dd": -0.0963578068961169,
+    "sortino": 2.1925596652370367,
+    "calmar": 0.9045985723589216,
+    "cvar95": -0.008022414058576805,
+    "n_days": 1270,
+    "turnover_annuel": 6.945391676258367,
+    "gross_moyen": 1.3857661266004087,
+    "couts_annuels": 0.0034726958381291833
+   },
+   "dsr_developpement": 0.9304360381755094,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": false
+   },
+   "verdict": "REJETÉ"
+  },
+  "H5": {
+   "nom": "H5 — Collar put −5 % / call +5 %, 1 mois",
+   "description": "Puts financés par la vente de calls.",
+   "developpement": {
+    "sharpe": 0.9956412752430615,
+    "cagr": 0.05249960516342034,
+    "vol": 0.05279737393988034,
+    "max_dd": -0.09358019338011488,
+    "sortino": 1.3953420597534028,
+    "calmar": 0.5610119328368062,
+    "cvar95": -0.0077226124894382705,
+    "n_days": 2945,
+    "turnover_annuel": 8.76081893345847,
+    "gross_moyen": 1.3101449289329115,
+    "couts_annuels": 0.004380409466729235
+   },
+   "validation": {
+    "sharpe": 1.1133363986362461,
+    "cagr": 0.06229068805443516,
+    "vol": 0.05567530177265465,
+    "max_dd": -0.08728088234088761,
+    "sortino": 1.5290717692921156,
+    "calmar": 0.7136807784681899,
+    "cvar95": -0.008183110533259201,
+    "n_days": 1712,
+    "turnover_annuel": 9.20413095043394,
+    "gross_moyen": 1.2789303366550808,
+    "couts_annuels": 0.004602065475216971
+   },
+   "cvar95_jour": {
+    "developpement": 0.007736561073693723,
+    "validation": 0.008212533864553243
+   },
+   "crises": {
+    "2008": {
+     "rendement": -0.047955385801289774,
+     "pire_baisse": -0.06205036865035696
+    },
+    "covid": {
+     "rendement": -0.03039877796245216,
+     "pire_baisse": -0.04643332181879267
+    },
+    "2022": {
+     "rendement": 0.05189602925317338,
+     "pire_baisse": -0.026985433332074482
+    }
+   },
+   "couverture_moyenne": 0.38840205958576834,
+   "cout_annuel": -0.011810353513074726,
+   "cout_annuel_vs_ref": {
+    "developpement": -0.010479017763611154,
+    "validation": -0.013591080634431929
+   },
+   "echantillon_2001_2007": {
+    "sharpe": 1.5956232218830961,
+    "cagr": 0.09661760556302057,
+    "vol": 0.05889905761331901,
+    "max_dd": -0.09147699751778497,
+    "sortino": 2.4635197160530726,
+    "calmar": 1.0561956358945446,
+    "cvar95": -0.007791507487745052,
+    "n_days": 1270,
+    "turnover_annuel": 6.945391676258367,
+    "gross_moyen": 1.3857661266004087,
+    "couts_annuels": 0.0034726958381291833
+   },
+   "dsr_developpement": 0.9768995826911356,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": true,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": true
+   },
+   "verdict": "REJETÉ"
+  },
+  "H6": {
+   "nom": "H6 — Couverture à CVaR 95 % minimale (252 j)",
+   "description": "h ∈ [0, β], Rockafellar-Uryasev.",
+   "developpement": {
+    "sharpe": 0.8586856618829144,
+    "cagr": 0.03858689493409173,
+    "vol": 0.045289529224126206,
+    "max_dd": -0.08548238800651772,
+    "sortino": 1.1980218915690828,
+    "calmar": 0.45140169611487246,
+    "cvar95": -0.006575512730144831,
+    "n_days": 2945,
+    "turnover_annuel": 9.597270290020568,
+    "gross_moyen": 1.1283211852872739,
+    "couts_annuels": 0.004798635145010284
+   },
+   "validation": {
+    "sharpe": 0.7497780294861591,
+    "cagr": 0.030774852601821223,
+    "vol": 0.04158235087031243,
+    "max_dd": -0.09228206823777547,
+    "sortino": 0.9866400440527169,
+    "calmar": 0.3334868104876696,
+    "cvar95": -0.0062396587972776,
+    "n_days": 1712,
+    "turnover_annuel": 9.633068046584553,
+    "gross_moyen": 1.0671696493772274,
+    "couts_annuels": 0.004816534023292277
+   },
+   "cvar95_jour": {
+    "developpement": 0.006588871020965833,
+    "validation": 0.006263665914195533
+   },
+   "crises": {
+    "2008": {
+     "rendement": -0.058994811021740756,
+     "pire_baisse": -0.06882645047327507
+    },
+    "covid": {
+     "rendement": -0.022025751317176767,
+     "pire_baisse": -0.03552317344539124
+    },
+    "2022": {
+     "rendement": 0.09459788367928379,
+     "pire_baisse": -0.01793286821090967
+    }
+   },
+   "couverture_moyenne": 0.26373201631951904,
+   "cout_annuel_vs_ref": {
+    "developpement": -0.02439172799293976,
+    "validation": -0.04510691608704587
+   },
+   "echantillon_2001_2007": {
+    "sharpe": 1.6257058328961174,
+    "cagr": 0.08136320222807525,
+    "vol": 0.04885707802248332,
+    "max_dd": -0.07819037404595648,
+    "sortino": 2.455141813260685,
+    "calmar": 1.0405782453509422,
+    "cvar95": -0.006724681172758125,
+    "n_days": 1270,
+    "turnover_annuel": 7.705556547034918,
+    "gross_moyen": 1.2281943596944584,
+    "couts_annuels": 0.0038527782735174594
+   },
+   "dsr_developpement": 0.9378953140944225,
+   "criteres": {
+    "gain_developpement": false,
+    "dsr": true,
+    "validation_non_contredite": false,
+    "drawdown_validation": true,
+    "echantillon_2001_2007": true
+   },
+   "verdict": "REJETÉ"
+  }
+ }
+}

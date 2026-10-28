@@ -24,7 +24,7 @@ async function render() {
   // colonne gauche : courbe + expositions
   html += '<div class="panel"><div class="panel-h">Portefeuille papier <span class="rt">' + esc(d ? d.strategy : '') + '</span></div><div class="panel-b">';
   if (d && d.equity_history.length > 1) {
-    html += lineChart('chTermEq', [{ name: 'Équity', x: d.equity_history.map(h=>h.date), y: d.equity_history.map(h=>h.equity), color: '#E3B65C', area: true }], { height: 200, zero: d.initial_capital, yfmt: v => (v/1e6).toFixed(3)+' M$' });
+    html += lineChart('chTermEq', [{ name: 'Équity', x: d.equity_history.map(h=>h.date), y: d.equity_history.map(h=>h.equity), color: '#ff9900', area: true }], { height: 200, zero: d.initial_capital, yfmt: v => (v/1e6).toFixed(3)+' M$' });
   } else html += '<div class="muted" style="padding:10px 4px 4px">Premier jour du nouveau portefeuille — la courbe réelle apparaîtra dès demain.</div>';
   if (d && d.equity_history.length < 20) html += await backtestPreview('chTermBt');
   if (d) {
@@ -83,9 +83,9 @@ async function renderResearch() {
   html += `<div class="muted small proto">Protocole figé : sélection sur la période de <b>développement</b> (${esc(U.debut)} → ${esc(uni==='etf'?P.dev_fin:P.crypto_dev_fin)}) uniquement ; la période de <b>validation</b> (jusqu’au ${esc(U.fin)}) n’a servi à aucun choix. Coûts ${uni==='etf'?P.couts_bps.etf:P.couts_bps.crypto} bps par unité de turnover, rebalancement ${esc(P.rebalancement)}, dérive des poids modélisée. Deflated Sharpe = probabilité que le Sharpe soit réel compte tenu du nombre de stratégies testées (Bailey & López de Prado).</div>`;
   // courbes
   const names = Object.keys(res).filter(n => RS_SEL.shown.has(n)).sort((a, b) => (b === keyRet) - (a === keyRet));
-  const others = ['#C9A0F0','#7FD4E3','#F2D479','#F08A73','#B49A86','#A39F96','#6CCB8F'];
+  const others = ['#e040fb','#00e5ff','#ffea00','#ff1744','#8d6e63','#9e9e9e','#00c853'];
   let oi = 0;
-  const colorOf = n => n === keyRet ? '#E3B65C' : n === r.reference_risque ? '#8AB4FF' : others[oi++ % others.length];
+  const colorOf = n => n === keyRet ? '#ff9900' : n === r.reference_risque ? '#2979ff' : others[oi++ % others.length];
   const series = names.map(n => ({ name: n, x: res[n].courbe.dates, y: res[n].courbe.equity, color: colorOf(n), width: n === keyRet ? 2.2 : 1.3 }));
   html += '<div class="panel" style="margin-top:10px"><div class="panel-h">Courbes de capital <span class="rt">échelle log · base 1 · coche les stratégies dans le tableau</span></div><div class="panel-b">';
   const split = res[keyRet].courbe.dates.findIndex(dt => dt > (uni==='etf'?P.dev_fin:P.crypto_dev_fin));
@@ -146,9 +146,9 @@ async function renderPaper() {
   html += '<div class="panel"><div class="panel-h">Équity <span class="rt">' + esc(d.strategy) + '</span></div><div class="panel-b">';
   if (d.equity_history.length > 1) {
     const h = d.equity_history;
-    html += lineChart('chPaperEq', [{ name: 'Équity', x: h.map(e=>e.date), y: h.map(e=>e.equity), color: '#E3B65C', area: true }], { height: 220, zero: d.initial_capital, yfmt: v => (v/1e6).toFixed(3)+' M$' });
+    html += lineChart('chPaperEq', [{ name: 'Équity', x: h.map(e=>e.date), y: h.map(e=>e.equity), color: '#ff9900', area: true }], { height: 220, zero: d.initial_capital, yfmt: v => (v/1e6).toFixed(3)+' M$' });
     html += '<div class="sub-h">Drawdown</div>';
-    html += lineChart('chPaperDD', [{ name: 'Drawdown', x: h.map(e=>e.date), y: h.map(e=>-e.drawdown*100), color: '#F08A73', area: true }], { height: 90, zero: 0, yfmt: v => v.toFixed(1)+'%' });
+    html += lineChart('chPaperDD', [{ name: 'Drawdown', x: h.map(e=>e.date), y: h.map(e=>-e.drawdown*100), color: '#ff1744', area: true }], { height: 90, zero: 0, yfmt: v => v.toFixed(1)+'%' });
   } else html += '<div class="muted" style="padding:10px 4px 4px">Portefeuille démarré le ' + esc(d.started || '') + ' — la courbe réelle apparaîtra dès le prochain jour de marché.</div>';
   if (d.equity_history.length < 20) html += await backtestPreview('chPaperBt');
   html += '</div></div>';

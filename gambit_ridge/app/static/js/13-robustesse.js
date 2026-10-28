@@ -8,8 +8,8 @@ function histoReperes(h, reperes, opts = {}) {
   const pad = (hi - lo) * 0.04, x0 = lo - pad, x1 = hi + pad, mx = Math.max(...c);
   const X = v => L + (v - x0) / (x1 - x0) * (W - L - R), Y = v => T + (1 - v / mx) * (H - T - B);
   let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:${H}px">`;
-  c.forEach((k, i) => { const col = opts.couleur ? opts.couleur(b[i], b[i + 1]) : '#4A4A52'; s += `<rect x="${X(b[i]) + 0.5}" y="${Y(k)}" width="${Math.max(0.5, X(b[i + 1]) - X(b[i]) - 1)}" height="${H - B - Y(k)}" fill="${col}"/>`; });
-  for (const t of niceTicks(x0, x1, 6)) s += `<text x="${X(t)}" y="${H - 8}" fill="#8A867E" font-size="10" text-anchor="middle">${(opts.fmt || (v => v.toFixed(2)))(t)}</text>`;
+  c.forEach((k, i) => { const col = opts.couleur ? opts.couleur(b[i], b[i + 1]) : '#5a5a5a'; s += `<rect x="${X(b[i]) + 0.5}" y="${Y(k)}" width="${Math.max(0.5, X(b[i + 1]) - X(b[i]) - 1)}" height="${H - B - Y(k)}" fill="${col}"/>`; });
+  for (const t of niceTicks(x0, x1, 6)) s += `<text x="${X(t)}" y="${H - 8}" fill="#666" font-size="10" text-anchor="middle">${(opts.fmt || (v => v.toFixed(2)))(t)}</text>`;
   reperes.forEach((r, i) => { s += `<line x1="${X(r.v)}" x2="${X(r.v)}" y1="${T - 4}" y2="${H - B}" stroke="${r.c}" stroke-width="2" ${r.pointille ? 'stroke-dasharray="4,3"' : ''}/><text x="${X(r.v) + (X(r.v) > W * 0.8 ? -4 : 4)}" y="${12 + i * 11}" fill="${r.c}" font-size="10" text-anchor="${X(r.v) > W * 0.8 ? 'end' : 'start'}">${esc(r.l)}</text>`; });
   return s + '</svg>';
 }
@@ -49,7 +49,7 @@ function fnROB(d) {
   const c = P.complet;
   h += '<div class="grid g-main">';
   h += pan('Le fonds face à des stratégies aléatoires', `Sharpe 2008-2026 · ${A.n.toLocaleString('fr-FR')} tirages`,
-    histoReperes(c.histogramme, [{ v: c.sharpe_fonds, l: `Fonds ${c.sharpe_fonds.toFixed(2)}`, c: '#E3B65C' }, { v: c.sharpe_socle_seul, l: `Socle 60/40 seul ${c.sharpe_socle_seul.toFixed(2)}`, c: '#8AB4FF', pointille: true }, { v: c.quantiles[50], l: `Médiane du hasard ${c.quantiles[50].toFixed(2)}`, c: '#A39F96', pointille: true }]));
+    histoReperes(c.histogramme, [{ v: c.sharpe_fonds, l: `Fonds ${c.sharpe_fonds.toFixed(2)}`, c: '#ff9900' }, { v: c.sharpe_socle_seul, l: `Socle 60/40 seul ${c.sharpe_socle_seul.toFixed(2)}`, c: '#2979ff', pointille: true }, { v: c.quantiles[50], l: `Médiane du hasard ${c.quantiles[50].toFixed(2)}`, c: '#888', pointille: true }]));
   let t = '<table><tr><th>Période</th><th class="num">Fonds</th><th class="num">Socle seul</th><th class="num">Hasard médian</th><th class="num">Hasard 95e pct</th><th class="num">Percentile</th><th class="num">p-valeur</th></tr>';
   for (const [k, l] of [['developpement', 'Développement 2008-2019'], ['validation', 'Validation 2020-2026'], ['complet', 'Complet']]) {
     const x = P[k];
@@ -61,7 +61,7 @@ function fnROB(d) {
   // 2. PBO
   h += '<div class="grid g-main" style="margin-top:10px">';
   h += pan('Probabilité de surapprentissage (CSCV)', `${B.n_combinaisons.toLocaleString('fr-FR')} coupes de ${B.blocs} blocs · ${B.n_variantes} variantes`,
-    histoReperes({ bords: B.histogramme_logits.bords, comptes: B.histogramme_logits.comptes }, [{ v: 0, l: 'médiane hors échantillon', c: '#E3B65C', pointille: true }], { couleur: (a, b) => (a + b) / 2 < 0 ? '#F08A73' : '#6CCB8F', fmt: v => v.toFixed(1) })
+    histoReperes({ bords: B.histogramme_logits.bords, comptes: B.histogramme_logits.comptes }, [{ v: 0, l: 'médiane hors échantillon', c: '#ff9900', pointille: true }], { couleur: (a, b) => (a + b) / 2 < 0 ? '#ff1744' : '#00c853', fmt: v => v.toFixed(1) })
     + `<div class="muted small" style="margin:6px">Chaque barre : rang hors échantillon (logit) de la variante qui était la meilleure en échantillon. Rouge = elle tombe sous la médiane. PBO = part rouge = <b>${pc(B.pbo, 1)}</b>. Sharpe médian de la « meilleure » : ${B.sharpe_is_meilleur_median.toFixed(2)} en échantillon, ${B.sharpe_oos_meilleur_median.toFixed(2)} hors échantillon (pente de dégradation ${B.pente_degradation.toFixed(2)}).<br><b>Lecture :</b> les ${B.n_variantes} réglages se valent presque tous (Sharpe médian ${B.sharpe_variantes.median.toFixed(2)}) ; classer le « meilleur » sur le passé revient donc à classer du bruit, d’où une PBO élevée. Conséquence pratique : ne pas optimiser finement les paramètres — c’est ce que fait le protocole (réglages fixés avant calcul, production ${B.production.rang}e et non 1re). Même la « meilleure » choisie a posteriori garde hors échantillon un Sharpe médian (${B.sharpe_oos_meilleur_median.toFixed(2)}) bien au-dessus du hasard (${P.complet.quantiles[50].toFixed(2)}) : l’avantage vient de la famille de stratégies, pas du réglage.</div>`);
   const top = [...B.variantes].sort((a, b) => b.sharpe - a.sharpe);
   let tv = '<table><tr><th class="num">Rang</th><th>Signal</th><th class="num">Socle</th><th class="num">Vol cible</th><th class="num">Rebal.</th><th class="num">Sharpe</th></tr>';

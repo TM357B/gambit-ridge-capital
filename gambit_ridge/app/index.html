@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Gambit Ridge Capital — Terminal</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#16161A">
+<meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,13 +12,11 @@
 <link rel="apple-touch-icon" href="/static/icons/icon-180.png">
 <link rel="icon" type="image/png" href="/static/icons/icon-192.png">
 <link rel="manifest" href="/static/manifest.webmanifest">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="/static/app.css?v={{V}}">
 </head>
 <body>
 <div id="lockScreen">
-  <div class="lock-logo"><img class="logo-crete" src="/static/icons/icon-192.png" alt="" width="56" height="56"><br>Gambit Ridge Capital</div>
+  <div class="lock-logo">GAMBIT RIDGE CAPITAL</div>
   <div class="lock-sub">Terminal — accès restreint</div>
   <div class="lock-box">
     <input type="password" id="lockInput" placeholder="Code d'accès" autocomplete="off" onkeydown="if(event.key==='Enter')tryUnlock()">
@@ -28,28 +26,45 @@
   <div class="lock-foot">GRC SECURITY · ACCÈS SOUVENT JOURNALISÉ</div>
 </div>
 <div class="topbar">
-  <span class="brand"><img class="logo-crete" src="/static/icons/icon-192.png" alt="" width="30" height="30">Gambit Ridge<span class="beta">Capital</span></span>
+  <span class="brand" title="Gambit Ridge Capital"><img class="logo-g" src="/static/icons/icon-192.png" alt="Gambit Ridge Capital" width="28" height="28"></span>
   <span id="connDot" style="color:var(--green)">● LIVE</span>
   <span id="opsDot" class="small" style="cursor:help"></span>
-  <form class="cmd" onsubmit="event.preventDefault();runCommand(this.c.value);this.c.blur()"><input id="cmdInput" name="c" autocomplete="off" spellcheck="false" placeholder="Commande… ex. NVDA GP · FXC · ECST · HELP  ( / )"><button class="go">GO</button></form>
+  <form class="cmd" onsubmit="event.preventDefault();runCommand(this.c.value);this.c.blur()" autocomplete="off"><input id="cmdInput" name="c" autocomplete="off" spellcheck="false" placeholder="Commande… ex. SPY US &lt;EQUITY&gt; GP · FXC · HELP   ( / · ? )"><button class="go">&lt;GO&gt;</button></form>
   <span class="clock" id="clock"></span>
 </div>
+<div class="keyrow" id="keyrow">
+  <span class="key k-red" onclick="toucheAnnuler()" title="CANCEL (Échap) : ferme, vide la commande, puis revient à l'écran principal">CANCEL<i class="fk">Échap</i></span>
+  <span class="key k-green" onclick="toucheMenu()" title="MENU (Origine) : fonctions liées à l'écran, puis remonter dans les menus">MENU<i class="fk">Orig.</i></span>
+  <span class="key k-yel" onclick="toucheSecteur('GOVT')" title="GOVT (F2) : emprunts d'État — seule : menu de marché ; après un ticker : famille de l'instrument">GOVT<i class="fk">F2</i></span>
+  <span class="key k-yel" onclick="toucheSecteur('CORP')" title="CORP (F3) : obligations d'entreprises">CORP<i class="fk">F3</i></span>
+  <span class="key k-yel" onclick="toucheSecteur('MTGE')" title="MTGE (F4) : prêts hypothécaires / titrisation">MTGE<i class="fk">F4</i></span>
+  <span class="key k-yel" onclick="toucheSecteur('M-MKT')" title="M-MKT (F5) : marché monétaire">M-MKT<i class="fk">F5</i></span>
+  <span class="key k-yel" onclick="toucheSecteur('MUNI')" title="MUNI (F6) : collectivités locales">MUNI<i class="fk">F6</i></span>
+  <span class="key k-yel" onclick="toucheSecteur('PFD')" title="PFD (F7) : titres préférentiels">PFD<i class="fk">F7</i></span>
+  <span class="key k-yel" onclick="toucheSecteur('EQUITY')" title="EQUITY (F8) : actions">EQUITY<i class="fk">F8</i></span>
+  <span class="key k-yel" onclick="toucheSecteur('CMDTY')" title="CMDTY (F9) : matières premières">CMDTY<i class="fk">F9</i></span>
+  <span class="key k-yel" onclick="toucheSecteur('INDEX')" title="INDEX (F10) : indices">INDEX<i class="fk">F10</i></span>
+  <span class="key k-yel" onclick="toucheSecteur('CRNCY')" title="CRNCY (F11) : devises">CRNCY<i class="fk">F11</i></span>
+  <span class="key k-yel" onclick="toucheSecteur('ALPHA')" title="ALPHA / CLIENT (F12) : portefeuille du fonds">ALPHA<i class="fk">F12</i></span>
+  <span class="key k-green" onclick="toucheAide()" title="HELP (F1) : aide de l'écran actif ; deux appuis : aide de l'aide">HELP<i class="fk">F1</i></span>
+  <span class="key-hint" title="Afficher la carte des raccourcis">Ticker &lt;FAMILLE&gt; fonction &lt;GO&gt; · chiffre + &lt;GO&gt; · <b>?</b> raccourcis</span>
+</div>
 <div class="tabs">
-  <div class="side-brand"><img class="logo-crete" src="/static/icons/icon-192.png" alt="" width="36" height="36"><div><b>Gambit Ridge</b><span>Capital · paper</span></div></div>
-  <div class="tab active" id="tab-terminal" onclick="switchTab('terminal')">Terminal</div>
-  <div class="tab" id="tab-research" onclick="switchTab('research')">Recherche</div>
-  <div class="tab" id="tab-risk" onclick="switchTab('risk')">Risque</div>
-  <div class="tab" id="tab-fn" onclick="switchTab('fn')">Fonctions</div>
-  <div class="tab" id="tab-agents" onclick="switchTab('agents')">Agents</div>
-  <div class="tab" id="tab-reports" onclick="switchTab('reports')">Rendus</div>
-  <div class="tab" id="tab-backtest" onclick="switchTab('backtest')">Backtest</div>
-  <div class="tab" id="tab-news" onclick="switchTab('news')">Actualités</div>
-  <div class="tab" id="tab-strategies" onclick="switchTab('strategies')">Stratégies</div>
-  <div class="tab" id="tab-notes" onclick="switchTab('notes')">Notes</div>
-  <div class="tab" id="tab-voice" onclick="switchTab('voice')">Voix</div>
-  <div class="tab" id="tab-paper" onclick="switchTab('paper')">Paper Trading</div>
+  <div class="tab active" id="tab-terminal" onclick="switchTab('terminal')"><span class="tn">1)</span> Terminal</div>
+  <div class="tab" id="tab-research" onclick="switchTab('research')"><span class="tn">2)</span> Recherche</div>
+  <div class="tab" id="tab-risk" onclick="switchTab('risk')"><span class="tn">3)</span> Risque</div>
+  <div class="tab" id="tab-fn" onclick="switchTab('fn')"><span class="tn">4)</span> Fonctions</div>
+  <div class="tab" id="tab-agents" onclick="switchTab('agents')"><span class="tn">5)</span> Agents</div>
+  <div class="tab" id="tab-reports" onclick="switchTab('reports')"><span class="tn">6)</span> Rendus</div>
+  <div class="tab" id="tab-backtest" onclick="switchTab('backtest')"><span class="tn">7)</span> Backtest</div>
+  <div class="tab" id="tab-news" onclick="switchTab('news')"><span class="tn">9)</span> Actualités</div>
+  <div class="tab" id="tab-strategies" onclick="switchTab('strategies')"><span class="tn">10)</span> Stratégies</div>
+  <div class="tab" id="tab-notes" onclick="switchTab('notes')"><span class="tn">11)</span> Notes</div>
+  <div class="tab" id="tab-voice" onclick="switchTab('voice')"><span class="tn">12)</span> Voix</div>
+  <div class="tab" id="tab-paper" onclick="switchTab('paper')"><span class="tn">13)</span> Paper Trading</div>
 </div>
 <div class="tape" id="tape"><div class="tape-inner" id="tapeInner"></div></div>
+<div class="screen-h" id="screenH"></div>
 <div class="content" id="content"><div class="loader">Connexion au terminal…</div></div>
 
 <script src="/static/js/01-core.js?v={{V}}"></script>
@@ -65,6 +80,10 @@
 <script src="/static/js/11-actions-macro.js?v={{V}}"></script>
 <script src="/static/js/12-requetes.js?v={{V}}"></script>
 <script src="/static/js/13-robustesse.js?v={{V}}"></script>
+<script src="/static/js/14-hedge.js?v={{V}}"></script>
+<script src="/static/js/16-bulle.js?v={{V}}"></script>
+<script src="/static/js/15-navigation.js?v={{V}}"></script>
+<script src="/static/js/17-pro.js?v={{V}}"></script>
 <script src="/static/js/99-demarrage.js?v={{V}}"></script>
 </body>
 </html>
